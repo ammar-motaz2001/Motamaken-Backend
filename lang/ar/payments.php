@@ -1,0 +1,39 @@
+<?php
+
+return [
+    'insufficient_funds' => 'رصيد محفظتك لا يكفي لهذه العملية.',
+    'kyc_required' => 'وثّق هويتك قبل سحب الأموال.',
+    'amount_too_small' => 'الحد الأدنى هو :min :currency.',
+    'amount_too_large' => 'الحد الأقصى هو :max :currency.',
+    'deposit_not_pending' => 'تم إكمال هذه الدفعة أو إلغاؤها بالفعل.',
+    'withdrawal_not_pending' => 'تم الرد على طلب السحب هذا أو إلغاؤه بالفعل.',
+    'bad_signature' => 'التوقيع غير صالح.',
+    'unsupported' => 'وسيلة الدفع هذه غير متاحة.',
+
+    'escrow_exists' => 'حماية الدفع مفعّلة بالفعل لهذا المشروع.',
+    'escrow_needs_hired' => 'وظّف أحدهم أولاً: اقبل عرضاً قبل إعداد الدفعات.',
+    'escrow_missing' => 'لم يتم إعداد حماية الدفع لهذا المشروع بعد.',
+    'milestones_total' => 'يجب أن يساوي مجموع المراحل قيمة العرض: :total :currency.',
+    'milestone_not_pending' => 'تم تمويل هذه المرحلة بالفعل.',
+    'milestone_not_funded' => 'موّل هذه المرحلة قبل تسليمها.',
+    'milestone_not_submitted' => 'لم يتم تسليم العمل بعد.',
+    'milestone_wrong_state' => 'لا يمكن تغيير هذه المرحلة في حالتها الحالية.',
+    'escrow_has_funds' => 'الأموال محجوزة بالفعل. افتح نزاعاً للإلغاء.',
+    'escrow_incomplete' => 'حرّر جميع المراحل قبل إكمال المشروع.',
+
+    'types' => [
+        'deposit' => 'إيداع',
+        'withdrawal_request' => 'طلب سحب',
+        'withdrawal_cancelled' => 'تم إلغاء السحب',
+        'withdrawal_rejected' => 'تم رفض السحب',
+        'escrow_fund' => 'دفع إلى الضمان: :milestone (:project)',
+        'escrow_release' => 'دفعة مستلمة: :milestone (:project)',
+        'dispute_settlement' => 'تسوية نزاع: :milestone (:project)',
+        'subscription' => 'اشتراك',
+        'promotion' => 'ترويج',
+        'affiliate_commission' => 'عمولة التسويق بالعمولة',
+        'campaign_funding' => 'ميزانية حملة',
+        'campaign_earning' => 'أرباح الترويج',
+        'adjustment' => 'تعديل من الدعم',
+    ],
+];

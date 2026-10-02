@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Http\Resources;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+/**
+ * @mixin User
+ */
+class UserResource extends JsonResource
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'id' => $this->id,
+            'firstName' => $this->first_name,
+            'lastName' => $this->last_name,
+            'fullName' => $this->full_name,
+            'username' => $this->username,
+            'avatarUrl' => $this->avatar_url,
+            'email' => $this->email,
+            'emailVerifiedAt' => $this->email_verified_at,
+            'phone' => $this->phone,
+            'phoneVerifiedAt' => $this->phone_verified_at,
+            'points' => $this->points,
+            'subscribed' => $this->subscribed,
+            /** Chosen header language (`en`, `ar`, `fr`), or null to follow the browser. */
+            'locale' => $this->locale,
+            'currency' => $this->currency,
+            /** `light` or `dark`. */
+            'theme' => $this->theme,
+            'createdAt' => $this->created_at,
+        ];
+    }
+}
