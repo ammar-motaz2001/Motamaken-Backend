@@ -31,22 +31,62 @@ class PromotionService
         $perDay = config("marketplace.promotions.prices.{$kind}.{$currency}")
             ?? throw new ApiException(__('subscriptions.currency_unavailable'), 'currency_unavailable');
 
-        $discount = (float) ($this->subscriptions->planOf($user)?->features['promotion_discount_percent'] ?? 0);
-
-        return (int) round(Money::toCents($perDay) * $days * (100 - $discount) / 100);
+        return (int) round(Money::toCents($perDay) * $days * (100 - $this->discount($user)) / 100);
     }
 
-    public function buy(User $user, string $kind, ?int $projectId, int $days, string $currency): Promotion
+    private function discount(User $user): float
     {
-        return DB::transaction(function () use ($user, $kind, $projectId, $days, $currency) {
-            $price = $this->priceCents($user, $kind, $currency, $days);
+        return (float) ($this->subscriptions->planOf($user)?->features['promotion_discount_percent'] ?? 0);
+    }
+
+    /**
+     * The packages of the "Feature your ..." popups, priced in one currency after the user's plan discount.
+     *
+     * @return list<array{code: string, days: int, reach: array{min: int, max: int}, price: float, currency: string}>
+     */
+    public function packages(User $user, string $currency): array
+    {
+        return array_map(fn (array $package) => [
+            'code' => $package['code'],
+            'days' => $package['days'],
+            'reach' => ['min' => $package['reach'][0], 'max' => $package['reach'][1]],
+            'price' => $this->packagePriceCents($user, $package['code'], $currency) / 100,
+            'currency' => $currency,
+        ], config('marketplace.promotions.packages'));
+    }
+
+    public function packagePriceCents(User $user, string $code, string $currency): int
+    {
+        $price = $this->package($code)['prices'][$currency]
+            ?? throw new ApiException(__('subscriptions.currency_unavailable'), 'currency_unavailable');
+
+        return (int) round(Money::toCents($price) * (100 - $this->discount($user)) / 100);
+    }
+
+    /**
+     * @return array{code: string, days: int, reach: array{int, int}, prices: array<string, float>}
+     */
+    public function package(string $code): array
+    {
+        return collect(config('marketplace.promotions.packages'))->firstWhere('code', $code)
+            ?? throw new ApiException(__('subscriptions.package_unknown'), 'package_unknown');
+    }
+
+    public function buy(User $user, string $kind, ?int $projectId, int $days, string $currency, ?string $package = null): Promotion
+    {
+        return DB::transaction(function () use ($user, $kind, $projectId, $days, $currency, $package) {
+            if ($package) {
+                $days = $this->package($package)['days'];
+            }
+            $price = $package ? $this->packagePriceCents($user, $package, $currency) : $this->priceCents($user, $kind, $currency, $days);
+            $points = (int) config('marketplace.promotions.points');
 
             $target = $kind === Promotion::PROFILE
                 ? Profile::where('user_id', $user->id)->first() ?? throw new ApiException(__('proposals.profile_required'), 'profile_required')
                 : $this->ownOpenProject($user, $projectId);
 
             $promotion = Promotion::create([
-                'user_id' => $user->id, 'kind' => $kind, 'project_id' => $kind === Promotion::PROJECT ? $target->id : null,
+                'user_id' => $user->id, 'kind' => $kind, 'package' => $package, 'points_awarded' => $points, 'project_id' => $kind === Promotion::PROJECT ? $target->id : null,
                 'days' => $days, 'price_cents' => $price, 'currency' => $currency, 'starts_at' => now(), 'ends_at' => now()->addDays($days),
             ]);
 
@@ -60,6 +100,9 @@ class PromotionService
             $until = $from->copy()->addDays($days);
             $target->update(['is_featured' => true, 'featured_until' => $until]);
             $promotion->update(['ends_at' => $until]);
+
+            app(RewardsService::class)->award($user, 'promotion', "promotion:{$promotion->id}", ['promotionId' => $promotion->id], $points);
+            app(RewardsService::class)->syncMedals($user);
 
             $user->notify(new ActivityNotification('promotion.started', null, [
                 'kind' => $kind, 'until' => $until->toDateString(), 'promotionId' => $promotion->id,

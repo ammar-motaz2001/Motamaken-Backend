@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\AuthMethod;
+use App\Services\RewardsService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -19,7 +20,7 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['first_name', 'last_name', 'username', 'email', 'phone', 'password', 'subscribed', 'locale', 'currency', 'theme'])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden(['password', 'remember_token', 'two_factor_target'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -54,12 +55,23 @@ class User extends Authenticatable
             'password' => 'hashed',
             'subscribed' => 'boolean',
             'points' => 'integer',
+            'two_factor_target' => 'encrypted',
+            'two_factor_enabled_at' => 'datetime',
+            'notification_settings' => 'array',
+            'password_changed_at' => 'datetime',
             'last_seen_at' => 'datetime',
         ];
     }
 
     protected static function booted(): void
     {
+        static::updated(function (self $user) {
+            if ($user->wasChanged('kyc_status') && $user->kyc_status === 'approved') {
+                app(RewardsService::class)->award($user, 'identity_verified');
+                app(RewardsService::class)->syncMedals($user);
+            }
+        });
+
         static::creating(function (self $user) {
             $user->referral_code ??= static::newReferralCode();
         });
@@ -139,6 +151,24 @@ class User extends Authenticatable
         return Attribute::get(fn () => $this->avatar_path ? Storage::disk('public')->url($this->avatar_path) : null);
     }
 
+    public function hasTwoFactor(): bool
+    {
+        return $this->two_factor_method !== null;
+    }
+
+    public function twoFactorMethod(): ?AuthMethod
+    {
+        return $this->two_factor_method ? AuthMethod::from($this->two_factor_method) : null;
+    }
+
+    /**
+     * Whether notifications of this group are also emailed. Groups follow config('notifications.groups').
+     */
+    public function wantsEmailFor(string $group): bool
+    {
+        return (bool) ($this->notification_settings[$group] ?? config("notifications.defaults.{$group}", false));
+    }
+
     public function isOnline(): bool
     {
         return $this->last_seen_at?->gt(now()->subMinutes(self::ONLINE_WINDOW_MINUTES)) ?? false;
@@ -157,11 +187,13 @@ class User extends Authenticatable
      */
     public function markVerified(AuthMethod $method): void
     {
-        if (! $this->isVerified()) {
-            $this->points += config('auth_flow.welcome_points');
-        }
+        $first = ! $this->isVerified();
 
         $this->{$method->verifiedColumn()} ??= now();
         $this->save();
+
+        if ($first) {
+            app(RewardsService::class)->onVerified($this);
+        }
     }
 }

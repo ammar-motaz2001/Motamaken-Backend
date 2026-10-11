@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Admin\AdminDisputeController;
+use App\Http\Controllers\Admin\AdminDrawController;
 use App\Http\Controllers\Admin\AdminKycController;
 use App\Http\Controllers\Admin\AdminLedgerController;
 use App\Http\Controllers\Admin\AdminOverviewController;
@@ -9,15 +11,19 @@ use App\Http\Controllers\Admin\AdminProjectController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
+use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\AvatarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\DisputeController;
+use App\Http\Controllers\DrawController;
 use App\Http\Controllers\EscrowController;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\GroupConversationController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\KycController;
@@ -27,14 +33,21 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MilestoneController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionsController;
+use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\PlanController;
+use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectManagementController;
 use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\ProposalController;
+use App\Http\Controllers\PublicProfileController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\RewardsController;
 use App\Http\Controllers\SearchController;
+use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SubscriptionController;
 use App\Http\Controllers\TeamController;
 use App\Http\Controllers\TeamInvitationController;
@@ -80,6 +93,20 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     // Header: wallet/points pills, unread badges, language/currency/theme choices.
     Route::get('me/summary', [MeController::class, 'summary']);
     Route::patch('me/preferences', [MeController::class, 'updatePreferences']);
+    // Settings: account, password, notifications, two-factor, devices.
+    Route::patch('me', [AccountController::class, 'update']);
+    Route::post('me/password', [AccountController::class, 'password'])->middleware('throttle:auth');
+    Route::get('me/notification-settings', [AccountController::class, 'notifications']);
+    Route::patch('me/notification-settings', [AccountController::class, 'updateNotifications']);
+    Route::get('me/security', [SecurityController::class, 'show']);
+    Route::post('me/two-factor', [SecurityController::class, 'start'])->middleware('throttle:auth');
+    Route::post('me/two-factor/resend', [SecurityController::class, 'resend'])->middleware('throttle:auth');
+    Route::post('me/two-factor/confirm', [SecurityController::class, 'confirm'])->middleware('throttle:auth');
+    Route::post('me/two-factor/disable', [SecurityController::class, 'disable'])->middleware('throttle:auth');
+    Route::delete('me/sessions/{session}', [SecurityController::class, 'revoke'])->whereNumber('session');
+    Route::post('me/sessions/logout-others', [SecurityController::class, 'revokeOthers']);
+    Route::post('me/avatar', [AvatarController::class, 'store'])->middleware('throttle:writes');
+    Route::delete('me/avatar', [AvatarController::class, 'destroy']);
 
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
@@ -88,6 +115,21 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     // Own profile ("Add Your Profile"): needed to send offers.
     Route::get('me/profile', [ProfileController::class, 'show']);
     Route::put('me/profile', [ProfileController::class, 'update'])->middleware('throttle:writes');
+    Route::post('me/portfolio', [PortfolioController::class, 'store'])->middleware('throttle:writes');
+    Route::patch('me/portfolio/{item}', [PortfolioController::class, 'update'])->whereNumber('item');
+    Route::delete('me/portfolio/{item}', [PortfolioController::class, 'destroy'])->whereNumber('item');
+    Route::post('projects/{project}/reviews', [ReviewController::class, 'store'])->whereNumber('project')->middleware('throttle:writes');
+    Route::post('reports', [ReportController::class, 'store'])->middleware('throttle:writes');
+    Route::get('me/reports', [ReportController::class, 'mine']);
+
+    // Rewards: points, medals, prize draw, referral programme.
+    Route::get('me/points', [RewardsController::class, 'points']);
+    Route::get('me/medals', [RewardsController::class, 'medals']);
+    Route::post('draws/{draw}/entries', [DrawController::class, 'enter'])->whereNumber('draw')->middleware('throttle:writes');
+    Route::post('draw-winners/{winner}/claim', [DrawController::class, 'claim'])->whereNumber('winner')->middleware('throttle:money');
+    Route::get('me/affiliate', [AffiliateController::class, 'show']);
+    Route::get('me/affiliate/referrals', [AffiliateController::class, 'referrals']);
+    Route::get('me/affiliate/earnings', [AffiliateController::class, 'earnings']);
 
     // Post Your Project, My Projects, My Offers.
     Route::post('projects', [ProjectManagementController::class, 'store'])->middleware('throttle:writes');
@@ -113,6 +155,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::post('subscriptions/cancel', [SubscriptionController::class, 'cancel']);
     Route::post('subscriptions/resume', [SubscriptionController::class, 'resume']);
     Route::get('promotions/prices', [PromotionController::class, 'prices']);
+    Route::get('promotions/packages', [PromotionController::class, 'packages']);
     Route::post('promotions', [PromotionController::class, 'store'])->middleware('throttle:money');
     Route::get('me/promotions', [PromotionController::class, 'index']);
 
@@ -142,6 +185,11 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::post('wallet/deposits/{deposit}/simulate', [DepositController::class, 'simulate'])->whereNumber('deposit');
     Route::get('wallet/withdrawals', [WithdrawalController::class, 'index']);
     Route::post('wallet/withdrawals', [WithdrawalController::class, 'store'])->middleware('throttle:money');
+    Route::post('feedback', [FeedbackController::class, 'store'])->middleware('throttle:writes');
+    Route::get('me/payment-methods', [PaymentMethodController::class, 'index']);
+    Route::post('me/payment-methods', [PaymentMethodController::class, 'store'])->middleware('throttle:money');
+    Route::post('me/payment-methods/{method}/default', [PaymentMethodController::class, 'makeDefault'])->whereNumber('method');
+    Route::delete('me/payment-methods/{method}', [PaymentMethodController::class, 'destroy'])->whereNumber('method');
     Route::post('wallet/withdrawals/{withdrawal}/cancel', [WithdrawalController::class, 'cancel'])->whereNumber('withdrawal');
 
     // Escrow: payment protection with milestones.
@@ -149,6 +197,9 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::post('projects/{project}/escrow', [EscrowController::class, 'store'])->whereNumber('project')->middleware('throttle:money');
     Route::get('projects/{project}/escrow', [EscrowController::class, 'show'])->whereNumber('project');
     Route::post('projects/{project}/escrow/fund', [EscrowController::class, 'fund'])->whereNumber('project')->middleware('throttle:money');
+    Route::post('projects/{project}/escrow/split/approve', [EscrowController::class, 'approveSplit'])->whereNumber('project');
+    Route::post('projects/{project}/escrow/split/object', [EscrowController::class, 'objectSplit'])->whereNumber('project');
+    Route::post('projects/{project}/escrow/tip', [EscrowController::class, 'tip'])->whereNumber('project')->middleware('throttle:money');
     Route::post('projects/{project}/escrow/cancel', [EscrowController::class, 'cancel'])->whereNumber('project');
     Route::post('milestones/{milestone}/fund', [MilestoneController::class, 'fund'])->whereNumber('milestone')->middleware('throttle:money');
     Route::post('milestones/{milestone}/submit', [MilestoneController::class, 'submit'])->whereNumber('milestone');
@@ -194,6 +245,9 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
         Route::get('ledger/trial-balance', [AdminLedgerController::class, 'trialBalance']);
         Route::get('plans', [AdminPlanController::class, 'index']);
         Route::patch('plans/{plan}', [AdminPlanController::class, 'update'])->whereNumber('plan');
+        Route::get('draws', [AdminDrawController::class, 'index']);
+        Route::post('draws', [AdminDrawController::class, 'store']);
+        Route::post('draws/{draw}/run', [AdminDrawController::class, 'run'])->whereNumber('draw');
         Route::get('settings', [AdminSettingsController::class, 'show']);
         Route::put('settings', [AdminSettingsController::class, 'update']);
     });
@@ -217,6 +271,13 @@ Route::get('home', [HomeController::class, 'index']);
 Route::get('projects', [ProjectController::class, 'index']);
 Route::get('projects/{project}', [ProjectController::class, 'show'])->whereNumber('project');
 Route::get('search', SearchController::class);
+Route::get('search/skills', [SearchController::class, 'skills']);
+Route::get('users/{user}', [PublicProfileController::class, 'show'])->whereNumber('user');
+Route::get('draws/current', [DrawController::class, 'current']);
+Route::get('draws/history', [DrawController::class, 'history']);
+Route::post('affiliate/visits', [AffiliateController::class, 'visit'])->middleware('throttle:writes');
+Route::get('users/{user}/reviews', [ReviewController::class, 'user'])->whereNumber('user');
+Route::get('projects/{project}/reviews', [ReviewController::class, 'project'])->whereNumber('project');
 Route::get('categories', [CategoryController::class, 'index']);
 Route::get('countries', [LocationController::class, 'countries']);
 Route::get('countries/{country}/cities', [LocationController::class, 'cities'])->whereNumber('country');

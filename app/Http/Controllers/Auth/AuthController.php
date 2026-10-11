@@ -9,6 +9,7 @@ use App\Http\Requests\Auth\SignupRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\Auth\OtpService;
+use App\Support\Mask;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -73,6 +74,16 @@ class AuthController extends Controller
 
         if (! $user?->password || ! Hash::check($request->input('password'), $user->password)) {
             abort(422, __("auth_flow.invalid_credentials.{$method->value}"));
+        }
+
+        // Two-factor: the code goes to the second factor, whatever the login method.
+        if ($user->hasTwoFactor()) {
+            $this->otp->send(OtpPurpose::Login, $user->twoFactorMethod(), $user->two_factor_target);
+
+            return ['otpRequired' => true, 'twoFactor' => [
+                'method' => $user->two_factor_method,
+                'target' => Mask::identifier($user->twoFactorMethod(), $user->two_factor_target),
+            ]];
         }
 
         $identifierVerified = $user->{$method->verifiedColumn()} !== null;

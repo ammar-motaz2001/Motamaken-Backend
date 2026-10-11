@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'two_factor_expired' => 'The setup took too long. Start again.',
+    'unknown_device' => 'Unknown device',
+    'unknown_browser' => 'Browser',
+    'unknown_system' => 'unknown system',
+    'device' => ':browser on :system',
     'already_registered' => [
         'email' => 'An account with this email already exists. Please log in.',
         'phone' => 'An account with this phone number already exists. Please log in.',
@@ -18,6 +23,7 @@ return [
     'too_many_requests' => 'Too many attempts. Please try again in a minute.',
 
     'otp_subject' => [
+        'two_factor' => 'Your Motamakin verification code',
         'signup' => 'Verify your Motamakin account',
         'login' => 'Your Motamakin login code',
         'reset' => 'Reset your Motamakin password',

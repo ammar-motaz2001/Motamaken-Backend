@@ -47,7 +47,7 @@ class EscrowTest extends TestCase
             ->assertJsonPath('data.milestones.0.title', 'Design')
             ->assertJsonPath('data.milestones.0.status', 'pending')
             ->assertJsonPath('data.milestones.1.position', 2)
-            ->assertJsonPath('data.payees', [['userId' => $this->freelancer->id, 'fullName' => 'Fay Freelancer', 'avatarUrl' => null, 'sharePercent' => 100, 'isLead' => true]]);
+            ->assertJsonPath('data.payees', [['userId' => $this->freelancer->id, 'fullName' => 'Fay Freelancer', 'avatarUrl' => null, 'sharePercent' => 100, 'isLead' => true, 'splitStatus' => 'approved', 'splitNote' => null]]);
 
         $this->as($this->freelancer)->getJson('/api/notifications')
             ->assertJsonPath('data.0.type', 'escrow.created')
@@ -293,6 +293,37 @@ class EscrowTest extends TestCase
     }
 
     // ---- helpers ----------------------------------------------------------------------------------------------------
+
+    public function test_the_client_can_tip_after_a_release_without_fee(): void
+    {
+        [$design] = $this->setUpEscrow();
+        $this->fund($this->client, 450);
+        $tip = fn (array $body) => $this->as($this->client)->postJson("/api/projects/{$this->project->id}/escrow/tip", $body);
+
+        $tip(['amount' => 20])->assertStatus(422)->assertJsonPath('code', 'tip_too_early');
+        $this->as($this->client)->postJson("/api/milestones/{$design->id}/fund")->assertOk();
+        $this->as($this->client)->postJson("/api/milestones/{$design->id}/approve")->assertOk()
+            ->assertJsonPath('data.status', 'released');
+        $before = $this->balance($this->freelancer);
+
+        $this->as($this->freelancer)->postJson("/api/projects/{$this->project->id}/escrow/tip", ['amount' => 5])->assertForbidden();
+        $tip(['amount' => 500])->assertStatus(422)->assertJsonPath('code', 'insufficient_funds');
+        $tip(['amount' => 0])->assertJsonValidationErrors('amount');
+        $tip(['amount' => 25, 'note' => 'Great work!'])->assertOk()->assertJsonPath('data.tips.0.amount', 25)->assertJsonPath('data.tips.0.note', 'Great work!');
+
+        $this->assertSame($before + 25, $this->balance($this->freelancer));
+        $this->assertSame(25.0, $this->balance($this->client));
+        $this->assertBooksBalance();
+        $this->as($this->freelancer)->getJson('/api/notifications')->assertJsonPath('data.0.type', 'escrow.tip');
+        $this->as($this->freelancer)->getJson('/api/wallet/transactions')->assertJsonPath('data.0.label', "Tip: {$this->project->title}");
+    }
+
+    public function test_a_solo_freelancer_needs_no_split_approval(): void
+    {
+        $this->setUpEscrow();
+        $this->as($this->client)->getJson("/api/projects/{$this->project->id}/escrow")
+            ->assertJsonPath('data.splitApproved', true)->assertJsonPath('data.payees.0.splitStatus', 'approved');
+    }
 
     private function as(User $user): static
     {

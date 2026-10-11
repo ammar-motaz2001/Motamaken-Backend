@@ -10,6 +10,8 @@ use Illuminate\Validation\Validator;
 
 class ProfileRequest extends FormRequest
 {
+    public const PLATFORMS = ['instagram', 'facebook', 'youtube', 'tiktok', 'snapchat', 'x', 'pinterest', 'telegram', 'whatsapp', 'linkedin'];
+
     /**
      * @return array<string, mixed>
      */
@@ -24,6 +26,41 @@ class ProfileRequest extends FormRequest
             'countryId' => ['nullable', 'integer', 'exists:countries,id'],
             /** Needs `countryId`. */
             'cityId' => ['nullable', 'integer', 'exists:cities,id'],
+
+            // The sections below are optional: a list that is sent replaces the saved one, one that is left out is kept.
+            /** Up to 20 skills, e.g. `["Figma", "Branding"]`. */
+            'skills' => ['sometimes', 'array', 'max:20'],
+            'skills.*' => ['string', 'min:1', 'max:40', 'distinct'],
+            /** `[{name, level}]`, level `native`, `fluent`, `good` or `basic`. */
+            'languages' => ['sometimes', 'array', 'max:10'],
+            'languages.*.name' => ['required', 'string', 'max:40'],
+            'languages.*.level' => ['required', Rule::in(['native', 'fluent', 'good', 'basic'])],
+            /** `[{title, company, from: "2021-03", to: null|"2023-01", description}]`. */
+            'experiences' => ['sometimes', 'array', 'max:20'],
+            'experiences.*.title' => ['required', 'string', 'max:80'],
+            'experiences.*.company' => ['required', 'string', 'max:80'],
+            'experiences.*.from' => ['required', 'date_format:Y-m'],
+            'experiences.*.to' => ['nullable', 'date_format:Y-m', 'after_or_equal:experiences.*.from'],
+            'experiences.*.description' => ['nullable', 'string', 'max:500'],
+            /** `[{school, degree, from: 2016, to: 2020}]`. */
+            'educations' => ['sometimes', 'array', 'max:10'],
+            'educations.*.school' => ['required', 'string', 'max:100'],
+            'educations.*.degree' => ['required', 'string', 'max:100'],
+            'educations.*.from' => ['required', 'integer', 'between:1950,2100'],
+            'educations.*.to' => ['nullable', 'integer', 'between:1950,2100', 'gte:educations.*.from'],
+            /** `[{name, issuer, year, url}]`. */
+            'certificates' => ['sometimes', 'array', 'max:20'],
+            'certificates.*.name' => ['required', 'string', 'max:100'],
+            'certificates.*.issuer' => ['required', 'string', 'max:100'],
+            'certificates.*.year' => ['required', 'integer', 'between:1950,2100'],
+            'certificates.*.url' => ['nullable', 'url', 'max:500'],
+            /** Influencers: `[{platform, handle, url, followers, engagementRate}]`. */
+            'channels' => ['sometimes', 'array', 'max:12'],
+            'channels.*.platform' => ['required', Rule::in(self::PLATFORMS)],
+            'channels.*.handle' => ['required', 'string', 'max:60'],
+            'channels.*.url' => ['nullable', 'url', 'max:500'],
+            'channels.*.followers' => ['required', 'integer', 'min:0', 'max:2000000000'],
+            'channels.*.engagementRate' => ['nullable', 'numeric', 'between:0,100'],
         ];
     }
 

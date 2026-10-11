@@ -34,13 +34,20 @@ class OtpController extends Controller
         $method = $request->authMethod();
         $identifier = $request->identifier();
 
-        $this->otp->verify($purpose, $method, $identifier, $request->input('code'));
-
         $user = User::findByIdentifier($method, $identifier);
+        $twoFactor = $purpose === OtpPurpose::Login && $user?->hasTwoFactor();
+
+        // With two-factor on, the login code was sent to the second factor, not to the login identifier.
+        $twoFactor
+            ? $this->otp->verify($purpose, $user->twoFactorMethod(), $user->two_factor_target, $request->input('code'))
+            : $this->otp->verify($purpose, $method, $identifier, $request->input('code'));
+
         abort_if(! $user, 422, __('auth_flow.otp_invalid'));
 
-        // Receiving the code proves ownership of the identifier, whatever the purpose.
-        $user->markVerified($method);
+        // Receiving the code proves ownership of the identifier it was sent to.
+        if (! $twoFactor) {
+            $user->markVerified($method);
+        }
 
         return match ($purpose) {
             OtpPurpose::Signup => ['verified' => true],
@@ -59,7 +66,11 @@ class OtpController extends Controller
      */
     public function resend(ResendOtpRequest $request): array
     {
-        $this->otp->resend($request->purpose(), $request->authMethod(), $request->identifier());
+        $user = $request->purpose() === OtpPurpose::Login ? User::findByIdentifier($request->authMethod(), $request->identifier()) : null;
+
+        $user?->hasTwoFactor()
+            ? $this->otp->resend(OtpPurpose::Login, $user->twoFactorMethod(), $user->two_factor_target)
+            : $this->otp->resend($request->purpose(), $request->authMethod(), $request->identifier());
 
         // Same answer whether or not a code was pending, so this can't be used to probe accounts.
         return ['sent' => true];

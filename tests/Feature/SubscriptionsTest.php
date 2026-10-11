@@ -305,6 +305,27 @@ class SubscriptionsTest extends TestCase
         $this->as($this->user)->getJson('/api/wallet/transactions')->assertJsonPath('data.0.label', 'Promotion');
     }
 
+    public function test_packages_are_priced_after_the_plan_discount_and_grant_points(): void
+    {
+        $this->as($this->user)->getJson('/api/promotions/packages?currency=USD')
+            ->assertOk()->assertJsonPath('points', 200)->assertJsonCount(3, 'data')
+            ->assertJsonPath('data.0.code', 'starter')->assertJsonPath('data.0.price', 3.99)
+            ->assertJsonPath('data.2.reach', ['min' => 30000, 'max' => 50000]);
+
+        $this->fund($this->user, 20);
+        $points = $this->user->fresh()->points;
+        $this->as($this->user)->postJson('/api/promotions', ['kind' => 'profile', 'package' => 'pro', 'currency' => 'USD'])
+            ->assertCreated()->assertJsonPath('data.package', 'pro')->assertJsonPath('data.days', 1)
+            ->assertJsonPath('data.price', 8.99)->assertJsonPath('data.pointsAwarded', 200);
+
+        $this->assertSame(11.01, $this->balance($this->user));
+        $this->assertSame($points + 200, $this->user->fresh()->points);
+        $this->assertBooksBalance();
+
+        $this->as($this->user)->postJson('/api/promotions', ['kind' => 'profile', 'package' => 'gold', 'currency' => 'USD'])->assertJsonValidationErrors('package');
+        $this->as($this->user)->postJson('/api/promotions', ['kind' => 'profile', 'currency' => 'USD'])->assertJsonValidationErrors(['days', 'package']);
+    }
+
     public function test_buying_a_project_promotion(): void
     {
         $this->fund($this->user, 100);

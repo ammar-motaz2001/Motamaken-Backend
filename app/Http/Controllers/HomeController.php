@@ -26,8 +26,20 @@ class HomeController extends Controller
      */
     public function index(): array
     {
-        $data = Cache::remember('home:'.app()->getLocale(), config('marketplace.home.cache_seconds'), fn () => $this->load());
+        // Cached as plain arrays: the cache store refuses to unserialize objects (config cache.serializable_classes).
+        return Cache::remember(
+            'home:'.app()->getLocale(),
+            config('marketplace.home.cache_seconds'),
+            fn () => json_decode(json_encode($this->present($this->load())), true),
+        );
+    }
 
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function present(array $data): array
+    {
         return [
             'featuredProfiles' => ProfileCardResource::collection($data['featuredProfiles']),
             'distinctiveProjects' => ProjectResource::collection($data['distinctiveProjects']),

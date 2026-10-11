@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileRequest;
 use App\Http\Resources\ProfileResource;
+use App\Services\RewardsService;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class ProfileController extends Controller
      */
     public function show(Request $request): ProfileResource
     {
-        return new ProfileResource($request->user()->profile()->with(['country', 'city'])->firstOrFail());
+        return new ProfileResource($request->user()->profile()->with(['country', 'city', 'portfolio'])->firstOrFail());
     }
 
     /**
@@ -38,7 +39,16 @@ class ProfileController extends Controller
             'bio' => $request->input('bio'),
             'country_id' => $request->input('countryId'),
             'city_id' => $request->input('cityId'),
-        ])->save();
+        ]);
+
+        // A section that is sent replaces the saved list; one that is left out stays as it is.
+        foreach (['skills', 'languages', 'experiences', 'educations', 'certificates', 'channels'] as $section) {
+            if ($request->has($section)) {
+                $profile->{$section} = array_values($request->validated($section) ?? []);
+            }
+        }
+        $profile->save();
+        app(RewardsService::class)->checkProfileCompleted($request->user());
 
         return (new ProfileResource($profile->load(['country', 'city'])))->response()->setStatusCode($created ? 201 : 200);
     }

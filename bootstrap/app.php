@@ -14,6 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Render's (or any) load balancer: trust X-Forwarded-* so URLs and signed links use https.
+        $middleware->trustProxies(at: '*');
+
         $middleware->api(append: [SetLocaleFromHeader::class]);
 
         // Apple returns to the OAuth callback with a cross-site form POST.

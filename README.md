@@ -133,3 +133,152 @@ Rules:
   "Add Your Profile"), `profile_type_mismatch`, `own_project`, `already_offered`, `project_not_open`, `proposal_not_pending`,
   `project_has_proposals`, `project_not_editable`, `project_not_in_progress`.
 - Sample offers for the demo account load with `php artisan db:seed` (or `--class=DemoProposalsSeeder` on an existing database).
+
+## Payment methods & quick feedback API
+
+| Endpoint | Body | Response |
+|---|---|---|
+| `GET /me/payment-methods` | — | saved cards / PayPal accounts, preferred first |
+| `POST /me/payment-methods` | card: `type=card, holderName, number, expMonth, expYear, cvc, makeDefault?` · PayPal: `type=paypal, email, makeDefault?` | the saved method (201) |
+| `POST /me/payment-methods/{id}/default` | — | the method, now preferred |
+| `DELETE /me/payment-methods/{id}` | — | `{ success: true }`; the newest remaining method becomes preferred |
+| `POST /feedback` | `context (deposit\|withdrawal\|promotion\|subscription\|payment_method\|escrow), referenceId?, rating (up\|down), comment?` | `{ success: true }` (201) |
+
+Rules:
+- **Card numbers are never stored.** The number (Luhn-checked), expiry (not in the past) and CVC go to
+  `PaymentGateway::saveCard()`, which returns the provider's token; only the brand, last 4 digits, expiry and holder
+  name are kept. The token and PayPal email are encrypted at rest. A real gateway should tokenize in the browser
+  (e.g. Stripe Elements) and send the token instead of the card number.
+- The first saved method is always the preferred one.
+
+## Promotion packages & profile photo
+
+| Endpoint | Body | Response |
+|---|---|---|
+| `GET /promotions/packages?currency=` | — | `{ points, data: [{ code, days, reach: {min, max}, price, currency }] }` after the plan discount |
+| `POST /promotions` | `kind (profile\|project), projectId?, package (starter\|boost\|pro) or days, currency` | the promotion with `package` and `pointsAwarded` |
+| `POST /me/avatar` | `multipart/form-data` `avatar` (JPEG/PNG/WebP, ≤ 5 MB, ≥ 100×100) | the user with the new `avatarUrl` |
+| `DELETE /me/avatar` | — | the user, `avatarUrl: null` |
+
+Packages and the points per purchase live in `config/marketplace.php` (`promotions.packages`, `promotions.points`).
+Photos are stored on the `public` disk, so run `php artisan storage:link` once per environment.
+Paying a promotion "by card" from the frontend is a card deposit followed by the wallet purchase.
+
+## Escrow: split approval & tips
+
+| Endpoint | Body | Response |
+|---|---|---|
+| `POST /projects/{id}/escrow/split/approve` | — | the escrow; the member's `splitStatus` is `approved` |
+| `POST /projects/{id}/escrow/split/object` | `note` (5–1000 chars) | the escrow; `objected`, client and team notified |
+| `POST /projects/{id}/escrow/tip` | `amount, note?` | the escrow with `tips` |
+
+Rules:
+- Team escrows start with every member's split `pending`; solo escrows are `approved`. While `splitApproved` is false,
+  `POST /milestones/{id}/approve` answers `split_not_approved`. Admin dispute settlements are not blocked.
+- Tips need at least one released milestone (`tip_too_early`), come from the client's wallet (`insufficient_funds`),
+  are split by share like payments, and carry no platform fee (ledger type `tip`).
+
+## Settings API: account, notifications, two-factor, devices
+
+| Endpoint | Body | Response |
+|---|---|---|
+| `PATCH /me` | `firstName?, lastName?, username?, subscribed?` | the user (email / phone are not changed here) |
+| `POST /me/password` | `currentPassword, password, password_confirmation` | `{ success }`; every other token is deleted |
+| `GET /me/notification-settings` · `PATCH` | `{ messages?, proposals?, projects?, payments?, disputes? }` | `{ data: {group: bool}, required: ["account"] }` |
+| `GET /me/security` | — | `{ twoFactor: {enabled, method, target}, passwordChangedAt, sessions: [{id, device, ip, lastUsedAt, isCurrent}] }` |
+| `POST /me/two-factor` | `method (email\|phone), password, target` | `{ sent, target }` (masked); a code is sent to `target` |
+| `POST /me/two-factor/resend` · `/confirm` (`code`) · `/disable` (`password`) | | the security object |
+| `DELETE /me/sessions/{id}` · `POST /me/sessions/logout-others` | — | `{ success, wasCurrent }` · `{ success, count }` |
+
+Rules:
+- **Two-factor login**: when it is on, `POST /auth/login` always answers `{ otpRequired: true, twoFactor: {method, target} }` and
+  sends the login code to the second factor, whatever the login method. `/auth/otp/verify` and `/auth/otp/resend` with
+  `purpose=login` keep using the login identifier; the backend checks the code against the second factor.
+- **Email notifications**: bell notifications belong to groups (`config/notifications.php`). After one is stored, the
+  `EmailActivityNotification` listener (auto-discovered, do not register it again) queues an `ActivityEmail` when the
+  user wants that group by email. Restart the `queue` container after changing notification code.
+- **Devices**: every token records the IP and user agent when it is created (`IssuesTokens::newToken`).
+
+## Public profiles, portfolio, reviews, reports
+
+| Endpoint | Body | Response |
+|---|---|---|
+| `GET /users/{id}` (public) | — | `{ user (verified badges, memberSince, lastSeenAt), profile (sections + portfolio) \| null, stats, reviews (latest 3), openProjects, isMe }` |
+| `GET /users/{id}/reviews` (public) | — | paginated reviews + `average`, `total` |
+| `PUT /me/profile` | adds optional `skills, languages, experiences, educations, certificates, channels` | a section that is sent replaces the saved list; one left out is kept |
+| `POST /me/portfolio` · `PATCH`/`DELETE /me/portfolio/{id}` | multipart `title, description?, link?, image` (≤ 8 MB) | the item; up to 30 per profile |
+| `GET /projects/{id}/reviews` (public, token optional) | — | `{ data, canReview }` |
+| `POST /projects/{id}/reviews` | `rating (1–5), comment?` | once per side on a completed project; updates the reviewee's profile rating |
+| `POST /reports` · `GET /me/reports` | `targetType (user\|project\|portfolio\|review), targetId, reason, details?` | once per item; `counts` per status in the list |
+
+Public endpoints that personalise their answer read the user with `$request->user('sanctum')` (they are outside the auth middleware).
+
+## Advanced search & notification filters
+
+- `GET /search` also accepts `category` (slug), `budgetMin`, `budgetMax` (projects), `skill`, `minRating`, `platform`
+  (profiles) and `sort` (`newest`, `budget_high`, `budget_low` for projects; `rating`, `reviews`, `newest` for profiles).
+  Skills and channels are JSON: they are matched on the stored JSON text, with the term encoded the same way
+  (`\uXXXX` for non-ASCII), so it works on PostgreSQL and SQLite.
+- `GET /search/skills?q=` returns the most listed skills for the picker.
+- `GET /notifications` accepts `group` (a key of `config/notifications.php`) and `unread=1`, and returns `unreadByGroup`.
+
+## Rewards: points, medals, prize draw, referral programme
+
+| Endpoint | Body | Response |
+|---|---|---|
+| `GET /me/points` | — | `{ balance, earn: [{reason, label, points, once, done}], data: history, meta }` |
+| `GET /me/medals` | — | every medal with `current`/`target`, `earned`, `awardedAt` (also awards newly reached ones) |
+| `GET /draws/current` (public) | — | the open draw (or last drawn), prizes, totals and `me` (points, tickets, chance, won) |
+| `POST /draws/{id}/entries` | `tickets` | spends `tickets × ticketCost` points; `draw_closed`, `too_many_tickets`, `insufficient_points` |
+| `GET /draws/history` (public) | — | past draws with winners |
+| `POST /draw-winners/{id}/claim` | `method (wallet\|delivery), details?` | cash prizes are credited to the wallet from the `marketing` account; items need a shipping address |
+| `GET /me/affiliate` · `/referrals` · `/earnings` | — | link, visits, sign-ups, qualified, conversion, tier / next tier, monthly earnings; invitees; commissions |
+| `POST /affiliate/visits` (public) | `code` | counts an invite-link visit (once per visitor per day) |
+| `GET/POST /admin/draws` · `POST /admin/draws/{id}/run` | see Swagger | create a draw; pick winners now |
+
+Rules:
+- Points and medals live in `config/engagement.php`. Every change to `users.points` goes through `RewardsService` and is
+  recorded in `point_transactions`; awards with a key (or marked `once`) happen once.
+- Hooks: first email/phone verification (welcome + referrer reward), KYC approved and project completed (model `updated`
+  events on `User` and `Project`), review left, payment method saved, promotion bought, profile completed (photo, about,
+  3 skills, a portfolio item).
+- `draws:run` runs every five minutes from the scheduler and picks the winners of due draws, weighted by tickets, one
+  prize per member. Prizes are an expense of the `marketing` system account, which (like `gateway`) may go negative.
+- Notifications `points.*`, `medal.*`, `draw.*` form the `rewards` group (not emailed by default).
+
+## Deploy on Render
+
+Everything is described in [`render.yaml`](render.yaml) (a Render Blueprint) and built from [`Dockerfile.render`](Dockerfile.render)
+(FrankenPHP, PHP 8.4, production settings in `docker/render/`). Local development keeps using `Dockerfile` + `docker-compose.yml`.
+
+| Render resource | What it runs |
+|---|---|
+| `motamakin-db` (Postgres 16) | the database (`DB_URL`) |
+| `motamakin-redis` (Key Value) | cache, sessions, queues, OTP codes (`REDIS_URL`) |
+| `motamakin-api` (web) | the API on `$PORT`; runs `migrate --force` on start (`RUN_MIGRATIONS=true`); health check `/up`; uploads on a 5 GB persistent disk at `storage/app` |
+| `motamakin-queue` (worker) | `queue:work` (emails, notifications) |
+| `motamakin-scheduler` (cron, every minute) | `schedule:run` (team invitations, subscription renewals, prize draws) |
+
+Steps:
+
+1. Push this repository to GitHub, then in Render: **New → Blueprint** → choose the repository.
+2. Fill the values Render asks for (`sync: false`):
+   - `APP_KEY`: run `php artisan key:generate --show` locally and paste the `base64:...` value.
+   - `FRONTEND_URL` and `CORS_ALLOWED_ORIGINS`: the frontend address, e.g. `https://motamaken-front.vercel.app`.
+   - `MAIL_HOST`, `MAIL_USERNAME`, `MAIL_PASSWORD`: an SMTP provider (Brevo, Mailgun, SES...). OTP codes are sent by email.
+3. Apply. The first deploy creates the tables. To add the reference data (countries, cities, categories, plans), open the
+   `motamakin-api` **Shell** and run `php artisan db:seed --class=ReferenceDataSeeder --force`
+   (`php artisan db:seed --force` also adds the demo people and projects, unless `APP_ENV=production`).
+4. Point the frontend at the API: `NEXT_PUBLIC_API_URL` and `API_URL` = `https://<motamakin-api>.onrender.com/api`.
+   Keep `NEXT_PUBLIC_PAYMENTS_SIMULATE=true` while `APP_ENV=staging` and the fake gateway are used.
+
+Good to know:
+- `APP_URL` defaults to Render's `RENDER_EXTERNAL_URL`; set it only for a custom domain. Proxies are trusted, so links are `https`.
+- Uploads (avatars, portfolio, identity documents, chat and dispute files) are on the web service's disk, so it runs
+  one instance. To scale out, move the `public` and `local` disks to S3-compatible storage (install
+  `league/flysystem-aws-s3-v3` and switch the disks' drivers).
+- The image caches config, routes, views and events at start; change environment variables in Render, not in code.
+- Before real money: bind a real `PaymentGateway`, set `APP_ENV=production` (this disables `/wallet/deposits/{id}/simulate`),
+  and set `NEXT_PUBLIC_PAYMENTS_SIMULATE=false` on the frontend. WhatsApp OTP sending still uses `LogWhatsAppSender`.
+- Social login: fill the `*_CLIENT_ID` / `*_CLIENT_SECRET` variables and register
+  `https://<api>/api/auth/oauth/{provider}/callback` with each provider.

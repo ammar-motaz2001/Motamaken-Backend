@@ -27,6 +27,9 @@ class Account extends Model
     /** Budgets of promotion campaigns, paid out to promoters as visits are counted. */
     public const CAMPAIGNS = 'campaigns';
 
+    /** What the platform spends on prizes (prize draw). An expense: goes negative as prizes are paid. */
+    public const MARKETING = 'marketing';
+
     /** @var array<string, mixed> */
     protected $attributes = ['balance_cents' => 0];
 
@@ -40,7 +43,7 @@ class Account extends Model
      */
     public function allowsNegative(): bool
     {
-        return $this->type === self::GATEWAY;
+        return in_array($this->type, [self::GATEWAY, self::MARKETING], true);
     }
 
     /**

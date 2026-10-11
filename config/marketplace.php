@@ -68,6 +68,14 @@ return [
             'profile' => ['USD' => 2, 'SAR' => 7.5, 'AED' => 7.35, 'EUR' => 1.85],
             'project' => ['USD' => 3, 'SAR' => 11.25, 'AED' => 11, 'EUR' => 2.75],
         ],
+        // The packages offered in the "Feature your project / profile" popups. `reach` is the estimated audience.
+        'packages' => [
+            ['code' => 'starter', 'days' => 1, 'reach' => [1000, 5000], 'prices' => ['USD' => 3.99, 'SAR' => 14.99, 'AED' => 14.65, 'EUR' => 3.69]],
+            ['code' => 'boost', 'days' => 1, 'reach' => [10000, 20000], 'prices' => ['USD' => 4.99, 'SAR' => 18.75, 'AED' => 18.35, 'EUR' => 4.59]],
+            ['code' => 'pro', 'days' => 1, 'reach' => [30000, 50000], 'prices' => ['USD' => 8.99, 'SAR' => 33.75, 'AED' => 33.0, 'EUR' => 8.29]],
+        ],
+        // Points granted for every promotion bought ("Distinguish Yourself").
+        'points' => 200,
     ],
 
     /*

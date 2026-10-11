@@ -23,7 +23,7 @@ class AdminPlanController extends Controller
         $counts = Subscription::inEffect()->selectRaw('plan_id, count(*) as total')->groupBy('plan_id')->pluck('total', 'plan_id');
 
         return PlanResource::collection(
-            Plan::orderBy("audience")->orderBy("sort_order")->get()->map(fn (Plan $plan) => tap($plan, fn () => $plan->subscribers = (int) ($counts[$plan->id] ?? 0))),
+            Plan::orderBy('audience')->orderBy('sort_order')->get()->map(fn (Plan $plan) => tap($plan, fn () => $plan->subscribers = (int) ($counts[$plan->id] ?? 0))),
         );
     }
 

@@ -52,7 +52,8 @@ return [
     |
     */
 
-    'url' => env('APP_URL', 'http://localhost'),
+    // On Render, RENDER_EXTERNAL_URL is set automatically, so APP_URL is only needed for a custom domain.
+    'url' => env('APP_URL', env('RENDER_EXTERNAL_URL', 'http://localhost')),
 
     /*
     |--------------------------------------------------------------------------

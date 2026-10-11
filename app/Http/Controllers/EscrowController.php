@@ -8,6 +8,7 @@ use App\Http\Resources\EscrowResource;
 use App\Models\Escrow;
 use App\Models\Project;
 use App\Services\Payments\EscrowService;
+use App\Support\Money;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -78,6 +79,52 @@ class EscrowController extends Controller
         $this->escrows->cancel($escrow);
 
         return ['success' => true];
+    }
+
+    /**
+     * Approve the payout split.
+     *
+     * Team escrows: every member confirms their share before the client can release any milestone (`split_not_approved`).
+     */
+    public function approveSplit(Request $request, int $project): EscrowResource
+    {
+        $escrow = Escrow::with(self::WITH)->where('project_id', $project)->firstOrFail();
+        Gate::authorize('view', $escrow);
+
+        return new EscrowResource($this->escrows->answerSplit($escrow, $request->user(), true, null)->load(self::WITH));
+    }
+
+    /**
+     * Object to the payout split.
+     *
+     * Blocks releases until the member approves. The client and the team are notified with the reason.
+     */
+    public function objectSplit(Request $request, int $project): EscrowResource
+    {
+        $note = $request->validate(['note' => ['required', 'string', 'min:5', 'max:1000']])['note'];
+        $escrow = Escrow::with(self::WITH)->where('project_id', $project)->firstOrFail();
+        Gate::authorize('view', $escrow);
+
+        return new EscrowResource($this->escrows->answerSplit($escrow, $request->user(), false, $note)->load(self::WITH));
+    }
+
+    /**
+     * Tip the freelancer.
+     *
+     * Client only, once at least one milestone was released. Paid from the wallet, split by share, without platform fee.
+     */
+    public function tip(Request $request, int $project): EscrowResource
+    {
+        $data = $request->validate([
+            'amount' => ['required', 'numeric', 'gt:0', 'max:100000', 'decimal:0,2'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ]);
+        $escrow = Escrow::with(self::WITH)->where('project_id', $project)->firstOrFail();
+        Gate::authorize('client', $escrow);
+
+        $this->escrows->tip($escrow, $request->user(), Money::toCents($data['amount']), $data['note'] ?? null);
+
+        return new EscrowResource($escrow->fresh(self::WITH));
     }
 
     /**

@@ -72,6 +72,20 @@ class Escrow extends Model
     /**
      * Whether the user is the client or one of the people being paid.
      */
+    /**
+     * @return HasMany<Tip, $this>
+     */
+    public function tips(): HasMany
+    {
+        return $this->hasMany(Tip::class);
+    }
+
+    /** Every member being paid confirmed their share (always true for a solo freelancer). */
+    public function splitApproved(): bool
+    {
+        return $this->payees->every(fn (EscrowPayee $payee) => $payee->split_status === EscrowPayee::SPLIT_APPROVED);
+    }
+
     public function involves(User $user): bool
     {
         return $user->id === $this->client_id || $this->payees->contains('user_id', $user->id);

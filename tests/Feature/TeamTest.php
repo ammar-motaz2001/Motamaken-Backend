@@ -250,6 +250,16 @@ class TeamTest extends TestCase
         $this->as($this->lead)->postJson("/api/milestones/{$milestone->id}/submit", ['note' => 'Done by the whole team'])->assertOk();
         $this->as($this->dana)->getJson('/api/wallet')->assertJsonPath('data.0.incoming', 300);
 
+        // Every member confirms their share before anything is released.
+        $this->as($this->client)->postJson("/api/milestones/{$milestone->id}/approve")->assertStatus(422)->assertJsonPath('code', 'split_not_approved');
+        $this->as($this->dana)->postJson("/api/projects/{$project->id}/escrow/split/object", ['note' => 'My part is bigger than 30%.'])
+            ->assertOk()->assertJsonPath('data.payees.1.splitStatus', 'objected')->assertJsonPath('data.splitApproved', false);
+        $this->as($this->client)->getJson('/api/notifications')->assertJsonPath('data.0.type', 'escrow.split_objected');
+        $this->as($this->client)->postJson("/api/projects/{$project->id}/escrow/split/approve")->assertForbidden();
+        $this->as($this->dana)->postJson("/api/projects/{$project->id}/escrow/split/approve")->assertOk();
+        $this->as($this->lead)->postJson("/api/projects/{$project->id}/escrow/split/approve")->assertOk()->assertJsonPath('data.splitApproved', true);
+        $this->as($this->client)->getJson('/api/notifications')->assertJsonPath('data.0.type', 'escrow.split_approved');
+
         $this->as($this->client)->postJson("/api/milestones/{$milestone->id}/approve")->assertOk();
 
         // 1000 - 10% fee = 900, split 70/30.

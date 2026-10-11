@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'package_unknown' => 'هذه الباقة غير موجودة.',
     'offer_limit' => 'وصلت إلى حد :limit عرضاً هذا الشهر. رقّ باقتك لإرسال المزيد.',
     'plan_unavailable' => 'هذه الباقة غير متاحة.',
     'already_subscribed' => 'أنت مشترك في هذه الباقة بالفعل.',

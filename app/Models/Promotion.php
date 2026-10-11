@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'kind', 'project_id', 'days', 'price_cents', 'currency', 'starts_at', 'ends_at'])]
+#[Fillable(['user_id', 'kind', 'package', 'project_id', 'days', 'price_cents', 'currency', 'points_awarded', 'starts_at', 'ends_at'])]
 class Promotion extends Model
 {
     public const PROFILE = 'profile';

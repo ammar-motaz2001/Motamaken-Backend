@@ -1,0 +1,71 @@
+<?php
+
+namespace App\Http\Requests;
+
+use App\Models\PaymentMethod;
+use Closure;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+
+class PaymentMethodRequest extends FormRequest
+{
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        $card = $this->input('type') === PaymentMethod::CARD;
+
+        return [
+            /** `card` or `paypal`. */
+            'type' => ['required', Rule::in([PaymentMethod::CARD, PaymentMethod::PAYPAL])],
+            /** Card: the name printed on the card. */
+            'holderName' => [Rule::requiredIf($card), 'nullable', 'string', 'min:2', 'max:100', "regex:/^[\pL\s.'-]+$/u"],
+            /** Card: the card number; only the brand and the last 4 digits are kept. */
+            'number' => [Rule::requiredIf($card), 'nullable', 'string', $this->luhn(...)],
+            'expMonth' => [Rule::requiredIf($card), 'nullable', 'integer', 'between:1,12'],
+            'expYear' => [Rule::requiredIf($card), 'nullable', 'integer', 'between:2000,2100', $this->notExpired(...)],
+            /** Card: 3 digits (4 for American Express). Checked by the gateway, never stored. */
+            'cvc' => [Rule::requiredIf($card), 'nullable', 'string', 'regex:/^\d{3,4}$/'],
+            /** PayPal: the account email. */
+            'email' => [Rule::requiredIf(! $card), 'nullable', 'email', 'max:255'],
+            /** Make it the preferred method. The first saved method always is. */
+            'makeDefault' => ['sometimes', 'boolean'],
+        ];
+    }
+
+    public function digits(): string
+    {
+        return preg_replace('/\D/', '', (string) $this->input('number'));
+    }
+
+    private function luhn(string $attribute, mixed $value, Closure $fail): void
+    {
+        $digits = preg_replace('/[\s-]/', '', (string) $value);
+
+        if (! preg_match('/^\d{13,19}$/', $digits)) {
+            $fail(__('payments.card_number_invalid'));
+
+            return;
+        }
+
+        $sum = 0;
+        foreach (array_reverse(str_split($digits)) as $index => $digit) {
+            $digit = (int) $digit * ($index % 2 ? 2 : 1);
+            $sum += $digit > 9 ? $digit - 9 : $digit;
+        }
+
+        if ($sum % 10 !== 0) {
+            $fail(__('payments.card_number_invalid'));
+        }
+    }
+
+    private function notExpired(string $attribute, mixed $value, Closure $fail): void
+    {
+        $month = (int) $this->input('expMonth');
+
+        if ($month && now()->startOfMonth()->greaterThan(now()->setDate((int) $value, $month, 1)->startOfMonth())) {
+            $fail(__('payments.card_expired'));
+        }
+    }
+}

@@ -1,0 +1,30 @@
+# Production image for Render (web service, queue worker and scheduler all run it with a different command).
+# Local development keeps using Dockerfile + docker-compose.yml.
+FROM dunglas/frankenphp:1-php8.4-alpine
+
+RUN install-php-extensions pdo_pgsql pgsql redis zip intl bcmath pcntl opcache
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+COPY docker/render/php.ini /usr/local/etc/php/conf.d/zz-production.ini
+
+WORKDIR /var/www/html
+
+# Dependencies first, so code changes do not reinstall them.
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-interaction --no-progress
+
+COPY . .
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+    && php artisan package:discover --ansi \
+    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+    && chmod -R ug+rwX storage bootstrap/cache
+
+COPY docker/render/start.sh /usr/local/bin/start
+RUN chmod +x /usr/local/bin/start
+
+ENV PORT=10000
+EXPOSE 10000
+
+ENTRYPOINT ["start"]
+# The web service. The worker and the cron job override this with their own command.
+CMD ["sh", "-c", "frankenphp php-server --root public/ --listen 0.0.0.0:${PORT}"]

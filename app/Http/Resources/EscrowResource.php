@@ -16,7 +16,7 @@ class EscrowResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $this->loadMissing(['milestones', 'payees.user']);
+        $this->loadMissing(['milestones', 'payees.user', 'tips']);
 
         return [
             'id' => $this->id,
@@ -43,7 +43,14 @@ class EscrowResource extends JsonResource
                 'avatarUrl' => $payee->user->avatar_url,
                 'sharePercent' => $payee->share_bp / 100,
                 'isLead' => $payee->is_lead,
+                /** Team escrows: `pending`, `approved` or `objected` (with `splitNote`). Solo: always `approved`. */
+                'splitStatus' => $payee->split_status,
+                'splitNote' => $payee->split_note,
             ])->values(),
+            /** False while a team member has not approved their share: milestones cannot be released yet. */
+            'splitApproved' => $this->splitApproved(),
+            /** Tips paid on top of the price. */
+            'tips' => $this->tips->map(fn ($tip) => ['id' => $tip->id, 'amount' => $tip->amount_cents / 100, 'note' => $tip->note, 'createdAt' => $tip->created_at])->values(),
             'createdAt' => $this->created_at,
         ];
     }

@@ -7,8 +7,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['user_id', 'type', 'job_title', 'bio', 'rating', 'reviews_count', 'country_id', 'city_id', 'is_featured', 'featured_until'])]
+#[Fillable(['user_id', 'type', 'job_title', 'bio', 'rating', 'reviews_count', 'country_id', 'city_id', 'is_featured', 'featured_until', 'skills', 'languages', 'experiences', 'educations', 'certificates', 'channels'])]
 class Profile extends Model
 {
     use HasFactory;
@@ -31,6 +32,12 @@ class Profile extends Model
             'reviews_count' => 'integer',
             'is_featured' => 'boolean',
             'featured_until' => 'datetime',
+            'skills' => 'array',
+            'languages' => 'array',
+            'experiences' => 'array',
+            'educations' => 'array',
+            'certificates' => 'array',
+            'channels' => 'array',
         ];
     }
 
@@ -68,5 +75,13 @@ class Profile extends Model
     {
         return $query->where('is_featured', true)
             ->where(fn ($query) => $query->whereNull('featured_until')->orWhere('featured_until', '>', now()));
+    }
+
+    /**
+     * @return HasMany<PortfolioItem, $this>
+     */
+    public function portfolio(): HasMany
+    {
+        return $this->hasMany(PortfolioItem::class)->orderBy('position')->orderBy('id');
     }
 }

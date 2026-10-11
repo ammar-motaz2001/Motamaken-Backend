@@ -11,6 +11,7 @@ use App\Models\Project;
 use App\Models\Proposal;
 use App\Models\Team;
 use App\Models\TeamMember;
+use App\Models\Tip;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
 use App\Services\AffiliateService;
@@ -64,8 +65,9 @@ class EscrowService
                 'currency' => $proposal->currency, 'total_cents' => $total,
             ]);
 
-            foreach ($this->payeesFor($proposal) as $payee) {
-                $escrow->payees()->create($payee);
+            $payees = $this->payeesFor($proposal);
+            foreach ($payees as $payee) {
+                $escrow->payees()->create([...$payee, 'split_status' => count($payees) > 1 ? EscrowPayee::SPLIT_PENDING : EscrowPayee::SPLIT_APPROVED]);
             }
 
             foreach ($milestones as $index => $milestone) {
@@ -184,10 +186,77 @@ class EscrowService
                 );
             }
 
+            if (! $escrow->loadMissing('payees')->splitApproved()) {
+                throw new ApiException(__('payments.split_not_approved'), 'split_not_approved');
+            }
+
             $this->settle($milestone, $escrow, toClient: 0, by: $client);
         });
 
         return $milestone->refresh();
+    }
+
+    /**
+     * A team member answers the payout split: approve their share, or object with a reason (which blocks releases).
+     */
+    public function answerSplit(Escrow $escrow, User $member, bool $approve, ?string $note): Escrow
+    {
+        $payee = $escrow->payees->firstWhere('user_id', $member->id) ?? throw new ApiException(__('payments.not_a_payee'), 'not_a_payee', 403);
+
+        if ($escrow->status === Escrow::COMPLETED) {
+            throw new ApiException(__('payments.split_closed'), 'split_closed');
+        }
+
+        $payee->update([
+            'split_status' => $approve ? EscrowPayee::SPLIT_APPROVED : EscrowPayee::SPLIT_OBJECTED,
+            'split_note' => $approve ? null : $note,
+            'split_answered_at' => now(),
+        ]);
+
+        $escrow->load(['payees.user', 'project', 'client']);
+        $params = ['projectId' => $escrow->project_id, 'project' => $escrow->project->title, 'escrowId' => $escrow->id];
+
+        if (! $approve) {
+            $this->notifyPayees($escrow, 'escrow.split_objected', $member, $params);
+            $escrow->client->notify(new ActivityNotification('escrow.split_objected', $member, $params));
+        } elseif ($escrow->splitApproved() && $escrow->payees->count() > 1) {
+            $escrow->client->notify(new ActivityNotification('escrow.split_approved', null, $params));
+        }
+
+        return $escrow;
+    }
+
+    /**
+     * The client thanks the freelancer(s) with a tip from the wallet, split by share. No platform fee is taken.
+     */
+    public function tip(Escrow $escrow, User $client, int $cents, ?string $note): Tip
+    {
+        return DB::transaction(function () use ($escrow, $client, $cents, $note) {
+            $escrow->loadMissing(['payees.user', 'project']);
+
+            if (! $escrow->milestones()->where('status', Milestone::RELEASED)->exists()) {
+                throw new ApiException(__('payments.tip_too_early'), 'tip_too_early');
+            }
+
+            $tip = Tip::create(['escrow_id' => $escrow->id, 'client_id' => $client->id, 'amount_cents' => $cents, 'currency' => $escrow->currency, 'note' => $note]);
+            $payouts = $this->distribute($cents, $escrow->payees);
+
+            $legs = [[$this->ledger->wallet($client, $escrow->currency), -$cents]];
+            foreach ($payouts as $userId => $share) {
+                if ($share > 0) {
+                    $legs[] = [$this->ledger->wallet($escrow->payees->firstWhere('user_id', $userId)->user, $escrow->currency), $share];
+                }
+            }
+            $this->ledger->post('tip', $legs, ['reference' => $tip, 'by' => $client, 'meta' => ['project' => $escrow->project->title]]);
+
+            foreach ($payouts as $userId => $share) {
+                $escrow->payees->firstWhere('user_id', $userId)->user->notify(new ActivityNotification('escrow.tip', $client, [
+                    'projectId' => $escrow->project_id, 'project' => $escrow->project->title, 'amount' => Money::fromCents($share), 'currency' => $escrow->currency,
+                ]));
+            }
+
+            return $tip;
+        });
     }
 
     /**

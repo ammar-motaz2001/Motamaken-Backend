@@ -8,6 +8,12 @@ return [
     'deposit_not_pending' => 'This payment was already completed or cancelled.',
     'withdrawal_not_pending' => 'This withdrawal was already answered or cancelled.',
     'bad_signature' => 'Invalid signature.',
+    'card_number_invalid' => 'The card number is not valid.',
+    'card_expired' => 'This card has expired.',
+    'split_not_approved' => 'Every team member must approve the payout split before payments can be released.',
+    'not_a_payee' => 'You are not paid on this project.',
+    'split_closed' => 'This project is finished; the split can no longer change.',
+    'tip_too_early' => 'You can tip once at least one milestone was released.',
     'unsupported' => 'This payment method is not available.',
 
     'escrow_exists' => 'Payment protection is already set up for this project.',
@@ -34,6 +40,8 @@ return [
         'affiliate_commission' => 'Affiliate commission',
         'campaign_funding' => 'Campaign budget',
         'campaign_earning' => 'Promotion earnings',
+        'tip' => 'Tip: :project',
+        'draw_prize' => 'Prize draw winnings',
         'adjustment' => 'Adjustment by support',
     ],
 ];

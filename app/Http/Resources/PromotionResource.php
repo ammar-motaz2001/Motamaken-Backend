@@ -21,7 +21,11 @@ class PromotionResource extends JsonResource
             /** `profile` (Featured profiles slider) or `project` (Distinctive projects slider). */
             'kind' => $this->kind,
             'project' => $this->whenLoaded('project', fn () => $this->project ? ['id' => $this->project->id, 'title' => $this->project->title] : null),
+            /** The package bought, or null when days were bought directly. */
+            'package' => $this->package,
             'days' => $this->days,
+            /** Points granted for this purchase. */
+            'pointsAwarded' => $this->points_awarded,
             'price' => $this->price_cents / 100,
             'currency' => $this->currency,
             'startsAt' => $this->starts_at,

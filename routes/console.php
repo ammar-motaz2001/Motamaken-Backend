@@ -13,3 +13,6 @@ Schedule::command('teams:expire-invitations')->hourly();
 
 // Subscriptions renew (or lapse) once a day.
 Schedule::command('subscriptions:renew')->dailyAt('03:00');
+
+// Prize draws pick their winners when their time comes.
+Schedule::command('draws:run')->everyFiveMinutes();

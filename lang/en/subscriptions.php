@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'package_unknown' => 'This package does not exist.',
     'offer_limit' => 'You reached your limit of :limit offers this month. Upgrade your plan to send more.',
     'plan_unavailable' => 'This plan is not available.',
     'already_subscribed' => 'You are already on this plan.',

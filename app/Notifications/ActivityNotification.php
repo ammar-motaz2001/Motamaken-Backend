@@ -25,6 +25,27 @@ class ActivityNotification extends Notification
         $this->id = (string) Str::orderedUuid();
     }
 
+    public function type(): string
+    {
+        return $this->type;
+    }
+
+    /**
+     * The settings group it belongs to (config/notifications.php), or null when it fits none.
+     */
+    public function group(): ?string
+    {
+        foreach (config('notifications.groups') as $group => $prefixes) {
+            foreach ($prefixes as $prefix) {
+                if (str_starts_with($this->type, $prefix)) {
+                    return $group;
+                }
+            }
+        }
+
+        return null;
+    }
+
     /**
      * @return array<int, string>
      */

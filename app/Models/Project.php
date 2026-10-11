@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\RewardsService;
 use App\Support\LikeSearch;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -107,6 +108,16 @@ class Project extends Model
      * @param  Builder<self>  $query
      * @return Builder<self>
      */
+    protected static function booted(): void
+    {
+        // Both sides earn points (and maybe medals) when a project is completed, however it got there.
+        static::updated(function (self $project) {
+            if ($project->wasChanged('status') && $project->status === self::STATUS_COMPLETED) {
+                app(RewardsService::class)->onProjectCompleted($project);
+            }
+        });
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('projects.status', self::STATUS_OPEN);
