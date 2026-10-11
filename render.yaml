@@ -1,128 +1,83 @@
-# Render Blueprint: Dashboard → New → Blueprint → pick this repository.
-# Creates the database, Redis (Key Value), the API, the queue worker and the scheduler.
-# Values marked `sync: false` are asked for when the Blueprint is created (see README → Deploy on Render).
-
-databases:
-  - name: motamakin-db
-    databaseName: motamakin
-    user: motamakin
-    postgresMajorVersion: "16"
-    plan: basic-256mb
-
 services:
-  - type: keyvalue
-    name: motamakin-redis
-    plan: starter
-    maxmemoryPolicy: noeviction # queues and OTP codes live here: never evict them
-    ipAllowList: [] # internal connections only
-
   - type: web
     name: motamakin-api
     runtime: docker
     dockerfilePath: ./Dockerfile.render
-    plan: starter # a persistent disk needs a paid instance
+    plan: free
     healthCheckPath: /up
-    numInstances: 1 # uploads live on this service's disk, so it runs as one instance
-    disk:
-      name: uploads
-      mountPath: /var/www/html/storage/app
-      sizeGB: 5
-    envVars:
-      - fromGroup: motamakin-backend
-      - key: RUN_MIGRATIONS
-        value: "true"
-      - key: DB_URL
-        fromDatabase: { name: motamakin-db, property: connectionString }
-      - key: REDIS_URL
-        fromService: { type: keyvalue, name: motamakin-redis, property: connectionString }
 
-  - type: worker
-    name: motamakin-queue
-    runtime: docker
-    dockerfilePath: ./Dockerfile.render
-    dockerCommand: php artisan queue:work --tries=3 --timeout=90 --sleep=3 --max-time=3600
-    plan: starter
-    envVars:
-      - fromGroup: motamakin-backend
-      - key: DB_URL
-        fromDatabase: { name: motamakin-db, property: connectionString }
-      - key: REDIS_URL
-        fromService: { type: keyvalue, name: motamakin-redis, property: connectionString }
-
-  - type: cron
-    name: motamakin-scheduler
-    runtime: docker
-    dockerfilePath: ./Dockerfile.render
-    schedule: "* * * * *"
-    dockerCommand: php artisan schedule:run
-    plan: starter
-    envVars:
-      - fromGroup: motamakin-backend
-      - key: DB_URL
-        fromDatabase: { name: motamakin-db, property: connectionString }
-      - key: REDIS_URL
-        fromService: { type: keyvalue, name: motamakin-redis, property: connectionString }
-
-envVarGroups:
-  - name: motamakin-backend
     envVars:
       - key: APP_NAME
         value: Motamakin
-      # `staging` keeps the fake payment gateway's "simulate payment" endpoint available. Switch to `production` once a
-      # real gateway (App\Contracts\PaymentGateway) is bound; the frontend must then set NEXT_PUBLIC_PAYMENTS_SIMULATE=false.
+
       - key: APP_ENV
         value: staging
+
       - key: APP_DEBUG
         value: "false"
-      - key: APP_KEY # run `php artisan key:generate --show` locally and paste the base64:... value
+
+      - key: APP_KEY
         sync: false
+
       - key: APP_LOCALE
         value: en
-      - key: APP_FALLBACK_LOCALE
-        value: en
+
       - key: LOG_CHANNEL
         value: stderr
-      - key: LOG_LEVEL
-        value: info
+
       - key: DB_CONNECTION
         value: pgsql
+
+      - key: DB_URL
+        sync: false
+
       - key: CACHE_STORE
-        value: redis
+        value: database
+
       - key: SESSION_DRIVER
-        value: redis
+        value: database
+
       - key: QUEUE_CONNECTION
-        value: redis
-      - key: REDIS_CLIENT
-        value: phpredis
+        value: sync
+
       - key: FILESYSTEM_DISK
-        value: local
-      - key: BCRYPT_ROUNDS
-        value: "12"
-      - key: FRONTEND_URL # e.g. https://motamaken-front.vercel.app
+        value: public
+
+      - key: RUN_MIGRATIONS
+        value: "true"
+
+      - key: FRONTEND_URL
         sync: false
-      - key: CORS_ALLOWED_ORIGINS # comma separated, e.g. https://motamaken-front.vercel.app
+
+      - key: CORS_ALLOWED_ORIGINS
         sync: false
-      - key: FRONTEND_OAUTH_CALLBACK_PATH
-        value: /oauth/callback
+
       - key: LOGIN_OTP_METHODS
         value: email
-      - key: SANCTUM_EXPIRATION
-        value: "43200"
+
       - key: PAYMENTS_DRIVER
         value: fake
+
       - key: PAYMENTS_WEBHOOK_SECRET
         generateValue: true
+
       - key: MAIL_MAILER
         value: smtp
+
       - key: MAIL_HOST
         sync: false
+
       - key: MAIL_PORT
         value: "587"
+
       - key: MAIL_USERNAME
         sync: false
+
       - key: MAIL_PASSWORD
         sync: false
+
       - key: MAIL_FROM_ADDRESS
-        value: no-reply@motamakin.com
+        sync: false
+
       - key: MAIL_FROM_NAME
         value: Motamakin
