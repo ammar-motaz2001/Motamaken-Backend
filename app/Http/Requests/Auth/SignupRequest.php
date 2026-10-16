@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Enums\AuthMethod;
+use App\Rules\Recaptcha;
 use Illuminate\Validation\Rule;
 
 class SignupRequest extends IdentifierRequest
@@ -30,6 +31,8 @@ class SignupRequest extends IdentifierRequest
             'subscribe' => ['sometimes', 'boolean'],
             /** The code from an invite link. An unknown code is simply ignored. */
             'referralCode' => ['nullable', 'string', 'max:12'],
+            /** The reCAPTCHA checkbox token. Required when the server has reCAPTCHA keys. */
+            'recaptchaToken' => Recaptcha::rules(),
         ];
     }
 }

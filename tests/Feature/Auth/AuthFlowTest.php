@@ -42,10 +42,10 @@ class AuthFlowTest extends TestCase
         $this->assertSame(50, $user->points);
         $this->assertTrue($user->subscribed);
 
-        $this->login('email', 'ammar@example.com')->assertOk()->assertExactJson(['otpRequired' => true]);
-
-        $token = $this->verify('login', 'email', 'ammar@example.com')
+        // Verified: the password is enough, no code is sent.
+        $token = $this->login('email', 'ammar@example.com')
             ->assertOk()
+            ->assertJsonPath('otpRequired', false)
             ->assertJsonPath('user.email', 'ammar@example.com')
             ->json('accessToken');
 
@@ -62,6 +62,15 @@ class AuthFlowTest extends TestCase
             ->assertJsonStructure(['accessToken', 'user' => ['id', 'phone']]);
 
         Notification::assertNothingSent();
+    }
+
+    public function test_a_login_code_can_be_required_for_a_method_by_configuration(): void
+    {
+        config(['auth_flow.login_otp_methods' => ['email']]);
+        User::factory()->create(['email' => 'coded@example.com', 'password' => self::PASSWORD]);
+
+        $this->login('email', 'coded@example.com')->assertOk()->assertExactJson(['otpRequired' => true]);
+        $this->verify('login', 'email', 'coded@example.com')->assertOk()->assertJsonStructure(['accessToken']);
     }
 
     public function test_unverified_account_must_verify_on_login_and_gets_welcome_points(): void

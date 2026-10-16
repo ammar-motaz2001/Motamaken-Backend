@@ -16,3 +16,6 @@ Schedule::command('subscriptions:renew')->dailyAt('03:00');
 
 // Prize draws pick their winners when their time comes.
 Schedule::command('draws:run')->everyFiveMinutes();
+
+// Campaigns past their end date stop and give back what is left.
+Schedule::command('campaigns:close-ended')->everyFifteenMinutes();

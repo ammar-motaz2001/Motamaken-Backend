@@ -55,8 +55,7 @@ return [
 Backend for [motamaken-front](https://motamaken-front.vercel.app).
 
 **Auth:** protected endpoints need `Authorization: Bearer <accessToken>`. Get a token from
-`POST /auth/login` (when `otpRequired` is false), `POST /auth/otp/verify` with `purpose=login`,
-or `POST /auth/oauth/exchange`.
+`POST /auth/login` (when `otpRequired` is false) or `POST /auth/otp/verify` with `purpose=login`.
 
 **Errors** are `{ "message": "..." }` (plus `errors` per field on validation failures), in the language
 of the `Accept-Language` header (`ar` or `en`).
@@ -66,7 +65,7 @@ MD,
     ],
 
     'ui' => [
-        'title' => 'Motamakin API',
+        'title' => 'Mutamakin API',
     ],
 
     /*

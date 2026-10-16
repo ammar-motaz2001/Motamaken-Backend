@@ -25,6 +25,8 @@ class DepositResource extends JsonResource
             'status' => $this->status,
             /** Send the customer here to pay. */
             'checkoutUrl' => $this->status === Deposit::PENDING ? $this->checkout_url : null,
+            /** Why a `failed` payment failed, e.g. the bank's answer. */
+            'failureReason' => $this->failure_reason,
             'paidAt' => $this->paid_at,
             'createdAt' => $this->created_at,
         ];

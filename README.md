@@ -64,20 +64,17 @@ Built to match the frontend's `authService` (motamaken-front). Set the frontend'
 | `POST /auth/otp/resend` | `purpose, method, target` | `{ sent: true }` (60 s cooldown) |
 | `POST /auth/password/forgot` | `method, target` | `{ sent: true }`, sends a reset OTP |
 | `POST /auth/password/reset` | `token, password` | `{ success: true }`, logs out all devices |
-| `GET /auth/oauth/{google\|apple\|x\|facebook}` | browser link | redirects to `FRONTEND_URL/oauth/callback?code=...` |
-| `POST /auth/oauth/exchange` | `code` | `{ accessToken, user }` |
 | `GET /auth/me` · `POST /auth/logout` | `Authorization: Bearer <token>` | user · `{ success: true }` |
 
 Rules:
 - **OTP**: 4 digits, valid 10 min, 5 wrong tries locks it, stored hashed in Redis. Email goes out by mail, phone by WhatsApp
   (`App\Contracts\WhatsAppSender`; the dev binding only logs, so bind a real provider in `AppServiceProvider`).
-- **Login OTP**: required for methods in `LOGIN_OTP_METHODS` (default `email`, like the frontend mock) and for any identifier that isn't verified yet.
+- **Login OTP**: a verified account logs in with its password alone. A code is required when the identifier isn't
+  verified yet, when two-factor authentication is on, or for methods listed in `LOGIN_OTP_METHODS` (empty by default,
+  e.g. `email,phone` to always ask).
 - **Forgot password never returns a token directly.** The frontend then sends email users through `/forgot-password/verify` too,
   and the reset token is issued only after the code is verified.
 - **Welcome points**: 50, granted the first time an account verifies an email or phone.
-- **OAuth**: fill `*_CLIENT_ID` / `*_CLIENT_SECRET` in `.env` and register `APP_URL/api/auth/oauth/{provider}/callback`
-  with each provider. The frontend needs a page at `/oauth/callback` that POSTs the `code` to `/auth/oauth/exchange`
-  and stores the token (it gets `?error=` on failure).
 - **Rate limits**: 30 requests/min per IP, and 6/min per endpoint and identifier.
 
 ## Homepage & Messages API
@@ -280,5 +277,105 @@ Good to know:
 - The image caches config, routes, views and events at start; change environment variables in Render, not in code.
 - Before real money: bind a real `PaymentGateway`, set `APP_ENV=production` (this disables `/wallet/deposits/{id}/simulate`),
   and set `NEXT_PUBLIC_PAYMENTS_SIMULATE=false` on the frontend. WhatsApp OTP sending still uses `LogWhatsAppSender`.
-- Social login: fill the `*_CLIENT_ID` / `*_CLIENT_SECRET` variables and register
-  `https://<api>/api/auth/oauth/{provider}/callback` with each provider.
+
+## Promotion campaigns API
+
+Pay-per-visit promotion (the "Promo" screens). Swagger group: **Promotion campaigns**.
+
+| Who | Endpoints |
+|---|---|
+| Advertiser | `POST /campaigns` · `PATCH /campaigns/{id}` · `POST /campaigns/{id}/launch` · `/pause` · `/resume` · `/cancel` · `GET /me/campaigns` |
+| Advertiser (reports) | `GET /campaigns/{id}` (stats, rejection pie, top promoters) · `GET /campaigns/{id}/visits` (filtering screen) · `/promoters` · `/daily` |
+| Promoter | `GET /campaigns/available` · `POST /campaigns/{id}/join` (get the link) · `GET /me/promoter` (dashboard) |
+| Website | `POST /campaign-visits` `{code}`: called by the `/r/{code}` page from the visitor's browser; answers the `path` to show |
+| Admin | `GET /admin/campaigns` · `POST /admin/campaigns/{id}/cancel` · `GET /admin/affiliate` (affiliate monitoring) |
+
+How it works:
+- A campaign is a draft until launched; launching takes the whole budget from the wallet into the campaigns account.
+- Each **valid** visit costs the advertiser `costPerVisit`: the promoter gets it minus the platform fee (`fee_percent`, 20%).
+- Links only lead to the owner's own project or profile on the website, never to an outside address.
+- **Filtering**: visits are always recorded, but not paid when they come from a robot (`bot`), a repeat visitor within
+  `unique_window_hours` (`duplicate`), a promoter over `max_visits_per_promoter_per_hour` (`rate_limited`), a country
+  outside `allowed_countries` (`country`, needs a CDN sending `CF-IPCountry`), the promoter or owner themselves (`own_link`),
+  or while the campaign is paused or out of money.
+- When the budget can't cover another visit, or the end date passes (`campaigns:close-ended`, every 15 minutes), the
+  campaign completes and what is left goes back to the owner. Stopping it early refunds the same way.
+- **Frontend**: needs a page at `/r/{code}` that POSTs the code (and `document.referrer`) to `/campaign-visits`, then
+  navigates to the returned `path`.
+
+## Swagger examples
+
+Endpoints without hand-written examples (`app/OpenApi/*Examples.php`) show real requests and responses recorded from the
+test suite. Refresh them after changing an endpoint:
+
+```sh
+docker compose exec -e DOCS_RECORD=1 app php artisan test
+```
+
+This rewrites `app/OpenApi/recorded-examples.json` (commit it). Debug details are stripped; long lists are cut to 3 items.
+
+## Favorites, info pages & contact
+
+| Area | Endpoints |
+|---|---|
+| Favorites (token) | `GET /me/favorites?type=project\|profile` · `GET /me/favorites/ids` (to fill the hearts) · `POST /favorites` `{type, id}` · `DELETE /favorites/{type}/{id}` |
+| Info pages (public) | `GET /pages` (footer & sitemap) · `GET /pages/{slug}` (Markdown, in the request language) |
+| Contact (public) | `POST /contact` (5 per hour per visitor) |
+| Admin | `GET/PUT/DELETE /admin/pages/{slug}` · `GET /admin/contact-messages` · `POST /admin/contact-messages/{id}/handle` |
+
+Page bodies may use `{{site_fee}}`, `{{withdrawal_fee}}`, `{{withdrawal_min}}`, `{{deposit_min}}`, `{{campaign_fee}}`,
+`{{free_offers}}` and `{{site_name}}`: they are replaced with the live settings, so the fees page never goes stale.
+`php artisan db:seed --class=PagesSeeder` adds starter pages (only the missing ones). **The legal pages are drafts**:
+replace them with reviewed text through `PUT /admin/pages/{slug}`.
+
+## The website's proxy and the visitor's IP
+
+The website calls the API from its own server, so without help every visitor looks like that server: rate limits would
+be shared by everyone and campaign/affiliate visits would all count as one person. The website therefore sends the
+visitor's IP, browser and country in `X-Client-*` headers, signed with a shared secret:
+
+- backend `.env`: `FRONTEND_PROXY_SECRET=<long random string>`
+- website server env: `API_PROXY_SECRET=<the same string>` (server-only, never `NEXT_PUBLIC_`)
+
+Without the matching secret the headers are ignored, so they cannot be forged by calling the API directly. If the
+secret is missing, campaign visits made through the website are rejected as robots (the server's `node` user agent),
+which makes the misconfiguration easy to spot.
+
+## Admin moderation endpoints
+
+Besides the existing admin API: `GET /admin/reports` + `POST /admin/reports/{id}/resolve` (content reports, the reporter sees
+the decision), `GET /admin/feedback` (payment thumbs up/down with satisfaction per payment type) and
+`GET|POST /admin/categories`, `PATCH|DELETE /admin/categories/{id}` (a category used by projects cannot be deleted).
+`GET /auth/me` now returns `isAdmin`, and the overview counts open reports and new contact messages.
+
+## reCAPTCHA
+
+- **reCAPTCHA v2 ("I'm not a robot")** guards sign-up and the contact form for visitors. Create keys at
+  https://www.google.com/recaptcha/admin (type *v2 checkbox*, add `localhost` and your site's domain), then set
+  `RECAPTCHA_SITE_KEY` / `RECAPTCHA_SECRET_KEY` here and `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` on the website. With an empty
+  secret the check is off (tests run that way).
+- Social login (Google) was removed; accounts sign in with email or phone. The `social_accounts` table is kept so
+  links made earlier are not lost, should it come back.
+
+## Card payments (Moyasar)
+
+`PAYMENTS_DRIVER=moyasar` charges real cards through [Moyasar](https://moyasar.com); `fake` (the default, and what the
+tests use) keeps the development flow with `POST /wallet/deposits/{id}/simulate`.
+
+- **Keys:** `MOYASAR_SECRET_KEY` (sk_…) here, server only. The publishable key (pk_…) goes to the website as
+  `NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY`. Test keys (`sk_test_` / `pk_test_`) never charge anyone; swap both for the live
+  keys to go live.
+- **How a payment works:** the browser sends the card straight to Moyasar and gets a token; card numbers never reach
+  this API. `POST /wallet/deposits` with `cardToken` (or `paymentMethodId` for a saved card) charges it; the deposit's
+  UUID is Moyasar's payment id, so a retry never charges twice. 3-D Secure runs on Moyasar's page, which returns to
+  `FRONTEND_URL/payments/return?deposit={id}`; the site then calls `POST /wallet/deposits/{id}/refresh`, which re-reads
+  the payment from Moyasar and credits the wallet only when it is `paid` for exactly the right amount and currency.
+- **Saved cards:** the customer confirms the card once with their bank; `POST /me/payment-methods` with `token` accepts
+  only tokens Moyasar reports as `active` and reads brand / last 4 / expiry from Moyasar. Later payments usually need
+  no bank page.
+- **Webhook (recommended):** in the Moyasar dashboard add `https://<api>/api/webhooks/moyasar` for payment events with
+  `MOYASAR_WEBHOOK_SECRET` as the secret token. It settles payments whose customer closed the tab before returning.
+- Paying for something by card (promotions, subscriptions) tops the wallet up with exactly the price
+  (`purpose: purchase`, which waives the top-up minimum) and then pays from the wallet, so every purchase stays in the
+  ledger. Withdrawals are still paid out by an admin.
+- Test card: `4111 1111 1111 1111`, any future expiry, any CVC; Moyasar's test bank page lets you approve or decline.

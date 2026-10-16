@@ -1,9 +1,9 @@
 <?php
 
 return [
-    'email_subject' => 'New activity on Motamakin',
+    'email_subject' => 'New activity on Mutamakin',
     'email_greeting' => 'Hello :name,',
-    'email_action' => 'Open Motamakin',
+    'email_action' => 'Open Mutamakin',
     'email_footer' => 'You can choose which emails you receive in Settings → Email & Notification.',
     'conversation.started' => ':name started a conversation with you.',
     'proposal.received' => ':name sent an offer on ":project".',
@@ -55,4 +55,7 @@ return [
     'subscription.expired' => 'Your :plan plan has ended.',
     'promotion.started' => 'Your promotion is live until :until.',
     'affiliate.commission' => 'You earned :amount :currency from :name\'s work through your invite.',
+    'campaign.completed' => 'Your campaign ":campaign" has finished. :refund :currency was returned to your wallet.',
+    'campaign.cancelled' => 'Your campaign ":campaign" was stopped. :refund :currency was returned to your wallet.',
+    'admin.contact_message' => 'New contact message from :from: ":subject".',
 ];

@@ -19,6 +19,10 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="RECAPTCHA_SECRET_KEY" value=""/>
+        <env name="PAYMENTS_DRIVER" value="fake"/>
+        <env name="MOYASAR_SECRET_KEY" value="sk_test_unit"/>
+        <env name="MOYASAR_WEBHOOK_SECRET" value="whsec_unit"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>

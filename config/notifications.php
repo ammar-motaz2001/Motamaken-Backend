@@ -17,7 +17,7 @@ return [
         'messages' => ['conversation.', 'message.'],
         'proposals' => ['proposal.', 'team.'],
         'projects' => ['escrow.', 'milestone.', 'review.'],
-        'payments' => ['deposit.', 'withdrawal.', 'promotion.', 'subscription.', 'affiliate.'],
+        'payments' => ['deposit.', 'withdrawal.', 'promotion.', 'subscription.', 'affiliate.', 'campaign.'],
         'disputes' => ['dispute.'],
         'account' => ['kyc.', 'security.'],
         'rewards' => ['points.', 'medal.', 'draw.'],

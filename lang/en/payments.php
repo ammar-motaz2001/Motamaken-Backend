@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'card_not_verified' => 'Your bank has not confirmed this card yet. Please add it again and finish the confirmation step.',
+    'card_required' => 'Choose a card to pay with.',
+    'card_token_required' => 'Card details must be sent through the secure payment form.',
+    'card_token_unsupported' => 'Saving cards this way is not available.',
+    'card_invalid' => 'This card could not be verified. Please check it or use another card.',
+    'provider_unavailable' => 'The payment service is not answering right now. Please try again in a moment.',
+    'payment_failed' => 'The payment was declined.',
+    'amount_mismatch' => 'The amount charged does not match this top-up.',
     'insufficient_funds' => 'Your wallet balance is not enough for this.',
     'kyc_required' => 'Verify your identity before withdrawing money.',
     'amount_too_small' => 'The minimum is :min :currency.',
@@ -40,6 +48,7 @@ return [
         'affiliate_commission' => 'Affiliate commission',
         'campaign_funding' => 'Campaign budget',
         'campaign_earning' => 'Promotion earnings',
+        'campaign_refund' => 'Campaign refund',
         'tip' => 'Tip: :project',
         'draw_prize' => 'Prize draw winnings',
         'adjustment' => 'Adjustment by support',

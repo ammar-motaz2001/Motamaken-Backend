@@ -81,7 +81,7 @@ class SettingsTest extends TestCase
 
         $mails = collect(app('mailer')->getSymfonyTransport()->messages())->map(fn ($sent) => $sent->getOriginalMessage());
         $this->assertCount(1, $mails, 'messages are not emailed by default; proposals are, exactly once');
-        $this->assertSame('New activity on Motamakin', $mails->first()->getSubject());
+        $this->assertSame('New activity on Mutamakin', $mails->first()->getSubject());
         $this->assertStringContainsString('Your offer on "Logo" was declined.', html_entity_decode((string) $mails->first()->getHtmlBody(), ENT_QUOTES));
         $this->assertStringContainsString('/projects/5', $mails->first()->getHtmlBody());
         $this->assertSame(2, $user->notifications()->count());
@@ -109,6 +109,9 @@ class SettingsTest extends TestCase
         $this->as($this->user)->postJson('/api/me/two-factor', ['method' => 'phone', 'password' => self::PASSWORD, 'target' => '0501'])->assertJsonValidationErrors('target');
         $this->as($this->user)->postJson('/api/me/two-factor', ['method' => 'phone', 'password' => self::PASSWORD, 'target' => '+966501234567'])
             ->assertOk()->assertJsonPath('target', '••••••••••567');
+        $this->as($this->user)->postJson('/api/me/two-factor/resend')->assertStatus(429);
+        $this->travel(61)->seconds();
+        $this->as($this->user)->postJson('/api/me/two-factor/resend')->assertOk()->assertExactJson(['sent' => true]);
         $this->as($this->user)->postJson('/api/me/two-factor/confirm', ['code' => '0000'.($this->lastCode() === '0000' ? '1' : '')])->assertStatus(422);
         $this->as($this->user)->postJson('/api/me/two-factor/confirm', ['code' => $this->lastCode()])
             ->assertOk()->assertJsonPath('twoFactor.enabled', true)->assertJsonPath('twoFactor.method', 'phone');

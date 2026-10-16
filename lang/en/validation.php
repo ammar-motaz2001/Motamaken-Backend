@@ -10,4 +10,8 @@ return [
         'identifier' => 'email or phone',
         'target' => 'email or phone',
     ],
+
+    'custom' => [
+        'recaptchaToken' => ['required' => 'Please tick "I\'m not a robot".'],
+    ],
 ];

@@ -23,11 +23,19 @@ class ApiExamples
      */
     public static function apply(array $spec): array
     {
-        foreach (self::operations() as $key => $examples) {
+        // Hand-written examples first; recorded ones (ExampleRecorder) fill in every endpoint that has none.
+        $all = [...ExampleRecorder::load(), ...self::operations()];
+
+        foreach ($all as $key => $examples) {
             [$method, $path] = explode(' ', $key, 2);
+
+            if (! isset($spec['paths'][$path][strtolower($method)])) {
+                continue;
+            }
+
             $operation = &$spec['paths'][$path][strtolower($method)];
 
-            if (isset($examples['request'])) {
+            if (isset($examples['request'], $operation['requestBody']['content'])) {
                 $type = array_key_first($operation['requestBody']['content']);
                 $operation['requestBody']['content'][$type]['examples'] = self::named($examples['request']);
             }
@@ -253,28 +261,6 @@ class ApiExamples
                     422 => ['Invalid/used token or weak password', [
                         'Invalid token' => ['message' => 'This password reset link is invalid or has expired.'],
                         'Weak password' => self::validation('password', ['The password field must contain at least one uppercase and one lowercase letter.']),
-                    ]],
-                    429 => ['Rate limited', $throttled],
-                ],
-            ],
-
-            'GET /auth/oauth/{provider}' => [
-                'responses' => [
-                    200 => null,
-                    302 => ['Redirect to the provider\'s sign-in page, or to FRONTEND_URL/oauth/callback?error=provider_unavailable', []],
-                ],
-            ],
-
-            'POST /auth/oauth/exchange' => [
-                'request' => [
-                    'Code from redirect' => ['code' => 'q8ZkT1mR4vXn7cWb2yHs9LdPa3fGe6Ju0iNoQtKwB5pVxYzSrM1lCh4gFjD8uEa2'],
-                ],
-                'responses' => [
-                    200 => ['Logged in', [
-                        'Logged in' => ['accessToken' => self::TOKEN, 'user' => $emailUser],
-                    ]],
-                    422 => ['Unknown, used or expired code', [
-                        'Expired' => ['message' => 'The sign-in session has expired. Please try again.'],
                     ]],
                     429 => ['Rate limited', $throttled],
                 ],

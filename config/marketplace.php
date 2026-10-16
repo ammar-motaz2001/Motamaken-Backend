@@ -98,6 +98,24 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Promotion campaigns
+    |--------------------------------------------------------------------------
+    |
+    | Advertisers pay per valid visit; the platform keeps `fee_percent` of it and the promoter gets the rest.
+    | Promoters share "{FRONTEND_URL}{landing_path}/{code}", a page that reports the visit to the API.
+    |
+    */
+
+    'campaigns' => [
+        'fee_percent' => 20,
+        'landing_path' => '/r',
+        // Smallest cost per visit, per currency.
+        'min_cost_per_visit' => ['USD' => 0.05, 'SAR' => 0.2, 'AED' => 0.2, 'EUR' => 0.05],
+        'min_budget' => ['USD' => 10, 'SAR' => 40, 'AED' => 40, 'EUR' => 10],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Chat
     |--------------------------------------------------------------------------
     */

@@ -35,28 +35,15 @@ return [
         ],
     ],
 
-    'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
-        'redirect' => env('APP_URL').'/api/auth/oauth/google/callback',
+    // reCAPTCHA v2 ("I'm not a robot" checkbox) on sign-up and the contact form. Without a secret it is switched off.
+    'recaptcha' => [
+        'site_key' => env('RECAPTCHA_SITE_KEY'),
+        'secret_key' => env('RECAPTCHA_SECRET_KEY'),
     ],
 
-    'facebook' => [
-        'client_id' => env('FACEBOOK_CLIENT_ID'),
-        'client_secret' => env('FACEBOOK_CLIENT_SECRET'),
-        'redirect' => env('APP_URL').'/api/auth/oauth/facebook/callback',
-    ],
-
-    'x' => [
-        'client_id' => env('X_CLIENT_ID'),
-        'client_secret' => env('X_CLIENT_SECRET'),
-        'redirect' => env('APP_URL').'/api/auth/oauth/x/callback',
-    ],
-
-    'apple' => [
-        'client_id' => env('APPLE_CLIENT_ID'),
-        'client_secret' => env('APPLE_CLIENT_SECRET'),
-        'redirect' => env('APP_URL').'/api/auth/oauth/apple/callback',
+    // Shared with the website's API proxy: lets it pass on the visitor's IP, browser and country (TrustFrontendProxy).
+    'frontend_proxy' => [
+        'secret' => env('FRONTEND_PROXY_SECRET'),
     ],
 
 ];

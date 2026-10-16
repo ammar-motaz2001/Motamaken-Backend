@@ -34,6 +34,8 @@ class ProjectResource extends JsonResource
             ],
             /** `open`, `in_progress`, `completed` or `closed`. Only open projects are public. */
             'status' => $this->status,
+            /** In the homepage "Distinctive projects" slider. */
+            'isFeatured' => (bool) $this->is_featured,
             /** How many offers it received. Present in "My Projects". */
             'proposalsCount' => $this->whenCounted('proposals'),
             /** The accepted offer, once the owner hired someone. */

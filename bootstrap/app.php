@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\RecordApiExamples;
 use App\Http\Middleware\SetLocaleFromHeader;
+use App\Http\Middleware\TrustFrontendProxy;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,10 +19,16 @@ return Application::configure(basePath: dirname(__DIR__))
         // Behind Render's (or any) load balancer: trust X-Forwarded-* so URLs and signed links use https.
         $middleware->trustProxies(at: '*');
 
+        // Before the rate limiters run, so they count the real visitor and not the website's server.
+        $middleware->prepend(TrustFrontendProxy::class);
+
         $middleware->api(append: [SetLocaleFromHeader::class]);
 
-        // Apple returns to the OAuth callback with a cross-site form POST.
-        $middleware->validateCsrfTokens(except: ['api/auth/oauth/apple/callback']);
+        // DOCS_RECORD=1 php artisan test: capture real requests and responses as Swagger examples.
+        if (env('DOCS_RECORD')) {
+            $middleware->api(prepend: [RecordApiExamples::class]);
+        }
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\ContactMessage;
 use App\Models\Dispute;
 use App\Models\KycSubmission;
 use App\Models\Project;
+use App\Models\Report;
 use App\Models\User;
 use App\Models\Withdrawal;
 use Dedoc\Scramble\Attributes\Group;
@@ -20,9 +22,9 @@ class AdminOverviewController extends Controller
      * Dashboard.
      *
      * The numbers of the admin home page: users, projects by status, money per currency, the work queues (withdrawals,
-     * identity checks, disputes) and the last 14 days of sign-ups and new projects for the charts.
+     * identity checks, disputes, reports, contact messages) and the last 14 days of sign-ups and new projects for the charts.
      *
-     * @return array{users: array{total: int, verified: int, newThisWeek: int, suspended: int}, projects: array<string, int>, money: list<array{currency: string, inWallets: float, inEscrow: float, revenue: float, pendingWithdrawals: float}>, queues: array{pendingWithdrawals: int, pendingKyc: int, openDisputes: int}, series: list<array{date: string, users: int, projects: int}>}
+     * @return array{users: array{total: int, verified: int, newThisWeek: int, suspended: int}, projects: array<string, int>, money: list<array{currency: string, inWallets: float, inEscrow: float, revenue: float, pendingWithdrawals: float}>, queues: array{pendingWithdrawals: int, pendingKyc: int, openDisputes: int, openReports: int, newContactMessages: int}, series: list<array{date: string, users: int, projects: int}>}
      */
     public function __invoke(): array
     {
@@ -45,6 +47,8 @@ class AdminOverviewController extends Controller
                 'pendingWithdrawals' => Withdrawal::where('status', Withdrawal::PENDING)->count(),
                 'pendingKyc' => KycSubmission::where('status', KycSubmission::PENDING)->count(),
                 'openDisputes' => Dispute::whereIn('status', Dispute::ACTIVE)->count(),
+                'openReports' => Report::where('status', Report::OPEN)->count(),
+                'newContactMessages' => ContactMessage::where('status', ContactMessage::NEW)->count(),
             ],
             'series' => $this->series($days, User::where('created_at', '>=', $since)->pluck('created_at'), Project::where('created_at', '>=', $since)->pluck('created_at')),
         ];

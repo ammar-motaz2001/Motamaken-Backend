@@ -1,28 +1,39 @@
 <?php
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\Admin\AdminAffiliateController;
+use App\Http\Controllers\Admin\AdminCampaignController;
+use App\Http\Controllers\Admin\AdminCategoryController;
+use App\Http\Controllers\Admin\AdminContactController;
 use App\Http\Controllers\Admin\AdminDisputeController;
 use App\Http\Controllers\Admin\AdminDrawController;
+use App\Http\Controllers\Admin\AdminFeedbackController;
 use App\Http\Controllers\Admin\AdminKycController;
 use App\Http\Controllers\Admin\AdminLedgerController;
 use App\Http\Controllers\Admin\AdminOverviewController;
+use App\Http\Controllers\Admin\AdminPageController;
 use App\Http\Controllers\Admin\AdminPlanController;
 use App\Http\Controllers\Admin\AdminProjectController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\AdminSettingsController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Auth\QuickAuthController;
 use App\Http\Controllers\AvatarController;
+use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\CampaignPromotingController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\DepositController;
 use App\Http\Controllers\DisputeController;
 use App\Http\Controllers\DrawController;
 use App\Http\Controllers\EscrowController;
+use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\GroupConversationController;
 use App\Http\Controllers\HomeController;
@@ -31,8 +42,10 @@ use App\Http\Controllers\LocationController;
 use App\Http\Controllers\MeController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\MilestoneController;
+use App\Http\Controllers\MoyasarWebhookController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\OptionsController;
+use App\Http\Controllers\PageController;
 use App\Http\Controllers\PaymentMethodController;
 use App\Http\Controllers\PaymentWebhookController;
 use App\Http\Controllers\PlanController;
@@ -75,7 +88,7 @@ Route::get('/health', function () {
     ]);
 });
 
-// Contract of the frontend's authService (motamaken-front). The OAuth browser redirects live in routes/web.php.
+// Contract of the frontend's authService (motamaken-front).
 Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('signup', [AuthController::class, 'signup']);
     Route::post('login', [AuthController::class, 'login']);
@@ -83,7 +96,8 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('otp/resend', [OtpController::class, 'resend']);
     Route::post('password/forgot', [PasswordController::class, 'forgot']);
     Route::post('password/reset', [PasswordController::class, 'reset']);
-    Route::post('oauth/exchange', [OAuthController::class, 'exchange']);
+    Route::post('quick/start', [QuickAuthController::class, 'start']);
+    Route::post('quick/verify', [QuickAuthController::class, 'verify']);
 });
 
 Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::class])->group(function () {
@@ -127,6 +141,28 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::get('me/medals', [RewardsController::class, 'medals']);
     Route::post('draws/{draw}/entries', [DrawController::class, 'enter'])->whereNumber('draw')->middleware('throttle:writes');
     Route::post('draw-winners/{winner}/claim', [DrawController::class, 'claim'])->whereNumber('winner')->middleware('throttle:money');
+    // The heart icon.
+    Route::get('me/favorites', [FavoriteController::class, 'index']);
+    Route::get('me/favorites/ids', [FavoriteController::class, 'ids']);
+    Route::post('favorites', [FavoriteController::class, 'store'])->middleware('throttle:writes');
+    Route::delete('favorites/{type}/{id}', [FavoriteController::class, 'destroy'])->whereNumber('id');
+
+    // Promotion campaigns: the advertiser's side, then the promoter's.
+    Route::get('me/campaigns', [CampaignController::class, 'index']);
+    Route::post('campaigns', [CampaignController::class, 'store'])->middleware('throttle:writes');
+    Route::get('campaigns/{campaign}', [CampaignController::class, 'show'])->whereNumber('campaign');
+    Route::patch('campaigns/{campaign}', [CampaignController::class, 'update'])->whereNumber('campaign');
+    Route::post('campaigns/{campaign}/launch', [CampaignController::class, 'launch'])->whereNumber('campaign')->middleware('throttle:money');
+    Route::post('campaigns/{campaign}/pause', [CampaignController::class, 'pause'])->whereNumber('campaign');
+    Route::post('campaigns/{campaign}/resume', [CampaignController::class, 'resume'])->whereNumber('campaign');
+    Route::post('campaigns/{campaign}/cancel', [CampaignController::class, 'cancel'])->whereNumber('campaign');
+    Route::get('campaigns/{campaign}/promoters', [CampaignController::class, 'promoters'])->whereNumber('campaign');
+    Route::get('campaigns/{campaign}/visits', [CampaignController::class, 'visits'])->whereNumber('campaign');
+    Route::get('campaigns/{campaign}/daily', [CampaignController::class, 'daily'])->whereNumber('campaign');
+    Route::get('campaigns/available', [CampaignPromotingController::class, 'available']);
+    Route::post('campaigns/{campaign}/join', [CampaignPromotingController::class, 'join'])->whereNumber('campaign')->middleware('throttle:writes');
+    Route::get('me/promoter', [CampaignPromotingController::class, 'dashboard']);
+
     Route::get('me/affiliate', [AffiliateController::class, 'show']);
     Route::get('me/affiliate/referrals', [AffiliateController::class, 'referrals']);
     Route::get('me/affiliate/earnings', [AffiliateController::class, 'earnings']);
@@ -182,6 +218,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::get('wallet/stats', [WalletController::class, 'stats']);
     Route::get('wallet/deposits', [DepositController::class, 'index']);
     Route::post('wallet/deposits', [DepositController::class, 'store'])->middleware('throttle:money');
+    Route::post('wallet/deposits/{deposit}/refresh', [DepositController::class, 'refresh'])->whereNumber('deposit');
     Route::post('wallet/deposits/{deposit}/simulate', [DepositController::class, 'simulate'])->whereNumber('deposit');
     Route::get('wallet/withdrawals', [WithdrawalController::class, 'index']);
     Route::post('wallet/withdrawals', [WithdrawalController::class, 'store'])->middleware('throttle:money');
@@ -238,6 +275,15 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
         Route::post('disputes/{dispute}/review', [AdminDisputeController::class, 'review'])->whereNumber('dispute');
         Route::post('disputes/{dispute}/resolve', [AdminDisputeController::class, 'resolve'])->whereNumber('dispute');
         Route::post('disputes/{dispute}/messages', [AdminDisputeController::class, 'message'])->whereNumber('dispute');
+        Route::get('pages', [AdminPageController::class, 'index']);
+        Route::get('pages/{slug}', [AdminPageController::class, 'show']);
+        Route::put('pages/{slug}', [AdminPageController::class, 'update']);
+        Route::delete('pages/{slug}', [AdminPageController::class, 'destroy']);
+        Route::get('contact-messages', [AdminContactController::class, 'index']);
+        Route::post('contact-messages/{message}/handle', [AdminContactController::class, 'handle'])->whereNumber('message');
+        Route::get('affiliate', AdminAffiliateController::class);
+        Route::get('campaigns', [AdminCampaignController::class, 'index']);
+        Route::post('campaigns/{campaign}/cancel', [AdminCampaignController::class, 'cancel'])->whereNumber('campaign');
         Route::get('withdrawals', [AdminWithdrawalController::class, 'index']);
         Route::post('withdrawals/{withdrawal}/approve', [AdminWithdrawalController::class, 'approve'])->whereNumber('withdrawal');
         Route::post('withdrawals/{withdrawal}/reject', [AdminWithdrawalController::class, 'reject'])->whereNumber('withdrawal');
@@ -248,6 +294,13 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
         Route::get('draws', [AdminDrawController::class, 'index']);
         Route::post('draws', [AdminDrawController::class, 'store']);
         Route::post('draws/{draw}/run', [AdminDrawController::class, 'run'])->whereNumber('draw');
+        Route::get('reports', [AdminReportController::class, 'index']);
+        Route::post('reports/{report}/resolve', [AdminReportController::class, 'resolve'])->whereNumber('report');
+        Route::get('feedback', AdminFeedbackController::class);
+        Route::get('categories', [AdminCategoryController::class, 'index']);
+        Route::post('categories', [AdminCategoryController::class, 'store']);
+        Route::patch('categories/{category}', [AdminCategoryController::class, 'update'])->whereNumber('category');
+        Route::delete('categories/{category}', [AdminCategoryController::class, 'destroy'])->whereNumber('category');
         Route::get('settings', [AdminSettingsController::class, 'show']);
         Route::put('settings', [AdminSettingsController::class, 'update']);
     });
@@ -276,6 +329,11 @@ Route::get('users/{user}', [PublicProfileController::class, 'show'])->whereNumbe
 Route::get('draws/current', [DrawController::class, 'current']);
 Route::get('draws/history', [DrawController::class, 'history']);
 Route::post('affiliate/visits', [AffiliateController::class, 'visit'])->middleware('throttle:writes');
+Route::get('pages', [PageController::class, 'index']);
+Route::get('pages/{slug}', [PageController::class, 'show']);
+Route::post('contact', ContactController::class)->middleware('throttle:contact');
+// Reported by the website's /r/{code} page from the visitor's browser.
+Route::post('campaign-visits', [CampaignPromotingController::class, 'visit'])->middleware('throttle:campaign-visits');
 Route::get('users/{user}/reviews', [ReviewController::class, 'user'])->whereNumber('user');
 Route::get('projects/{project}/reviews', [ReviewController::class, 'project'])->whereNumber('project');
 Route::get('categories', [CategoryController::class, 'index']);
@@ -287,6 +345,7 @@ Route::get('languages', [OptionsController::class, 'languages']);
 
 // Called by the payment provider, signed with the shared secret instead of a token.
 Route::post('webhooks/payments', PaymentWebhookController::class);
+Route::post('webhooks/moyasar', MoyasarWebhookController::class)->middleware('throttle:60,1');
 
 // Signed links: documents and evidence open in <img> tags and new tabs, which cannot send a token.
 Route::get('kyc-files/{submission}/{kind}', [AdminKycController::class, 'file'])->whereNumber('submission')->middleware('signed')->name('kyc.file');

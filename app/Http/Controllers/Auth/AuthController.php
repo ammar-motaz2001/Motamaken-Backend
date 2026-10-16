@@ -72,6 +72,9 @@ class AuthController extends Controller
         $identifier = $request->identifier();
         $user = User::findByIdentifier($method, $identifier);
 
+        // The sign-up form already tells whether an address is taken, so naming the missing account hides nothing more.
+        abort_if(! $user, 422, __("auth_flow.no_account.{$method->value}"));
+
         if (! $user?->password || ! Hash::check($request->input('password'), $user->password)) {
             abort(422, __("auth_flow.invalid_credentials.{$method->value}"));
         }

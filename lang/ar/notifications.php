@@ -55,4 +55,7 @@ return [
     'subscription.expired' => 'انتهت باقة :plan.',
     'promotion.started' => 'ترويجك فعّال حتى :until.',
     'affiliate.commission' => 'ربحت :amount :currency من عمل :name عبر دعوتك.',
+    'campaign.completed' => 'انتهت حملتك ":campaign". أُعيد :refund :currency إلى محفظتك.',
+    'campaign.cancelled' => 'تم إيقاف حملتك ":campaign". أُعيد :refund :currency إلى محفظتك.',
+    'admin.contact_message' => 'رسالة تواصل جديدة من :from: ":subject".',
 ];

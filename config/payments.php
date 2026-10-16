@@ -7,12 +7,22 @@ return [
     | Payment gateway
     |--------------------------------------------------------------------------
     |
-    | "fake" accepts every payment and is for development only. A real gateway (Stripe, HyperPay, Tap, ...)
-    | implements App\Contracts\PaymentGateway and is bound in AppServiceProvider.
+    | "moyasar" charges real cards through Moyasar (test keys charge nothing). "fake" accepts every payment
+    | and is for development only. Both implement App\Contracts\PaymentGateway (bound in AppServiceProvider).
     |
     */
 
     'driver' => env('PAYMENTS_DRIVER', 'fake'),
+
+    'moyasar' => [
+        'api_url' => env('MOYASAR_API_URL', 'https://api.moyasar.com/v1'),
+        // Secret key (sk_...): server only. The publishable key (pk_...) goes to the website as NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY.
+        'secret_key' => env('MOYASAR_SECRET_KEY'),
+        // The "secret token" set on the webhook in the Moyasar dashboard; it is sent inside every webhook body.
+        'webhook_secret' => env('MOYASAR_WEBHOOK_SECRET'),
+        // Website page Moyasar sends the customer back to after 3-D Secure.
+        'return_path' => env('MOYASAR_RETURN_PATH', '/payments/return'),
+    ],
 
     // Shared secret that signs the gateway's webhook calls (HMAC-SHA256 of the raw body, in the X-Signature header).
     'webhook_secret' => env('PAYMENTS_WEBHOOK_SECRET', 'change-me-in-production'),

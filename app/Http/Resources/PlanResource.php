@@ -28,6 +28,7 @@ class PlanResource extends JsonResource
             'isFree' => $this->isFree(),
             /** The "Most popular" ribbon. */
             'isPopular' => $this->is_popular,
+            'isActive' => (bool) $this->is_active,
             /** The benefits as sentences in the request language, ready for the checklist on the card. */
             'perks' => $this->perks(),
             /** The same benefits as numbers: `monthly_offers` (null = unlimited), `fee_percent`, `promotion_discount_percent`. */

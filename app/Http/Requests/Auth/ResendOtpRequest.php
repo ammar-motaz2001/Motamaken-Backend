@@ -24,7 +24,8 @@ class ResendOtpRequest extends IdentifierRequest
     {
         return [
             ...$this->identifierRules(),
-            'purpose' => ['required', Rule::enum(OtpPurpose::class)],
+            /** `signup`, `login`, `reset` or `quick`. */
+            'purpose' => ['required', Rule::enum(OtpPurpose::class)->only([OtpPurpose::Signup, OtpPurpose::Login, OtpPurpose::Reset, OtpPurpose::Quick])],
         ];
     }
 }

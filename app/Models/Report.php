@@ -14,6 +14,14 @@ class Report extends Model
 
     public const TARGETS = ['user', 'project', 'portfolio', 'review'];
 
+    public const OPEN = 'open';
+
+    public const ACTIONED = 'actioned';
+
+    public const DISMISSED = 'dismissed';
+
+    public const STATUSES = [self::OPEN, self::ACTIONED, self::DISMISSED];
+
     public const REASONS = ['spam', 'fake', 'inappropriate', 'copyright', 'scam', 'other'];
 
     protected function casts(): array

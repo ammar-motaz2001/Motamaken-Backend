@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(ReferenceDataSeeder::class);
+        $this->call(PagesSeeder::class);
 
         // Sample people, ads and chats for development. Skips itself in production.
         $this->call(DemoDataSeeder::class);

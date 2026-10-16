@@ -6,14 +6,12 @@ use App\Contracts\PaymentGateway;
 use App\Contracts\WhatsAppSender;
 use App\Services\LogWhatsAppSender;
 use App\Services\Payments\FakeGateway;
+use App\Services\Payments\MoyasarGateway;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
-use SocialiteProviders\Apple\AppleExtendSocialite;
-use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(WhatsAppSender::class, LogWhatsAppSender::class);
-        $this->app->bind(PaymentGateway::class, FakeGateway::class);
+        $this->app->bind(PaymentGateway::class, config('payments.driver') === 'moyasar' ? MoyasarGateway::class : FakeGateway::class);
     }
 
     /**
@@ -34,8 +32,6 @@ class AppServiceProvider extends ServiceProvider
         // The docs routes are registered in routes/web.php so the spec can carry our examples.
         Scramble::configure()->expose(false);
 
-        Event::listen(SocialiteWasCalled::class, [AppleExtendSocialite::class, 'handle']);
-
         // Posting projects, sending offers and saving the profile.
         RateLimiter::for('writes', fn (Request $request) => Limit::perMinute(30)
             ->by('user:'.($request->user()?->id ?? $request->ip()))
@@ -45,6 +41,13 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('money', fn (Request $request) => Limit::perMinute(20)
             ->by('user:'.($request->user()?->id ?? $request->ip()))
             ->response(fn () => response()->json(['message' => __('auth_flow.too_many_requests')], 429)));
+
+        // The contact form is open to visitors: a few messages per hour per address.
+        RateLimiter::for('contact', fn (Request $request) => Limit::perHour(5)->by('ip:'.$request->ip())
+            ->response(fn () => response()->json(['message' => __('auth_flow.too_many_requests')], 429)));
+
+        // Visits through campaign links, per visitor: generous for real people, a wall for scripts.
+        RateLimiter::for('campaign-visits', fn (Request $request) => Limit::perMinute(30)->by('ip:'.$request->ip()));
 
         RateLimiter::for('messages', fn (Request $request) => Limit::perMinute(60)
             ->by('user:'.($request->user()?->id ?? $request->ip()))

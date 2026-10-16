@@ -7,6 +7,7 @@ use App\Http\Requests\DepositRequest;
 use App\Http\Requests\PaginatedRequest;
 use App\Http\Resources\DepositResource;
 use App\Models\Deposit;
+use App\Models\PaymentMethod;
 use App\Services\Payments\DepositService;
 use App\Support\Money;
 use Dedoc\Scramble\Attributes\Group;
@@ -37,11 +38,30 @@ class DepositController extends Controller
      */
     public function store(DepositRequest $request): JsonResponse
     {
+        $token = $request->filled('paymentMethodId')
+            ? PaymentMethod::find($request->integer('paymentMethodId'))->gateway_token
+            : $request->input('cardToken');
+
         $deposit = $this->deposits->start(
-            $request->user(), Money::toCents($request->input('amount')), $request->input('currency'), $request->input('method'),
+            $request->user(), Money::toCents($request->input('amount')), $request->input('currency'), $request->input('method'), $token,
+            $request->input('purpose') === 'purchase',
         );
 
         return (new DepositResource($deposit))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Check a deposit.
+     *
+     * Call it when the customer comes back from 3-D Secure (the website's `/payments/return` page): the API asks the
+     * payment provider how the payment ended and, when it is paid for the right amount, adds the money to the wallet.
+     * Safe to call repeatedly.
+     */
+    public function refresh(Request $request, int $deposit): DepositResource
+    {
+        $deposit = Deposit::where('user_id', $request->user()->id)->findOrFail($deposit);
+
+        return new DepositResource($this->deposits->refresh($deposit));
     }
 
     /**

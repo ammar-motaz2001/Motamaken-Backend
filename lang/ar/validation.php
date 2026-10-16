@@ -40,4 +40,8 @@ return [
         'token' => 'الرمز',
         'subscribe' => 'الاشتراك',
     ],
+
+    'custom' => [
+        'recaptchaToken' => ['required' => 'يرجى تحديد «أنا لست روبوتًا».'],
+    ],
 ];

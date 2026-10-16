@@ -6,6 +6,7 @@ use App\Contracts\PaymentGateway;
 use App\Http\Requests\PaymentMethodRequest;
 use App\Http\Resources\PaymentMethodResource;
 use App\Models\PaymentMethod;
+use App\Models\User;
 use App\Services\RewardsService;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -48,8 +49,9 @@ class PaymentMethodController extends Controller
         $user = $request->user();
         $data = $request->validated();
 
-        $attributes = $data['type'] === PaymentMethod::CARD
-            ? [
+        $attributes = match (true) {
+            $data['type'] === PaymentMethod::CARD && filled($data['token'] ?? null) => $this->fromToken($user, $data['token']),
+            $data['type'] === PaymentMethod::CARD => [
                 'brand' => $this->brand($request->digits()),
                 'last4' => substr($request->digits(), -4),
                 'exp_month' => $data['expMonth'],
@@ -59,8 +61,9 @@ class PaymentMethodController extends Controller
                     'number' => $request->digits(), 'expMonth' => $data['expMonth'], 'expYear' => $data['expYear'],
                     'cvc' => $data['cvc'], 'holderName' => $data['holderName'],
                 ]),
-            ]
-            : ['email' => strtolower($data['email']), 'gateway_token' => 'paypal:'.strtolower($data['email'])];
+            ],
+            default => ['email' => strtolower($data['email']), 'gateway_token' => 'paypal:'.strtolower($data['email'])],
+        };
 
         $method = DB::transaction(function () use ($user, $data, $attributes) {
             $first = ! PaymentMethod::where('user_id', $user->id)->exists();
@@ -113,6 +116,19 @@ class PaymentMethodController extends Controller
         });
 
         return ['success' => true];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fromToken(User $user, string $token): array
+    {
+        $card = $this->gateway->cardFromToken($user, $token);
+
+        return [
+            'brand' => $card['brand'], 'last4' => $card['last4'], 'exp_month' => $card['expMonth'], 'exp_year' => $card['expYear'],
+            'holder_name' => $card['holderName'], 'gateway_token' => $card['token'],
+        ];
     }
 
     private function brand(string $digits): string

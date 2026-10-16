@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'card_not_verified' => 'لم يؤكد البنك هذه البطاقة بعد. أضفها مرة أخرى وأكمل خطوة التأكيد.',
+    'card_required' => 'اختر بطاقة للدفع.',
+    'card_token_required' => 'يجب إرسال بيانات البطاقة عبر نموذج الدفع الآمن.',
+    'card_token_unsupported' => 'حفظ البطاقات بهذه الطريقة غير متاح.',
+    'card_invalid' => 'تعذّر التحقق من هذه البطاقة. تأكد من بياناتها أو استخدم بطاقة أخرى.',
+    'provider_unavailable' => 'خدمة الدفع لا تستجيب حاليًا. حاول مرة أخرى بعد قليل.',
+    'payment_failed' => 'تم رفض عملية الدفع.',
+    'amount_mismatch' => 'المبلغ المدفوع لا يطابق عملية الشحن هذه.',
     'insufficient_funds' => 'رصيد محفظتك لا يكفي لهذه العملية.',
     'kyc_required' => 'وثّق هويتك قبل سحب الأموال.',
     'amount_too_small' => 'الحد الأدنى هو :min :currency.',
@@ -40,6 +48,7 @@ return [
         'affiliate_commission' => 'عمولة التسويق بالعمولة',
         'campaign_funding' => 'ميزانية حملة',
         'campaign_earning' => 'أرباح الترويج',
+        'campaign_refund' => 'استرداد ميزانية حملة',
         'tip' => 'إكرامية: :project',
         'draw_prize' => 'جائزة السحب',
         'adjustment' => 'تعديل من الدعم',

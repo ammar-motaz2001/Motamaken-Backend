@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Notifications\ActivityNotification;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DepositService
 {
@@ -19,19 +21,59 @@ class DepositService
         private readonly LedgerService $ledger,
     ) {}
 
-    public function start(User $user, int $cents, string $currency, string $method): Deposit
+    /**
+     * Saves the deposit, then starts the payment. With a card that needs no 3-D Secure the outcome is known at once;
+     * otherwise `checkout_url` is the provider's page and {@see refresh()} settles it afterwards.
+     */
+    public function start(User $user, int $cents, string $currency, string $method, ?string $cardToken = null, bool $forPurchase = false): Deposit
     {
-        $this->assertWithinLimits($cents, $currency);
+        $this->assertWithinLimits($cents, $currency, $forPurchase);
 
-        $deposit = new Deposit([
+        $deposit = Deposit::create([
             'user_id' => $user->id, 'amount_cents' => $cents, 'currency' => $currency,
-            'method' => $method, 'provider' => config('payments.driver'),
+            'method' => $method, 'provider' => config('payments.driver'), 'provider_ref' => (string) Str::uuid(),
         ]);
 
-        $checkout = $this->gateway->createCheckout($deposit);
-        $deposit->fill(['provider_ref' => $checkout['ref'], 'checkout_url' => $checkout['checkoutUrl']])->save();
+        try {
+            $checkout = $this->gateway->createCheckout($deposit, $cardToken);
+        } catch (ApiException $e) {
+            $this->fail($deposit, $e->getMessage());
 
-        return $deposit;
+            throw $e;
+        }
+
+        $deposit->update(['checkout_url' => $checkout['checkoutUrl']]);
+
+        return match ($checkout['status']) {
+            'paid' => $this->refresh($deposit),
+            'failed' => $this->fail($deposit, $checkout['message'] ?? __('payments.payment_failed')),
+            default => $deposit,
+        };
+    }
+
+    /**
+     * Ask the provider how a pending deposit ended and settle it. The wallet is only credited when the provider says
+     * it is paid for exactly this amount and currency. Safe to call any number of times.
+     */
+    public function refresh(Deposit $deposit): Deposit
+    {
+        if ($deposit->status !== Deposit::PENDING) {
+            return $deposit;
+        }
+
+        $result = $this->gateway->paymentStatus($deposit);
+
+        if ($result['status'] === 'paid') {
+            if ($result['amountCents'] !== $deposit->amount_cents || strtoupper($result['currency']) !== $deposit->currency) {
+                Log::error("Deposit {$deposit->id}: provider reports {$result['amountCents']} {$result['currency']}, expected {$deposit->amount_cents} {$deposit->currency}.");
+
+                return $this->fail($deposit, __('payments.amount_mismatch'));
+            }
+
+            return $this->succeed($deposit);
+        }
+
+        return $result['status'] === 'failed' ? $this->fail($deposit, $result['message'] ?? __('payments.payment_failed')) : $deposit;
     }
 
     /**
@@ -64,15 +106,15 @@ class DepositService
     public function fail(Deposit $deposit, string $reason): Deposit
     {
         if ($deposit->status === Deposit::PENDING) {
-            $deposit->update(['status' => Deposit::FAILED, 'failure_reason' => $reason]);
+            $deposit->update(['status' => Deposit::FAILED, 'failure_reason' => Str::limit($reason, 250)]);
         }
 
         return $deposit;
     }
 
-    private function assertWithinLimits(int $cents, string $currency): void
+    private function assertWithinLimits(int $cents, string $currency, bool $forPurchase = false): void
     {
-        $min = (float) Setting::get('deposits.min');
+        $min = $forPurchase ? 1.0 : (float) Setting::get('deposits.min');
         $max = (float) Setting::get('deposits.max');
 
         if ($cents < Money::toCents($min)) {

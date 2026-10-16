@@ -14,9 +14,13 @@ class PaymentMethodRequest extends FormRequest
      */
     public function rules(): array
     {
-        $card = $this->input('type') === PaymentMethod::CARD;
+        $tokenised = $this->filled('token');
+        // A card typed into our own form; with Moyasar the website sends a `token` instead.
+        $card = $this->input('type') === PaymentMethod::CARD && ! $tokenised;
 
         return [
+            /** Card: a Moyasar token made in the browser (`token_...`). Replaces holderName, number, expMonth, expYear and cvc. */
+            'token' => ['nullable', 'string', 'max:100', 'regex:/^token_[A-Za-z0-9]+$/'],
             /** `card` or `paypal`. */
             'type' => ['required', Rule::in([PaymentMethod::CARD, PaymentMethod::PAYPAL])],
             /** Card: the name printed on the card. */
@@ -28,7 +32,7 @@ class PaymentMethodRequest extends FormRequest
             /** Card: 3 digits (4 for American Express). Checked by the gateway, never stored. */
             'cvc' => [Rule::requiredIf($card), 'nullable', 'string', 'regex:/^\d{3,4}$/'],
             /** PayPal: the account email. */
-            'email' => [Rule::requiredIf(! $card), 'nullable', 'email', 'max:255'],
+            'email' => [Rule::requiredIf($this->input('type') === PaymentMethod::PAYPAL), 'nullable', 'email', 'max:255'],
             /** Make it the preferred method. The first saved method always is. */
             'makeDefault' => ['sometimes', 'boolean'],
         ];

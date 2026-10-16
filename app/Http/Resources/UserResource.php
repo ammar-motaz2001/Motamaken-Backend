@@ -34,6 +34,8 @@ class UserResource extends JsonResource
             'currency' => $this->currency,
             /** `light` or `dark`. */
             'theme' => $this->theme,
+            /** Opens the admin panel on the website. */
+            'isAdmin' => (bool) $this->is_admin,
             'createdAt' => $this->created_at,
         ];
     }

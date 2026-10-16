@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\AuthMethod;
+use App\Models\Account;
 use App\Models\Draw;
 use App\Models\PointTransaction;
 use App\Models\Profile;
@@ -74,6 +75,7 @@ class EngagementTest extends TestCase
             ->assertJsonPath('tier.code', 'bronze')->assertJsonPath('nextTier.code', 'silver')->assertJsonCount(6, 'monthly')
             ->assertJsonPath('link', fn ($link) => str_ends_with($link, "/signup?ref={$referrer->referral_code}"));
         $this->actingAs($referrer, 'sanctum')->getJson('/api/me/affiliate/referrals')->assertJsonPath('data.0.id', $invitee->id)->assertJsonPath('data.0.qualified', false);
+        $this->actingAs($referrer, 'sanctum')->getJson('/api/me/affiliate/earnings')->assertOk()->assertJsonPath('data', [])->assertJsonPath('meta.total', 0);
     }
 
     public function test_a_draw_takes_tickets_picks_winners_and_pays_cash_prizes(): void
@@ -90,6 +92,8 @@ class EngagementTest extends TestCase
                 ['rank' => 2, 'nameEn' => 'Headphones', 'nameAr' => 'سماعات', 'kind' => 'item', 'value' => 50, 'currency' => 'USD'],
             ],
         ])->assertCreated()->json('data.id');
+        $this->actingAs($admin, 'sanctum')->getJson('/api/admin/draws')->assertOk()->assertJsonPath('data.0.id', $id);
+        $this->actingAs($alice, 'sanctum')->getJson('/api/admin/draws')->assertForbidden();
 
         $this->actingAs($alice, 'sanctum')->postJson("/api/draws/{$id}/entries", ['tickets' => 6])->assertJsonPath('code', 'too_many_tickets');
         $this->actingAs($alice, 'sanctum')->postJson("/api/draws/{$id}/entries", ['tickets' => 3])->assertOk()->assertJsonPath('data.me.tickets', 3);
@@ -108,7 +112,7 @@ class EngagementTest extends TestCase
         $second = Draw::find($id)->winners()->where('rank', 2)->first();
         $this->actingAs($first->user, 'sanctum')->postJson("/api/draw-winners/{$first->id}/claim", ['method' => 'wallet'])->assertOk();
         $this->assertSame(100.0, $this->balance($first->user));
-        $this->assertSame(-100.0, $this->balance(\App\Models\Account::MARKETING));
+        $this->assertSame(-100.0, $this->balance(Account::MARKETING));
         $this->actingAs($first->user, 'sanctum')->postJson("/api/draw-winners/{$first->id}/claim", ['method' => 'wallet'])->assertJsonPath('code', 'already_claimed');
         $this->actingAs($second->user, 'sanctum')->postJson("/api/draw-winners/{$second->id}/claim", ['method' => 'wallet'])->assertJsonPath('code', 'not_cash');
         $this->actingAs($second->user, 'sanctum')->postJson("/api/draw-winners/{$second->id}/claim", ['method' => 'delivery'])->assertJsonValidationErrors('details.address');

@@ -39,7 +39,7 @@ class AdminPanelTest extends TestCase
             ->assertJsonPath('users.suspended', 1)
             ->assertJsonPath('users.newThisWeek', 5)
             ->assertJsonPath('projects', ['open' => 2, 'in_progress' => 1, 'completed' => 0, 'closed' => 0])
-            ->assertJsonPath('queues', ['pendingWithdrawals' => 0, 'pendingKyc' => 0, 'openDisputes' => 0])
+            ->assertJsonPath('queues', ['pendingWithdrawals' => 0, 'pendingKyc' => 0, 'openDisputes' => 0, 'openReports' => 0, 'newContactMessages' => 0])
             ->assertJsonPath('money.0', ['currency' => 'USD', 'inWallets' => 300, 'inEscrow' => 0, 'revenue' => 0, 'pendingWithdrawals' => 0])
             ->assertJsonCount(14, 'series')
             ->assertJsonPath('series.13.projects', 3);

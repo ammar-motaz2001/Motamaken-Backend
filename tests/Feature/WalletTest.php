@@ -202,6 +202,8 @@ class WalletTest extends TestCase
         $first = $this->as($this->user)->postJson('/api/wallet/withdrawals', $this->withdrawal(['amount' => 30]))->json('data.id');
         $second = $this->as($this->user)->postJson('/api/wallet/withdrawals', $this->withdrawal(['amount' => 20]))->json('data.id');
         $this->assertSame(48.0, $this->balance($this->user), 'each request sets aside its amount and its own fee');
+        $this->as($this->user)->getJson('/api/wallet/withdrawals')->assertOk()->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('data.0.id', $second)->assertJsonPath('data.0.status', 'pending');
 
         $this->as($this->admin)->postJson("/api/admin/withdrawals/{$first}/reject", [])->assertJsonValidationErrors('reason');
         $this->as($this->admin)->postJson("/api/admin/withdrawals/{$first}/reject", ['reason' => 'Name does not match'])
