@@ -43,12 +43,17 @@ services:
   queue:
     <<: *api
     command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90"]
+    # The image's health check probes the web server, which these two don't run.
+    healthcheck:
+      disable: true
     depends_on:
       - api
 
   scheduler:
     <<: *api
     command: ["php", "artisan", "schedule:work"]
+    healthcheck:
+      disable: true
     depends_on:
       - api
 
