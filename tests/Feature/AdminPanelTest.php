@@ -42,7 +42,14 @@ class AdminPanelTest extends TestCase
             ->assertJsonPath('queues', ['pendingWithdrawals' => 0, 'pendingKyc' => 0, 'openDisputes' => 0, 'openReports' => 0, 'newContactMessages' => 0])
             ->assertJsonPath('money.0', ['currency' => 'USD', 'inWallets' => 300, 'inEscrow' => 0, 'revenue' => 0, 'pendingWithdrawals' => 0])
             ->assertJsonCount(14, 'series')
-            ->assertJsonPath('series.13.projects', 3);
+            ->assertJsonPath('series.13.projects', 3)
+            ->assertJsonPath('days', 14)
+            ->assertJsonPath('trends.projects.current', 3)
+            ->assertJsonPath('trends.users.previous', 1) // the freelancer signed up 20 days ago
+            ->assertJsonStructure(['series' => [['date', 'users', 'projects', 'proposals', 'revenue', 'deposits']], 'topCategories', 'recent' => ['users', 'projects']]);
+
+        $this->getJson('/api/admin/overview?days=90')->assertOk()->assertJsonCount(90, 'series')->assertJsonPath('days', 90);
+        $this->getJson('/api/admin/overview?days=5')->assertJsonValidationErrors('days');
 
         $this->as(User::factory()->create())->getJson('/api/admin/overview')->assertForbidden();
     }
