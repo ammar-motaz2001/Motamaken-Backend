@@ -39,6 +39,13 @@ services:
     environment:
       PORT: "10000"
       RUN_MIGRATIONS: "true"
+    # The API's own health endpoint (also checks the database), on the port it really listens on.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:10000/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
 
   queue:
     <<: *api
