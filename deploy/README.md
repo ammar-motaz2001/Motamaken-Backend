@@ -25,6 +25,14 @@ cd ../backend/deploy && docker compose up -d --build
 ```
 
 Migrations run automatically when the API starts. Changing a `NEXT_PUBLIC_*` value (in `.env`) needs `--build`.
+A changed `Caddyfile` needs `docker compose up -d --force-recreate caddy` (a plain reload keeps the old file).
+
+## Security notes
+
+- Caddy only accepts connections from Cloudflare's IP ranges (see `Caddyfile`); browsing the server's IP directly is
+  refused. If Cloudflare publishes new ranges (https://www.cloudflare.com/ips/), update both lists in the Caddyfile.
+- Postgres and Redis have no published ports; only Caddy (80/443) is reachable.
+- Secrets are in `.env`, `backend.env` and `frontend.env` here (mode 600, never in git).
 
 ## Useful
 
