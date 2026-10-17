@@ -19,3 +19,6 @@ storage/logs/*
 bootstrap/cache/*.php
 public/storage
 public/hot
+
+# VPS deploy: secret files and anything else not needed inside the image
+deploy/

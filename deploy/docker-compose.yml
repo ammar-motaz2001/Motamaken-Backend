@@ -1,0 +1,99 @@
+# The whole platform on one server (VPS). Layout on the server:
+#   /opt/mutamakin/backend   this repo (deploy/ is here)
+#   /opt/mutamakin/frontend  the website repo
+# Secrets live next to this file, never in git: .env (compose values), backend.env, frontend.env (see deploy/README.md).
+name: mutamakin
+
+x-api: &api
+  image: mutamakin-api:latest
+  env_file: backend.env
+  volumes:
+    - uploads:/var/www/html/storage/app
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  restart: unless-stopped
+
+services:
+  caddy:
+    image: caddy:2.10-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+      - web
+    restart: unless-stopped
+
+  api:
+    <<: *api
+    build:
+      context: ..
+      dockerfile: Dockerfile.render
+    environment:
+      PORT: "10000"
+      RUN_MIGRATIONS: "true"
+
+  queue:
+    <<: *api
+    command: ["php", "artisan", "queue:work", "--tries=3", "--timeout=90"]
+    depends_on:
+      - api
+
+  scheduler:
+    <<: *api
+    command: ["php", "artisan", "schedule:work"]
+    depends_on:
+      - api
+
+  web:
+    image: mutamakin-web:latest
+    build:
+      context: ../../frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+        NEXT_PUBLIC_MOYASAR_PUBLISHABLE_KEY: ${MOYASAR_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_RECAPTCHA_SITE_KEY: ${RECAPTCHA_SITE_KEY:-}
+        NEXT_PUBLIC_PAYMENTS_SIMULATE: "false"
+    env_file: frontend.env
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  uploads:
+  caddy_data:
+  caddy_config:

@@ -25,3 +25,8 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# VPS deploy secrets (written by deploy/setup.sh on the server)
+/deploy/.env
+/deploy/backend.env
+/deploy/frontend.env
