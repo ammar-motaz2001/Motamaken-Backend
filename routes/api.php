@@ -83,7 +83,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/health', function () {
     return response()->json([
         'status' => 'ok',
-        'database' => DB::selectOne('select version() as v')->v,
+        // Reachability only: versions would tell attackers what to target.
+        'database' => DB::selectOne('select 1 as ok') ? 'ok' : 'down',
         'redis' => Redis::ping() ? 'ok' : 'down',
     ]);
 });

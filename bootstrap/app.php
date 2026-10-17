@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\RecordApiExamples;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocaleFromHeader;
 use App\Http\Middleware\TrustFrontendProxy;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(TrustFrontendProxy::class);
 
         $middleware->api(append: [SetLocaleFromHeader::class]);
+        // Global, so 404s and other errors get them too; only API paths (the Swagger page needs its scripts).
+        $middleware->append(SecurityHeaders::class);
 
         // DOCS_RECORD=1 php artisan test: capture real requests and responses as Swagger examples.
         if (env('DOCS_RECORD')) {

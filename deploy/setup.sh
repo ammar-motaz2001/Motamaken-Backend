@@ -45,6 +45,8 @@ SESSION_DRIVER=redis
 QUEUE_CONNECTION=redis
 FILESYSTEM_DISK=local
 
+SESSION_SECURE_COOKIE=true
+
 FRONTEND_URL=https://mutamakin.com
 CORS_ALLOWED_ORIGINS=https://mutamakin.com,https://www.mutamakin.com
 CORS_ALLOWED_ORIGIN_PATTERNS=
