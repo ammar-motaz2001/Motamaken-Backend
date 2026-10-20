@@ -64,4 +64,16 @@ class RecaptchaTest extends TestCase
         $this->actingAs(User::factory()->create(), 'sanctum')
             ->postJson('/api/contact', ['topic' => 'general', 'subject' => 'Hello there', 'message' => 'A question about fees.'])->assertSuccessful();
     }
+
+    public function test_v3_scores_below_the_threshold_are_refused(): void
+    {
+        config(['services.recaptcha.secret_key' => 'secret']);
+        Http::fake(['www.google.com/recaptcha/*' => fn (Request $request) => Http::response([
+            'success' => true, 'action' => 'contact', 'score' => $request['response'] === 'human' ? 0.9 : 0.1,
+        ])]);
+        $message = ['name' => 'Huda', 'email' => 'huda@example.com', 'topic' => 'general', 'subject' => 'A question', 'message' => 'How do I post a project here?'];
+
+        $this->postJson('/api/contact', [...$message, 'recaptchaToken' => 'bot'])->assertJsonValidationErrors('recaptchaToken');
+        $this->postJson('/api/contact', [...$message, 'recaptchaToken' => 'human'])->assertSuccessful();
+    }
 }

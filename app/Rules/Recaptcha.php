@@ -44,7 +44,13 @@ class Recaptcha implements ValidationRule
             $result = null;
         }
 
-        if (! ($result['success'] ?? false)) {
+        // v3 answers carry a score; v2 answers (no score) only need success.
+        $score = $result['score'] ?? null;
+
+        if (! ($result['success'] ?? false) || ($score !== null && (float) $score < (float) config('services.recaptcha.min_score'))) {
+            if ($score !== null) {
+                Log::info('reCAPTCHA refused a low score', ['score' => $score, 'action' => $result['action'] ?? null]);
+            }
             $fail(__('auth_flow.recaptcha_failed'));
         }
     }

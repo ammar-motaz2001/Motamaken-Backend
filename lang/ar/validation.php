@@ -42,6 +42,6 @@ return [
     ],
 
     'custom' => [
-        'recaptchaToken' => ['required' => 'يرجى تحديد «أنا لست روبوتًا».'],
+        'recaptchaToken' => ['required' => 'ما زال فحص الأمان قيد التحميل. حاول مرة أخرى بعد لحظة.'],
     ],
 ];

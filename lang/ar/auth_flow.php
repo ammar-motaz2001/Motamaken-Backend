@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'recaptcha_failed' => 'يرجى تحديد «أنا لست روبوتًا» مرة أخرى.',
+    'recaptcha_failed' => 'تعذّر على فحص الأمان تأكيد الطلب. حاول مرة أخرى.',
     'two_factor_expired' => 'انتهت مهلة الإعداد. ابدأ من جديد.',
     'unknown_device' => 'جهاز غير معروف',
     'unknown_browser' => 'متصفح',

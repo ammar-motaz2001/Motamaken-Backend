@@ -39,5 +39,5 @@ http://api.mutamakin.com, https://api.mutamakin.com {
 # The admin panel is part of the website.
 http://admin.mutamakin.com, https://admin.mutamakin.com {
 	import common
-	redir https://mutamakin.com/admin 302
+	redir https://mutamakin.com/admin{uri} 302
 }

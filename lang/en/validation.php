@@ -12,6 +12,6 @@ return [
     ],
 
     'custom' => [
-        'recaptchaToken' => ['required' => 'Please tick "I\'m not a robot".'],
+        'recaptchaToken' => ['required' => 'The security check is still loading. Please try again in a moment.'],
     ],
 ];

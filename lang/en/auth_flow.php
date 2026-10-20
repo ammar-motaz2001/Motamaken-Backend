@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'recaptcha_failed' => 'Please tick "I\'m not a robot" again.',
+    'recaptcha_failed' => 'Our security check could not confirm the request. Please try again.',
     'two_factor_expired' => 'The setup took too long. Start again.',
     'unknown_device' => 'Unknown device',
     'unknown_browser' => 'Browser',

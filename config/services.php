@@ -35,10 +35,12 @@ return [
         ],
     ],
 
-    // reCAPTCHA v2 ("I'm not a robot" checkbox) on sign-up and the contact form. Without a secret it is switched off.
+    // reCAPTCHA v3 (invisible, scored) on sign-up, quick sign-in and the contact form. Without a secret it is switched off.
     'recaptcha' => [
         'site_key' => env('RECAPTCHA_SITE_KEY'),
         'secret_key' => env('RECAPTCHA_SECRET_KEY'),
+        // v3 scores each visit from 0 (bot) to 1 (person); below this the request is refused.
+        'min_score' => (float) env('RECAPTCHA_MIN_SCORE', 0.5),
     ],
 
     // Shared with the website's API proxy: lets it pass on the visitor's IP, browser and country (TrustFrontendProxy).
