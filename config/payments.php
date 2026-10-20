@@ -44,8 +44,14 @@ return [
         'withdrawals.require_kyc' => true,
     ],
 
+    // Offered methods, in display order. Admins can switch some off and reorder them (Settings > Payments).
     'deposit_methods' => ['card', 'bank_transfer', 'apple_pay', 'mada'],
 
     'withdrawal_methods' => ['bank_transfer', 'paypal'],
+
+    // Every method the code supports: what the admins choose from.
+    'deposit_method_choices' => ['card', 'mada', 'apple_pay', 'bank_transfer'],
+
+    'withdrawal_method_choices' => ['bank_transfer', 'paypal'],
 
 ];

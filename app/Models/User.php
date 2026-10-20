@@ -60,6 +60,9 @@ class User extends Authenticatable
             'notification_settings' => 'array',
             'password_changed_at' => 'datetime',
             'last_seen_at' => 'datetime',
+            'suspended_at' => 'datetime',
+            'suspended_until' => 'datetime',
+            'is_admin' => 'boolean',
         ];
     }
 
@@ -195,5 +198,55 @@ class User extends Authenticatable
         if ($first) {
             app(RewardsService::class)->onVerified($this);
         }
+    }
+
+    /**
+     * The staff role. Null on an admin means full access.
+     *
+     * @return BelongsTo<AdminRole, $this>
+     */
+    public function adminRole(): BelongsTo
+    {
+        return $this->belongsTo(AdminRole::class);
+    }
+
+    /**
+     * Whether this admin may use a part of the panel (config/admin.php permissions).
+     */
+    public function canAdmin(string $permission): bool
+    {
+        return $this->is_admin && ($this->admin_role_id === null || (bool) $this->adminRole?->allows($permission));
+    }
+
+    /**
+     * The panel permissions of this admin ("*" for all), empty for everyone else.
+     *
+     * @return list<string>
+     */
+    public function adminPermissions(): array
+    {
+        if (! $this->is_admin) {
+            return [];
+        }
+
+        $granted = $this->admin_role_id === null ? ['*'] : ($this->adminRole?->permissions ?? []);
+
+        return in_array('*', $granted, true) ? config('admin.permissions') : array_values($granted);
+    }
+
+    /**
+     * Suspended right now: a ban (no end date) or a suspension that has not run out yet.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null && ($this->suspended_until === null || $this->suspended_until->isFuture());
+    }
+
+    /**
+     * The account type the user acts as: `influencer`, `freelancer` (by profile) or `client` (no profile).
+     */
+    public function accountType(): string
+    {
+        return $this->profile?->type ?? 'client';
     }
 }

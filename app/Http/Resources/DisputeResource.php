@@ -3,6 +3,8 @@
 namespace App\Http\Resources;
 
 use App\Models\Dispute;
+use App\Models\DisputeAppeal;
+use App\Services\AppealService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -58,7 +60,23 @@ class DisputeResource extends JsonResource
                 'canConcede' => $this->isActive() && $mySide !== null && $mySide !== $this->sideOf($this->opener)
                     && ($mySide === 'client' || $this->escrow->payees->contains(fn ($p) => $p->user_id === $viewer->id && $p->is_lead)),
                 'canResolve' => $this->isActive() && $isAdmin,
+                /** Ask for a second look at the decision (once per side, within a few days of it). */
+                'canAppeal' => ! $isAdmin && app(AppealService::class)->canAppeal($this->resource, $viewer),
             ],
+            /** Appeals against the decision and their outcome. */
+            'appeals' => $this->status === Dispute::RESOLVED ? DisputeAppeal::with('user')->where('dispute_id', $this->id)->orderBy('id')->get()->map(fn (DisputeAppeal $a) => [
+                'id' => $a->id,
+                'user' => new UserBriefResource($a->user),
+                'reason' => $a->reason,
+                /** `pending`, `upheld` or `overturned`. */
+                'status' => $a->status,
+                'decisionNote' => $a->decision_note,
+                'adjustment' => $a->adjustment_cents ? $a->adjustment_cents / 100 : null,
+                /** Who received the correction: `client` or `freelancer`. */
+                'adjustmentTo' => $a->adjustment_to,
+                'createdAt' => $a->created_at,
+                'decidedAt' => $a->decided_at,
+            ])->all() : [],
             /** The case timeline, oldest first. Only in the detail view; admin notes only for admins. */
             'timeline' => $this->whenLoaded('messages', fn () => DisputeMessageResource::collection(
                 $this->messages->when(! $isAdmin, fn ($messages) => $messages->where('kind', '!=', 'admin_note'))->values(),

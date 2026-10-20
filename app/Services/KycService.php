@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Models\KycEvent;
 use App\Models\KycSubmission;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
@@ -37,6 +38,7 @@ class KycService
             ]);
 
             $user->forceFill(['kyc_status' => 'pending'])->save();
+            KycEvent::create(['kyc_submission_id' => $submission->id, 'user_id' => $user->id, 'status' => 'submitted', 'actor_id' => $user->id]);
 
             return $submission;
         });
@@ -58,6 +60,14 @@ class KycService
         return $this->review($submission, $admin, KycSubmission::REJECTED, $reason);
     }
 
+    /**
+     * Ask for a clearer or missing document: like a rejection, but the user is invited to send it again.
+     */
+    public function requestUpdate(KycSubmission $submission, User $admin, string $reason): KycSubmission
+    {
+        return $this->review($submission, $admin, KycSubmission::NEEDS_UPDATE, $reason);
+    }
+
     private function review(KycSubmission $submission, User $admin, string $status, ?string $reason): KycSubmission
     {
         DB::transaction(function () use ($submission, $admin, $status, $reason) {
@@ -69,6 +79,7 @@ class KycService
 
             $locked->update(['status' => $status, 'rejection_reason' => $reason, 'reviewed_by' => $admin->id, 'reviewed_at' => now()]);
             $locked->user->forceFill(['kyc_status' => $status])->save();
+            KycEvent::create(['kyc_submission_id' => $locked->id, 'user_id' => $locked->user_id, 'status' => $status, 'note' => $reason, 'actor_id' => $admin->id]);
 
             $locked->user->notify(new ActivityNotification("kyc.{$status}", null, ['kycId' => $locked->id, 'reason' => $reason]));
         });

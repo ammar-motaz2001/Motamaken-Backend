@@ -17,6 +17,9 @@ class DisputeMessage extends Model
     /** Written by an admin for other admins only. */
     public const ADMIN_NOTE = 'admin_note';
 
+    /** The reason and evidence of an appeal, filed after the dispute was settled. */
+    public const APPEAL = 'appeal';
+
     /** @var array<string, mixed> */
     protected $attributes = ['kind' => 'message'];
 

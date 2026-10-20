@@ -6,6 +6,7 @@ use App\Models\Concerns\HasLocalizedName;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['code', 'audience', 'name_en', 'name_ar', 'price_cents', 'currency', 'features', 'is_popular', 'is_active', 'sort_order'])]
 class Plan extends Model
@@ -54,5 +55,13 @@ class Plan extends Model
         }
 
         return $perks;
+    }
+
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
     }
 }

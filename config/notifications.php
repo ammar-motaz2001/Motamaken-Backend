@@ -16,10 +16,10 @@ return [
     'groups' => [
         'messages' => ['conversation.', 'message.'],
         'proposals' => ['proposal.', 'team.'],
-        'projects' => ['escrow.', 'milestone.', 'review.'],
+        'projects' => ['escrow.', 'milestone.', 'review.', 'project.'],
         'payments' => ['deposit.', 'withdrawal.', 'promotion.', 'subscription.', 'affiliate.', 'campaign.'],
-        'disputes' => ['dispute.'],
-        'account' => ['kyc.', 'security.'],
+        'disputes' => ['dispute.', 'appeal.'],
+        'account' => ['kyc.', 'security.', 'support.'],
         'rewards' => ['points.', 'medal.', 'draw.'],
     ],
 

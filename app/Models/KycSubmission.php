@@ -18,6 +18,9 @@ class KycSubmission extends Model
 
     public const REJECTED = 'rejected';
 
+    /** Rejected with a request for a clearer or missing document; the user sends a new submission. */
+    public const NEEDS_UPDATE = 'needs_update';
+
     public const DOCUMENT_TYPES = ['national_id', 'passport', 'driver_license'];
 
     /** @var array<string, mixed> */

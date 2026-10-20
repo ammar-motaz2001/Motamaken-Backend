@@ -7,6 +7,7 @@ use App\Http\Resources\ProfileCardResource;
 use App\Http\Resources\ProjectResource;
 use App\Models\Profile;
 use App\Models\Project;
+use App\Models\Skill;
 use App\Support\LikeSearch;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
@@ -104,7 +105,8 @@ class SearchController extends Controller
     /**
      * Skill suggestions.
      *
-     * The most listed skills, for the "Choose skills" picker of the advanced search. Filter with `q`.
+     * The skills the staff curated (in the reader's language) first, then the most listed ones in profiles, for the
+     * "Choose skills" picker of the advanced search and the profile form. Filter with `q`.
      *
      * @unauthenticated
      *
@@ -118,7 +120,13 @@ class SearchController extends Controller
             ->flatten()->filter(fn ($skill) => is_string($skill) && ($term === '' || str_contains(mb_strtolower($skill), $term)))
             ->countBy(fn ($skill) => trim($skill));
 
-        return ['data' => $counts->sortDesc()->keys()->take(30)->values()->all()];
+        $column = app()->getLocale() === 'ar' ? 'name_ar' : 'name_en';
+        $curated = Skill::where('is_active', true)
+            ->when($term !== '', fn ($q) => $q->where(fn ($w) => $w->whereRaw('lower(name_en) like ?', ['%'.addcslashes($term, '%_\\').'%'])
+                ->orWhereRaw('lower(name_ar) like ?', ['%'.addcslashes($term, '%_\\').'%'])))
+            ->orderBy('sort_order')->orderBy($column)->limit(30)->pluck($column);
+
+        return ['data' => $curated->merge($counts->sortDesc()->keys())->unique(fn ($s) => mb_strtolower($s))->take(30)->values()->all()];
     }
 
     /**

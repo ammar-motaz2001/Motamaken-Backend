@@ -61,7 +61,7 @@ class DisputeTest extends TestCase
             ->assertJsonPath('data.openedBy.fullName', 'Cleo Client')
             ->assertJsonPath('data.against.fullName', 'Fay Freelancer')
             ->assertJsonPath('data.milestone', ['id' => $this->milestone->id, 'title' => 'Everything', 'amount' => 1000, 'status' => 'disputed'])
-            ->assertJsonPath('data.permissions', ['canPost' => true, 'canWithdraw' => true, 'canConcede' => false, 'canResolve' => false])
+            ->assertJsonPath('data.permissions', ['canPost' => true, 'canWithdraw' => true, 'canConcede' => false, 'canResolve' => false, 'canAppeal' => false])
             ->assertJsonPath('data.timeline.0.body', 'Dispute opened.')
             ->json('data');
 
@@ -73,7 +73,7 @@ class DisputeTest extends TestCase
         $this->as($this->admin)->getJson('/api/notifications')->assertJsonPath('data.0.type', 'admin.dispute_opened');
 
         $this->as($this->freelancer)->getJson("/api/disputes/{$case['id']}")->assertOk()
-            ->assertJsonPath('data.permissions', ['canPost' => true, 'canWithdraw' => false, 'canConcede' => true, 'canResolve' => false]);
+            ->assertJsonPath('data.permissions', ['canPost' => true, 'canWithdraw' => false, 'canConcede' => true, 'canResolve' => false, 'canAppeal' => false]);
     }
 
     public function test_the_freelancer_can_open_one_too(): void

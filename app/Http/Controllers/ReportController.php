@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\ApiException;
 use App\Http\Requests\PaginatedRequest;
+use App\Models\Message;
 use App\Models\PortfolioItem;
 use App\Models\Project;
+use App\Models\Proposal;
 use App\Models\Report;
 use App\Models\Review;
+use App\Models\Team;
 use App\Models\User;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -20,8 +23,9 @@ class ReportController extends Controller
     /**
      * Report content.
      *
-     * Flags a profile (`user`), `project`, `portfolio` item or `review` for the moderators. Once per item
-     * (`already_reported`); you cannot report yourself.
+     * Flags a profile (`user`), `project`, `portfolio` item, `review`, offer (`proposal`), `team` or chat `message` for
+     * the moderators. Once per item (`already_reported`); you cannot report yourself. A reported message is the only
+     * private message the staff can read.
      */
     public function store(Request $request): JsonResponse
     {
@@ -38,6 +42,11 @@ class ReportController extends Controller
             'project' => Project::find($data['targetId'])?->user_id,
             'portfolio' => PortfolioItem::with('profile')->find($data['targetId'])?->profile?->user_id,
             'review' => Review::find($data['targetId'])?->reviewer_id,
+            'proposal' => Proposal::find($data['targetId'])?->user_id,
+            'team' => Team::find($data['targetId'])?->owner_id,
+            // Only someone in the conversation can report a message: the staff never browse private chats.
+            'message' => Message::whereKey($data['targetId'])
+                ->whereHas('conversation.participants', fn ($q) => $q->where('users.id', $request->user()->id))->value('sender_id'),
         };
         abort_if($owner === null, 404);
 
@@ -49,7 +58,11 @@ class ReportController extends Controller
         if ($report->exists) {
             throw new ApiException(__('profiles.already_reported'), 'already_reported');
         }
-        $report->fill(['reason' => $data['reason'], 'details' => $data['details'] ?? null])->save();
+        $report->fill([
+            'reason' => $data['reason'], 'details' => $data['details'] ?? null,
+            // Fraud jumps the queue; the staff can change it.
+            'priority' => in_array($data['reason'], ['scam', 'copyright'], true) ? 'high' : 'normal',
+        ])->save();
 
         return response()->json(['data' => $this->present($report)], 201);
     }

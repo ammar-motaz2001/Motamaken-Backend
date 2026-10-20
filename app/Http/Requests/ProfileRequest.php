@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\City;
 use App\Models\Profile;
+use App\Rules\CleanText;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -22,7 +23,7 @@ class ProfileRequest extends FormRequest
             'type' => ['required', Rule::in([Profile::TYPE_FREELANCER, Profile::TYPE_INFLUENCER])],
             /** E.g. "Designer", "Web Developer". */
             'jobTitle' => ['required', 'string', 'min:2', 'max:80'],
-            'bio' => ['nullable', 'string', 'max:2000'],
+            'bio' => ['nullable', 'string', 'max:2000', new CleanText],
             'countryId' => ['nullable', 'integer', 'exists:countries,id'],
             /** Needs `countryId`. */
             'cityId' => ['nullable', 'integer', 'exists:cities,id'],

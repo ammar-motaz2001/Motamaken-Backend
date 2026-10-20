@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -15,7 +16,7 @@ class DisputeMessageRequest extends FormRequest
         return [
             'body' => ['nullable', 'string', 'max:3000'],
             /** Evidence: a screenshot, document or archive, up to 10 MB. Send as `multipart/form-data`. */
-            'file' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,pdf,doc,docx,xls,xlsx,txt,zip', 'max:10240'],
+            'file' => ['nullable', 'file', 'mimes:'.RuntimeConfig::attachmentTypes(), 'max:'.RuntimeConfig::uploadKb('document')],
         ];
     }
 

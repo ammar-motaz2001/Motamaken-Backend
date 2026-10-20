@@ -44,6 +44,8 @@ class MessageResource extends JsonResource
             'status' => $this->sender_id === $request->user()?->id ? ($this->isRead() ? 'read' : 'sent') : null,
             /** Groups, your own messages: how many of the other members have read it. */
             'seenBy' => $this->when(isset($this->seen_by), fn () => $this->seen_by),
+            /** Cleared by a moderator after a report: show "This message was removed". */
+            'removed' => $this->removed_at !== null,
             'readAt' => $this->read_at,
             'createdAt' => $this->created_at,
         ];

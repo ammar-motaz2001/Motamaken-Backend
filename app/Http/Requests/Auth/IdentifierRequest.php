@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Auth;
 
 use App\Enums\AuthMethod;
+use App\Models\BlacklistEntry;
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
@@ -43,10 +45,20 @@ abstract class IdentifierRequest extends FormRequest
         return [
             'method' => ['required', Rule::enum(AuthMethod::class)],
             /** An email address, or an international phone number (e.g. `+966501234567`) when method is `phone`. */
-            $this->identifierField() => $this->input('method') === AuthMethod::Phone->value
-                ? ['required', 'string', 'phone:INTERNATIONAL']
-                : ['required', 'string', 'email', 'max:255'],
+            $this->identifierField() => [...($this->input('method') === AuthMethod::Phone->value
+                ? ['bail', 'required', 'string', 'phone:INTERNATIONAL']
+                : ['bail', 'required', 'string', 'email', 'max:255']), $this->notBlacklisted(...)],
         ];
+    }
+
+    /**
+     * Emails, phones and email domains on the admins' blacklist cannot sign up, sign in or reset a password.
+     */
+    private function notBlacklisted(string $attribute, mixed $value, Closure $fail): void
+    {
+        if (in_array($this->input('method'), array_column(AuthMethod::cases(), 'value'), true) && BlacklistEntry::blocksIdentifier($this->identifier())) {
+            $fail(__('admin.blocked_identifier'));
+        }
     }
 
     /**

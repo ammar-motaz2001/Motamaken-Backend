@@ -107,7 +107,7 @@ class QuickAuthController extends Controller
             'username' => $name !== '' ? $name : 'User',
             'subscribed' => true,
         ]);
-        $user->forceFill([$method->column() => $identifier]);
+        $user->forceFill([$method->column() => $identifier, 'registration_ip' => $request->ip()]);
 
         if ($request->filled('referralCode')) {
             $user->referred_by = User::where('referral_code', Str::upper($request->input('referralCode')))->value('id');

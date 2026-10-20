@@ -2,6 +2,7 @@
 
 namespace App\Rules;
 
+use App\Models\IntegrationLog;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Http;
@@ -39,6 +40,7 @@ class Recaptcha implements ValidationRule
             ])->json();
         } catch (Throwable $e) {
             Log::warning("reCAPTCHA check failed: {$e->getMessage()}");
+            IntegrationLog::record('recaptcha', "reCAPTCHA unreachable: {$e->getMessage()}");
             $result = null;
         }
 

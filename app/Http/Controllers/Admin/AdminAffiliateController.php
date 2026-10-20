@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AffiliateEarning;
+use App\Models\PointTransaction;
 use App\Models\User;
 use App\Services\AffiliateService;
+use App\Services\RewardsService;
+use App\Support\Paged;
 use Dedoc\Scramble\Attributes\Group;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 #[Group('Admin', 'The admin panel. Every call needs an administrator account.', weight: 99)]
@@ -55,5 +59,67 @@ class AdminAffiliateController extends Controller
                 'createdAt' => $e->created_at?->toIso8601String(),
             ])->all(),
         ];
+    }
+
+    /**
+     * Suspicious referrals.
+     *
+     * Invited accounts that look like the inviter's own: signed up from the same address, or signed in from an address
+     * the inviter also uses. Revoke the referral points of the ones that are abuse.
+     *
+     * @return array{data: list<array<string, mixed>>}
+     */
+    public function suspicious(): array
+    {
+        $tokenIps = fn (array $ids) => DB::table('personal_access_tokens')->where('tokenable_type', User::class)->whereIn('tokenable_id', $ids)
+            ->whereNotNull('ip_address')->select('tokenable_id', 'ip_address')->distinct()->get()->groupBy('tokenable_id')
+            ->map(fn ($rows) => $rows->pluck('ip_address')->all());
+
+        $referred = User::with('referrer')->whereNotNull('referred_by')->latest('id')->limit(2000)->get();
+        $ips = $tokenIps($referred->pluck('id')->merge($referred->pluck('referred_by'))->unique()->all());
+        $revoked = PointTransaction::where('reason', 'admin_adjustment')->where('meta->referralRevoked', true)->pluck('meta')
+            ->map(fn ($meta) => $meta['userId'] ?? null)->filter()->all();
+
+        return ['data' => $referred->map(function (User $user) use ($ips) {
+            $reasons = [];
+            if ($user->registration_ip && $user->registration_ip === $user->referrer?->registration_ip) {
+                $reasons[] = 'same_signup_ip';
+            }
+            if ($shared = array_values(array_intersect($ips[$user->id] ?? [], $ips[$user->referred_by] ?? []))) {
+                $reasons[] = 'shared_login_ip';
+            }
+
+            return $reasons ? ['user' => Paged::user($user), 'referrer' => Paged::user($user->referrer), 'reasons' => $reasons,
+                'sharedIps' => $shared, 'createdAt' => $user->created_at?->toIso8601String()] : null;
+        })->filter()->map(fn ($row) => [...$row, 'revoked' => in_array($row['user']['id'], $revoked, true)])->values()->all()];
+    }
+
+    /**
+     * Revoke a referral.
+     *
+     * Takes back the points the inviter got for this invited account (never below zero) and unlinks it, so no further
+     * commission is paid on it.
+     *
+     * @return array{success: bool}
+     */
+    public function revoke(Request $request, int $user, RewardsService $rewards): array
+    {
+        $data = $request->validate(['reason' => ['required', 'string', 'min:3', 'max:200']]);
+        $invited = User::whereNotNull('referred_by')->findOrFail($user);
+        $referrer = User::findOrFail($invited->referred_by);
+        $points = (int) PointTransaction::where('user_id', $referrer->id)->where('key', "referral:{$invited->id}")->value('amount');
+
+        DB::transaction(function () use ($invited, $referrer, $points, $data, $request, $rewards) {
+            if ($points > 0) {
+                $take = min($points, (int) User::whereKey($referrer->id)->value('points'));
+                if ($take > 0) {
+                    $tx = $rewards->adjust($referrer, -$take, $data['reason'], $request->user());
+                    $tx->update(['meta' => [...$tx->meta, 'referralRevoked' => true, 'userId' => $invited->id]]);
+                }
+            }
+            $invited->forceFill(['referred_by' => null])->save();
+        });
+
+        return ['success' => true];
     }
 }

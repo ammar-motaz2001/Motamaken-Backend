@@ -32,10 +32,14 @@ class ProjectResource extends JsonResource
                 'max' => $this->budget_max,
                 'currency' => $this->currency,
             ],
-            /** `open`, `in_progress`, `completed` or `closed`. Only open projects are public. */
+            /** `draft`, `open`, `in_progress`, `completed` or `closed`. Only open projects are public. */
             'status' => $this->status,
             /** In the homepage "Distinctive projects" slider. */
             'isFeatured' => (bool) $this->is_featured,
+            /** Taken off the site by a moderator: only the owner and the staff can open it. */
+            'isHidden' => $this->hidden_at !== null,
+            /** Why it was hidden, shown to the owner. */
+            'hiddenReason' => $this->when($this->hidden_at !== null, fn () => $this->hidden_reason),
             /** How many offers it received. Present in "My Projects". */
             'proposalsCount' => $this->whenCounted('proposals'),
             /** The accepted offer, once the owner hired someone. */

@@ -4,14 +4,30 @@ namespace App\Providers;
 
 use App\Contracts\PaymentGateway;
 use App\Contracts\WhatsAppSender;
+use App\Models\IntegrationLog;
+use App\Models\MailLog;
+use App\Models\PortfolioItem;
+use App\Models\Profile;
+use App\Models\Project;
+use App\Models\Proposal;
+use App\Models\Review;
+use App\Observers\AiScreeningObserver;
 use App\Services\LogWhatsAppSender;
 use App\Services\Payments\FakeGateway;
 use App\Services\Payments\MoyasarGateway;
+use App\Support\RuntimeConfig;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Notifications\SendQueuedNotifications;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Symfony\Component\Mime\Address;
+use Throwable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +45,43 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach ([Project::class, Proposal::class, Review::class, Profile::class, PortfolioItem::class] as $model) {
+            $model::observe(AiScreeningObserver::class);
+        }
+
+        // Values the admins changed in the panel (prices, point rules, SMTP...), for requests and for every queued job.
+        RuntimeConfig::apply();
+        Queue::before(fn () => RuntimeConfig::apply());
+
+        // Email log: addresses and subjects, never bodies.
+        Event::listen(MessageSent::class, function (MessageSent $event) {
+            MailLog::create([
+                'to' => implode(', ', array_map(fn (Address $a) => $a->getAddress(), $event->message->getTo())),
+                'subject' => mb_substr((string) $event->message->getSubject(), 0, 250),
+                'notification' => isset($event->data['__laravel_notification']) ? class_basename($event->data['__laravel_notification']) : null,
+                'status' => 'sent',
+            ]);
+        });
+        Queue::failing(function (JobFailed $event) {
+            try {
+                $command = unserialize($event->job->payload()['data']['command'] ?? '');
+            } catch (Throwable) {
+                return;
+            }
+            if (! $command instanceof SendQueuedNotifications || ! in_array('mail', (array) $command->channels, true)) {
+                return;
+            }
+            foreach ($command->notifiables as $notifiable) {
+                MailLog::create([
+                    'to' => (string) ($notifiable->email ?? $notifiable->routes['mail'] ?? '?'),
+                    'notification' => class_basename($command->notification),
+                    'status' => 'failed',
+                    'error' => mb_substr($event->exception->getMessage(), 0, 1000),
+                ]);
+            }
+            IntegrationLog::record('mail', $event->exception->getMessage(), ['notification' => class_basename($command->notification)]);
+        });
+
         // The docs routes are registered in routes/web.php so the spec can carry our examples.
         Scramble::configure()->expose(false);
 

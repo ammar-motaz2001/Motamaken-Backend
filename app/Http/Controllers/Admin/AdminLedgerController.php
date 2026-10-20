@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Account;
+use App\Models\Escrow;
 use App\Models\LedgerTransaction;
+use App\Models\Milestone;
 use Dedoc\Scramble\Attributes\Group;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 #[Group('Admin', 'The admin panel. Every call needs an administrator account.', weight: 99)]
@@ -24,13 +27,18 @@ class AdminLedgerController extends Controller
         $request->validate([
             'type' => ['nullable', 'string', 'max:40'],
             'userId' => ['nullable', 'integer'],
+            /** Transactions of one project: its escrow funding, releases, refunds, tips and dispute settlements. */
+            'projectId' => ['nullable', 'integer'],
+            /** A transaction number, an idempotency key, or text from the description (e.g. a payout reference). */
+            'reference' => ['nullable', 'string', 'max:100'],
+            'currency' => ['nullable', 'string', 'size:3'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
             'perPage' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
 
-        $page = LedgerTransaction::query()
-            ->with(['entries.account'])
-            ->when($request->input('type'), fn ($query, $type) => $query->where('type', $type))
-            ->when($request->input('userId'), fn ($query, $user) => $query->whereHas('entries.account', fn ($q) => $q->where('user_id', $user)))
+        $page = $this->filtered($request)
+            ->with(['entries.account', 'creator'])
             ->latest('id')
             ->paginate($request->integer('perPage', 20));
 
@@ -41,6 +49,7 @@ class AdminLedgerController extends Controller
                 'description' => $t->description,
                 'reference' => $t->reference_id ? ['type' => class_basename($t->reference_type), 'id' => $t->reference_id] : null,
                 'meta' => $t->meta,
+                'createdBy' => $t->creator ? ['id' => $t->creator->id, 'fullName' => $t->creator->full_name] : null,
                 'entries' => $t->entries->map(fn ($e) => [
                     'account' => ['id' => $e->account->id, 'type' => $e->account->type, 'currency' => $e->account->currency, 'userId' => $e->account->user_id],
                     'amount' => $e->amount_cents / 100,
@@ -61,6 +70,34 @@ class AdminLedgerController extends Controller
      *
      * @return array{data: list<array{currency: string, balanced: bool, accounts: list<array{type: string, accounts: int, balance: float}>}>}
      */
+    /**
+     * The transactions query behind the list, shared with the CSV export.
+     *
+     * @return Builder<LedgerTransaction>
+     */
+    public function filtered(Request $request)
+    {
+        return LedgerTransaction::query()
+            ->when($request->input('type'), fn ($query, $type) => $query->where('type', $type))
+            ->when($request->input('userId'), fn ($query, $user) => $query->whereHas('entries.account', fn ($q) => $q->where('user_id', $user)))
+            ->when($request->input('currency'), fn ($query, $c) => $query->whereHas('entries.account', fn ($q) => $q->where('currency', strtoupper($c))))
+            ->when($request->input('from'), fn ($query, $d) => $query->where('created_at', '>=', $d))
+            ->when($request->input('to'), fn ($query, $d) => $query->where('created_at', '<', now()->parse($d)->addDay()))
+            ->when($request->input('projectId'), function ($query, $projectId) {
+                $escrow = Escrow::where('project_id', $projectId)->first();
+                $milestones = $escrow ? Milestone::where('escrow_id', $escrow->id)->pluck('id') : collect();
+
+                $query->where(fn ($q) => $q
+                    ->where(fn ($m) => $m->where('reference_type', (new Milestone)->getMorphClass())->whereIn('reference_id', $milestones))
+                    ->orWhere(fn ($e) => $e->where('reference_type', (new Escrow)->getMorphClass())->where('reference_id', $escrow?->id ?? 0))
+                    ->orWhere('meta->projectId', (string) $projectId));
+            })
+            ->when($request->input('reference'), fn ($query, $ref) => $query->where(fn ($q) => $q
+                ->where('idempotency_key', $ref)
+                ->orWhere('description', 'like', '%'.addcslashes($ref, '%_\\').'%')
+                ->when(ctype_digit($ref), fn ($q) => $q->orWhere('id', (int) $ref)->orWhere('reference_id', (int) $ref))));
+    }
+
     public function trialBalance(): array
     {
         $rows = Account::query()

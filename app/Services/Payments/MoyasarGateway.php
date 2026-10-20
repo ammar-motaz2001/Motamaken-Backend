@@ -5,6 +5,7 @@ namespace App\Services\Payments;
 use App\Contracts\PaymentGateway;
 use App\Exceptions\ApiException;
 use App\Models\Deposit;
+use App\Models\IntegrationLog;
 use App\Models\User;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -41,6 +42,8 @@ class MoyasarGateway implements PaymentGateway
         ]));
 
         if (! $response->successful()) {
+            IntegrationLog::record('payments', "Moyasar refused a payment ({$response->status()})", ['depositId' => $deposit->id, 'type' => $response->json('type')], 'warning');
+
             throw new ApiException($this->errorMessage($response), 'payment_failed');
         }
 
@@ -115,6 +118,7 @@ class MoyasarGateway implements PaymentGateway
                 ->acceptJson()->asJson()->timeout(20));
         } catch (Throwable $e) {
             Log::warning("Moyasar request failed: {$e->getMessage()}");
+            IntegrationLog::record('payments', "Moyasar unreachable: {$e->getMessage()}");
 
             throw new ApiException(__('payments.provider_unavailable'), 'provider_unavailable', 503);
         }

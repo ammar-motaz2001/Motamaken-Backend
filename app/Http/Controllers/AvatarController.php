@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\UserResource;
 use App\Services\RewardsService;
+use App\Support\RuntimeConfig;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -20,7 +21,7 @@ class AvatarController extends Controller
     public function store(Request $request): UserResource
     {
         $request->validate([
-            'avatar' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:5120', 'dimensions:min_width=100,min_height=100'],
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:'.RuntimeConfig::uploadKb('avatar'), 'dimensions:min_width=100,min_height=100'],
         ]);
 
         $user = $request->user();

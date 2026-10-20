@@ -3,15 +3,14 @@
 namespace App\Http\Requests;
 
 use App\Models\Message;
+use App\Rules\CleanText;
+use App\Support\RuntimeConfig;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class SendMessageRequest extends FormRequest
 {
-    /** Files the paperclip button accepts. Anything that can run in a browser (html, svg, js) is left out on purpose. */
-    private const ATTACHMENT_EXTENSIONS = 'jpg,jpeg,png,gif,webp,pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,zip,rar';
-
     private const VOICE_MIME_TYPES = 'audio/webm,video/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/x-wav';
 
     public function messageType(): string
@@ -27,13 +26,14 @@ class SendMessageRequest extends FormRequest
         $limit = config('marketplace.chat.max_file_kb');
         $file = $this->messageType() === Message::TYPE_VOICE
             ? ['mimetypes:'.self::VOICE_MIME_TYPES]
-            : ['mimes:'.self::ATTACHMENT_EXTENSIONS];
+            // Files the paperclip accepts, chosen by the admins from a list without anything that runs in a browser.
+            : ['mimes:'.RuntimeConfig::attachmentTypes()];
 
         return [
             /** `text` (default), `voice` (recorded with the mic button) or `attachment` (paperclip). Inferred from `file` when omitted. */
             'type' => ['nullable', Rule::in([Message::TYPE_TEXT, Message::TYPE_VOICE, Message::TYPE_ATTACHMENT])],
             /** The text. Required for `text`; an optional caption for `voice` and `attachment`. */
-            'body' => ['nullable', 'string', 'max:5000'],
+            'body' => ['nullable', 'string', 'max:5000', new CleanText],
             /** The voice recording or attachment (up to 20 MB). Send the request as `multipart/form-data`. */
             'file' => ['nullable', 'file', "max:{$limit}", ...$file],
             /** Length of the voice message in seconds. Required for `voice`. */

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\CleanText;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -22,7 +23,7 @@ class ProposalRequest extends FormRequest
             /** How many days the work will take. */
             'deliveryDays' => [$required, 'integer', 'min:1', 'max:365'],
             /** The cover letter. */
-            'message' => [$required, 'string', 'min:10', 'max:3000'],
+            'message' => [$required, 'string', 'min:10', 'max:3000', new CleanText],
             /** Send the offer for a published team you lead: its members share the payment. Projects only. */
             'teamId' => ['nullable', 'integer', 'exists:teams,id'],
         ];

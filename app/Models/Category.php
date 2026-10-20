@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['type', 'slug', 'name_en', 'name_ar', 'icon', 'sort_order'])]
+#[Fillable(['type', 'slug', 'name_en', 'name_ar', 'icon', 'sort_order', 'parent_id', 'is_active'])]
 class Category extends Model
 {
     use HasFactory, HasLocalizedName;
+
+    protected function casts(): array
+    {
+        return ['is_active' => 'boolean'];
+    }
 
     /** Project categories, e.g. "Website, IT & Software". */
     public const TYPE_PROJECT = 'project';

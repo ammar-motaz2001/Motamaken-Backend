@@ -61,8 +61,8 @@ class HomeController extends Controller
         $tabLimit = config('marketplace.home.tab_limit');
         $card = ['user', 'category', 'country', 'city'];
 
-        $projectCategories = Category::ofType(Category::TYPE_PROJECT)->orderBy('sort_order')->get();
-        $influencerPlatforms = Category::ofType(Category::TYPE_INFLUENCER)->orderBy('sort_order')->get();
+        $projectCategories = Category::ofType(Category::TYPE_PROJECT)->where('is_active', true)->whereNull('parent_id')->orderBy('sort_order')->get();
+        $influencerPlatforms = Category::ofType(Category::TYPE_INFLUENCER)->where('is_active', true)->whereNull('parent_id')->orderBy('sort_order')->get();
 
         $latestIn = fn (string $type, ?Category $category) => $category
             ? Project::open()->with($card)->filter(['type' => $type, 'category' => $category->slug])->latest()->limit($tabLimit)->get()

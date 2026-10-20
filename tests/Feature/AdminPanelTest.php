@@ -38,8 +38,11 @@ class AdminPanelTest extends TestCase
             ->assertJsonPath('users.total', 6)
             ->assertJsonPath('users.suspended', 1)
             ->assertJsonPath('users.newThisWeek', 5)
-            ->assertJsonPath('projects', ['open' => 2, 'in_progress' => 1, 'completed' => 0, 'closed' => 0])
-            ->assertJsonPath('queues', ['pendingWithdrawals' => 0, 'pendingKyc' => 0, 'openDisputes' => 0, 'openReports' => 0, 'newContactMessages' => 0])
+            ->assertJsonPath('projects', ['draft' => 0, 'open' => 2, 'in_progress' => 1, 'completed' => 0, 'closed' => 0])
+            ->assertJsonPath('proposals.accepted', 1)
+            ->assertJsonPath('usersByType.client', 5)
+            ->assertJsonPath('usersByType.freelancer', 1)
+            ->assertJsonPath('queues', ['pendingWithdrawals' => 0, 'pendingKyc' => 0, 'openDisputes' => 0, 'openReports' => 0, 'newContactMessages' => 0, 'pendingAppeals' => 0, 'openTickets' => 0, 'pendingDeposits' => 0])
             ->assertJsonPath('money.0', ['currency' => 'USD', 'inWallets' => 300, 'inEscrow' => 0, 'revenue' => 0, 'pendingWithdrawals' => 0])
             ->assertJsonCount(14, 'series')
             ->assertJsonPath('series.13.projects', 3)
@@ -75,7 +78,10 @@ class AdminPanelTest extends TestCase
         $this->as($this->admin)->getJson("/api/admin/users/{$sara->id}")->assertOk()
             ->assertJsonPath('data.email', 'sara@example.com')
             ->assertJsonPath('data.kycStatus', 'approved')
-            ->assertJsonPath('data.stats', ['projects' => 2, 'offers' => 1, 'openDisputes' => 0])
+            ->assertJsonPath('data.stats.projects', 2)
+            ->assertJsonPath('data.stats.offers', 1)
+            ->assertJsonPath('data.stats.openDisputes', 0)
+            ->assertJsonPath('data.accountType', 'client')
             ->assertJsonPath('wallet.0.available', 75);
         $this->as($this->admin)->getJson("/api/admin/users/{$omar->id}")->assertJsonPath('data.suspensionReason', 'Spam');
         $this->as($this->admin)->getJson('/api/admin/users/9999')->assertNotFound();

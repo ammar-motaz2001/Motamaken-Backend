@@ -17,6 +17,7 @@ return [
         'referral' => 'انضم صديق دعوته',
         'promotion' => 'ميّز نفسك (ترويج)',
         'draw_tickets' => 'تذاكر السحب',
+        'admin_adjustment' => 'تعديل من متمكن',
     ],
     'medals' => [
         'verified' => ['name' => 'موثق', 'description' => 'تم توثيق هويتك.'],

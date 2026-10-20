@@ -25,6 +25,8 @@ class CategoryResource extends JsonResource
             /** In the language of the `Accept-Language` header. */
             'name' => $this->name,
             'icon' => $this->icon,
+            /** The top-level category this one belongs to, for subcategories. */
+            'parentId' => $this->parent_id,
         ];
     }
 }

@@ -30,6 +30,8 @@ class CategoryController extends Controller
         return CategoryResource::collection(
             Category::query()
                 ->when($request->input('type'), fn ($query, $type) => $query->ofType($type))
+                // Archived categories stay on old projects but are not offered any more.
+                ->where('is_active', true)
                 ->orderBy('type')
                 ->orderBy('sort_order')
                 ->get(),

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\ApiException;
 use App\Models\PortfolioItem;
 use App\Services\RewardsService;
+use App\Support\RuntimeConfig;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class PortfolioController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([...$this->rules(), 'image' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:8192']]);
+        $data = $request->validate([...$this->rules(), 'image' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:'.RuntimeConfig::uploadKb('portfolio')]]);
         $profile = $request->user()->profile ?? throw new ApiException(__('proposals.profile_required'), 'profile_required');
 
         if ($profile->portfolio()->count() >= self::MAX_ITEMS) {
@@ -51,7 +52,7 @@ class PortfolioController extends Controller
     public function update(Request $request, int $item): array
     {
         $item = $this->own($request, $item);
-        $data = $request->validate([...$this->rules(), 'image' => ['sometimes', 'image', 'mimes:jpeg,png,webp', 'max:8192']]);
+        $data = $request->validate([...$this->rules(), 'image' => ['sometimes', 'image', 'mimes:jpeg,png,webp', 'max:'.RuntimeConfig::uploadKb('portfolio')]]);
 
         if ($request->hasFile('image')) {
             Storage::disk('public')->delete($item->image_path);

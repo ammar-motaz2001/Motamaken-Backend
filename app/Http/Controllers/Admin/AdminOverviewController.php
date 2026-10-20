@@ -8,11 +8,17 @@ use App\Models\Category;
 use App\Models\ContactMessage;
 use App\Models\Deposit;
 use App\Models\Dispute;
+use App\Models\DisputeAppeal;
 use App\Models\KycSubmission;
+use App\Models\PointTransaction;
 use App\Models\Project;
+use App\Models\Promotion;
 use App\Models\Proposal;
 use App\Models\Report;
+use App\Models\Subscription;
+use App\Models\SupportTicket;
 use App\Models\User;
+use App\Models\UserMedal;
 use App\Models\Withdrawal;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
@@ -33,7 +39,7 @@ class AdminOverviewController extends Controller
      * platform revenue and wallet top-ups per currency), the change against the previous period of the same length,
      * the busiest categories and the latest users and projects.
      *
-     * @return array{users: array{total: int, verified: int, newThisWeek: int, suspended: int}, projects: array<string, int>, money: list<array{currency: string, inWallets: float, inEscrow: float, revenue: float, pendingWithdrawals: float}>, queues: array{pendingWithdrawals: int, pendingKyc: int, openDisputes: int, openReports: int, newContactMessages: int}, days: int, series: list<array{date: string, users: int, projects: int, proposals: int, revenue: array<string, float>, deposits: array<string, float>}>, trends: array{users: array{current: int, previous: int}, projects: array{current: int, previous: int}, proposals: array{current: int, previous: int}, revenue: array<string, array{current: float, previous: float}>, deposits: array<string, array{current: float, previous: float}>}, topCategories: list<array{id: int, name: string, projects: int}>, recent: array{users: list<array<string, mixed>>, projects: list<array<string, mixed>>}}
+     * @return array{users: array{total: int, verified: int, newThisWeek: int, suspended: int}, usersByType: array<string, int>, projects: array<string, int>, influencerRequests: array<string, int>, proposals: array<string, int>, engagement: array<string, int>, money: list<array{currency: string, inWallets: float, inEscrow: float, revenue: float, pendingWithdrawals: float}>, queues: array{pendingWithdrawals: int, pendingKyc: int, openDisputes: int, openReports: int, newContactMessages: int, pendingAppeals: int, openTickets: int, pendingDeposits: int}, days: int, series: list<array{date: string, users: int, projects: int, proposals: int, revenue: array<string, float>, deposits: array<string, float>}>, trends: array{users: array{current: int, previous: int}, projects: array{current: int, previous: int}, proposals: array{current: int, previous: int}, revenue: array<string, array{current: float, previous: float}>, deposits: array<string, array{current: float, previous: float}>}, topCategories: list<array{id: int, name: string, projects: int}>, recent: array{users: list<array<string, mixed>>, projects: list<array<string, mixed>>}}
      */
     public function __invoke(Request $request): array
     {
@@ -52,17 +58,36 @@ class AdminOverviewController extends Controller
                 'newThisWeek' => User::where('created_at', '>=', now()->subDays(7))->count(),
                 'suspended' => User::whereNotNull('suspended_at')->count(),
             ],
-            'projects' => collect([Project::STATUS_OPEN, Project::STATUS_IN_PROGRESS, Project::STATUS_COMPLETED, Project::STATUS_CLOSED])
-                ->mapWithKeys(fn (string $status) => [$status => 0])
-                ->merge(Project::selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'))
-                ->map(fn ($count) => (int) $count)->all(),
+            /** Accounts per type: `client` (no profile), `freelancer`, `influencer`. */
+            'usersByType' => [
+                'client' => User::whereDoesntHave('profile')->count(),
+                ...collect(['freelancer' => 0, 'influencer' => 0])->merge(
+                    DB::table('profiles')->selectRaw('type, count(*) as total')->groupBy('type')->pluck('total', 'type'),
+                )->map(fn ($n) => (int) $n)->all(),
+            ],
+            'projects' => $this->byStatus(Project::where('type', Project::TYPE_PROJECT), self::PROJECT_STATUSES),
+            /** Influencer requests per status (they share the projects table). */
+            'influencerRequests' => $this->byStatus(Project::where('type', Project::TYPE_INFLUENCER_REQUEST), self::PROJECT_STATUSES),
+            /** Offers per status. */
+            'proposals' => $this->byStatus(Proposal::query(), ['pending', 'accepted', 'declined', 'withdrawn']),
+            /** Paid services, promotions and rewards right now and in the chosen period. */
+            'engagement' => [
+                'activeSubscriptions' => Subscription::whereIn('status', ['active', 'past_due'])->count(),
+                'activePromotions' => Promotion::where('ends_at', '>', now())->count(),
+                'pointsIssued' => (int) PointTransaction::where('amount', '>', 0)->where('created_at', '>=', $since)->sum('amount'),
+                'pointsSpent' => (int) -PointTransaction::where('amount', '<', 0)->where('created_at', '>=', $since)->sum('amount'),
+                'medalsAwarded' => UserMedal::where('awarded_at', '>=', $since)->count(),
+            ],
             'money' => $this->money(),
             'queues' => [
                 'pendingWithdrawals' => Withdrawal::where('status', Withdrawal::PENDING)->count(),
                 'pendingKyc' => KycSubmission::where('status', KycSubmission::PENDING)->count(),
                 'openDisputes' => Dispute::whereIn('status', Dispute::ACTIVE)->count(),
                 'openReports' => Report::where('status', Report::OPEN)->count(),
-                'newContactMessages' => ContactMessage::where('status', ContactMessage::NEW)->count(),
+                'newContactMessages' => ContactMessage::where('status', ContactMessage::NEW)->whereNull('archived_at')->count(),
+                'pendingAppeals' => DisputeAppeal::where('status', DisputeAppeal::PENDING)->count(),
+                'openTickets' => SupportTicket::where('status', SupportTicket::OPEN)->count(),
+                'pendingDeposits' => Deposit::where('status', Deposit::PENDING)->where('created_at', '<', now()->subMinutes(30))->count(),
             ],
             'days' => $length,
             'series' => $this->series($since, $length),
@@ -86,6 +111,21 @@ class AdminOverviewController extends Controller
                 ])->all(),
             ],
         ];
+    }
+
+    private const PROJECT_STATUSES = [Project::STATUS_DRAFT, Project::STATUS_OPEN, Project::STATUS_IN_PROGRESS, Project::STATUS_COMPLETED, Project::STATUS_CLOSED];
+
+    /**
+     * Counts per status, zero-filled.
+     *
+     * @param  list<string>  $statuses
+     * @return array<string, int>
+     */
+    private function byStatus(Builder $query, array $statuses): array
+    {
+        return collect($statuses)->mapWithKeys(fn (string $status) => [$status => 0])
+            ->merge($query->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status'))
+            ->map(fn ($count) => (int) $count)->all();
     }
 
     /**

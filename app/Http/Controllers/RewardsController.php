@@ -39,7 +39,7 @@ class RewardsController extends Controller
                 'id' => $row->id,
                 'amount' => $row->amount,
                 'reason' => $row->reason,
-                'label' => __("rewards.reasons.{$row->reason}"),
+                'label' => $row->reason === 'admin_adjustment' ? ($row->meta['note'] ?? __('rewards.reasons.admin_adjustment')) : __("rewards.reasons.{$row->reason}"),
                 'createdAt' => $row->created_at,
             ]),
             'meta' => ['current_page' => $page->currentPage(), 'last_page' => $page->lastPage(), 'per_page' => $page->perPage(), 'total' => $page->total()],
@@ -57,10 +57,6 @@ class RewardsController extends Controller
     {
         $this->rewards->syncMedals($request->user());
 
-        return ['data' => array_map(fn ($medal) => [
-            ...$medal,
-            'name' => __("rewards.medals.{$medal['code']}.name"),
-            'description' => __("rewards.medals.{$medal['code']}.description"),
-        ], $this->rewards->medals($request->user()))];
+        return ['data' => $this->rewards->medals($request->user())];
     }
 }

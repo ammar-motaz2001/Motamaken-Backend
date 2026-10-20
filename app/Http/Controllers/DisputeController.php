@@ -11,7 +11,9 @@ use App\Http\Resources\DisputeResource;
 use App\Models\Dispute;
 use App\Models\DisputeMessage;
 use App\Models\Milestone;
+use App\Services\AppealService;
 use App\Services\DisputeService;
+use App\Support\RuntimeConfig;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -112,6 +114,25 @@ class DisputeController extends Controller
         Gate::authorize('dispute', $dispute->escrow);
 
         return new DisputeResource($this->disputes->concede($dispute, $request->user())->load(self::WITH));
+    }
+
+    /**
+     * Appeal the decision.
+     *
+     * Either side can ask once for a second look within a few days of the settlement, with the reason and optional new
+     * evidence (`multipart/form-data`). The staff uphold the decision or change it with a money correction.
+     */
+    public function appeal(Request $request, int $dispute): JsonResponse
+    {
+        $data = $request->validate([
+            'reason' => ['required', 'string', 'min:20', 'max:3000'],
+            'file' => ['nullable', 'file', 'mimes:'.RuntimeConfig::attachmentTypes(), 'max:'.RuntimeConfig::uploadKb('document')],
+        ]);
+
+        $dispute = $this->find($dispute, $request);
+        $appeal = app(AppealService::class)->file($dispute, $request->user(), $data['reason'], $request->file('file'));
+
+        return response()->json(['data' => ['id' => $appeal->id, 'status' => $appeal->status]], 201);
     }
 
     /**

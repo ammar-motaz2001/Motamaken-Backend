@@ -63,7 +63,8 @@ class AdminCategoryController extends Controller
     /**
      * Delete a category.
      *
-     * Only when no project uses it (`category_in_use`); move those projects or keep the category.
+     * Only when no project uses it (`category_in_use`); otherwise archive it (`isActive: false`). Its subcategories become
+     * top-level ones.
      *
      * @return array{success: bool}
      */
@@ -95,13 +96,23 @@ class AdminCategoryController extends Controller
             /** An icon name the website knows, e.g. `code`, `palette`, `instagram`. */
             'icon' => ['nullable', 'string', 'max:60'],
             'sortOrder' => ['nullable', 'integer', 'min:0', 'max:65000'],
+            /** Makes it a subcategory of another top-level category of the same type. */
+            'parentId' => ['nullable', 'integer', Rule::exists('categories', 'id')->where('type', $type)->whereNull('parent_id'),
+                Rule::notIn(array_filter([$category?->id]))],
+            /** `false` archives it: kept on existing projects, no longer offered for new ones. */
+            'isActive' => ['sometimes', 'boolean'],
         ]);
+
+        if ($category && ($data['parentId'] ?? null) && Category::where('parent_id', $category->id)->exists()) {
+            abort(response()->json(['message' => __('admin.category_has_children'), 'errors' => ['parentId' => [__('admin.category_has_children')]]], 422));
+        }
 
         return collect([
             'type' => $data['type'] ?? null, 'slug' => $data['slug'] ?? null, 'name_en' => $data['nameEn'] ?? null,
             'name_ar' => $data['nameAr'] ?? null, 'icon' => $data['icon'] ?? null, 'sort_order' => $data['sortOrder'] ?? null,
+            'parent_id' => $data['parentId'] ?? null, 'is_active' => $data['isActive'] ?? null,
         ])->filter(fn ($v, $k) => array_key_exists(match ($k) {
-            'name_en' => 'nameEn', 'name_ar' => 'nameAr', 'sort_order' => 'sortOrder', default => $k,
+            'name_en' => 'nameEn', 'name_ar' => 'nameAr', 'sort_order' => 'sortOrder', 'parent_id' => 'parentId', 'is_active' => 'isActive', default => $k,
         }, $data))->map(fn ($v, $k) => $k === 'sort_order' ? (int) $v : $v)->all();
     }
 
@@ -113,6 +124,7 @@ class AdminCategoryController extends Controller
         return [
             'id' => $c->id, 'type' => $c->type, 'slug' => $c->slug, 'nameEn' => $c->name_en, 'nameAr' => $c->name_ar,
             'icon' => $c->icon, 'sortOrder' => $c->sort_order, 'projects' => $projects,
+            'parentId' => $c->parent_id, 'isActive' => (bool) $c->is_active,
         ];
     }
 

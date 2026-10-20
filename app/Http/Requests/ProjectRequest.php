@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\BlacklistEntry;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Project;
@@ -37,6 +38,8 @@ class ProjectRequest extends FormRequest
             'countryId' => ['nullable', 'integer', 'exists:countries,id'],
             /** Needs `countryId`. */
             'cityId' => ['nullable', 'integer', 'exists:cities,id'],
+            /** POST only: save it as a draft instead of publishing it. */
+            'draft' => ['nullable', 'boolean'],
         ];
     }
 
@@ -53,8 +56,18 @@ class ProjectRequest extends FormRequest
             if ($this->filled('categoryId')) {
                 $expected = $type === Project::TYPE_PROJECT ? Category::TYPE_PROJECT : Category::TYPE_INFLUENCER;
 
-                if (Category::whereKey($this->integer('categoryId'))->value('type') !== $expected) {
+                $category = Category::find($this->integer('categoryId'));
+
+                if ($category?->type !== $expected) {
                     $validator->errors()->add('categoryId', __('proposals.category_mismatch'));
+                } elseif (! $category->is_active && $category->id !== $project?->category_id) {
+                    $validator->errors()->add('categoryId', __('proposals.category_archived'));
+                }
+            }
+
+            foreach (['title', 'description'] as $field) {
+                if ($word = BlacklistEntry::blockedWord($this->input($field))) {
+                    $validator->errors()->add($field, __('admin.blocked_word', ['word' => $word]));
                 }
             }
 

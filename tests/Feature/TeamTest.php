@@ -339,7 +339,7 @@ class TeamTest extends TestCase
 
         // The other team member can write on the timeline, but cannot withdraw or give in.
         $this->as($this->dana)->postJson("/api/disputes/{$id}/messages", ['body' => 'I confirm what Lena said.'])->assertCreated();
-        $this->as($this->dana)->getJson("/api/disputes/{$id}")->assertJsonPath('data.permissions', ['canPost' => true, 'canWithdraw' => false, 'canConcede' => false, 'canResolve' => false]);
+        $this->as($this->dana)->getJson("/api/disputes/{$id}")->assertJsonPath('data.permissions', ['canPost' => true, 'canWithdraw' => false, 'canConcede' => false, 'canResolve' => false, 'canAppeal' => false]);
         $this->as($this->dana)->postJson("/api/disputes/{$id}/withdraw")->assertForbidden();
 
         // A split pays the team by share.

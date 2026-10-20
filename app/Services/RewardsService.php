@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Models\Medal;
 use App\Models\PaymentMethod;
 use App\Models\PointTransaction;
 use App\Models\Project;
@@ -90,42 +91,94 @@ class RewardsService
     }
 
     /**
-     * Every medal with the user's progress and when it was earned.
+     * Every medal with the user's progress and when it was earned. Medals the admins switched off are listed only for
+     * those who already hold them.
      *
-     * @return list<array{code: string, current: int, target: int, earned: bool, awardedAt: mixed}>
+     * @return list<array{code: string, name: string, description: ?string, icon: ?string, current: int, target: int, earned: bool, awardedAt: mixed}>
      */
     public function medals(User $user): array
     {
         $metrics = $this->metrics($user);
         $earned = UserMedal::where('user_id', $user->id)->pluck('awarded_at', 'code');
+        $ar = app()->getLocale() === 'ar';
 
-        return collect(config('engagement.medals'))->map(fn (array $medal) => [
-            'code' => $medal['code'],
-            'current' => min($metrics[$medal['metric']] ?? 0, $medal['target']),
-            'target' => $medal['target'],
-            'earned' => $earned->has($medal['code']),
-            'awardedAt' => $earned->get($medal['code']),
-        ])->values()->all();
+        return Medal::orderBy('sort_order')->orderBy('id')->get()
+            ->filter(fn (Medal $medal) => $medal->is_active || $earned->has($medal->code))
+            ->map(fn (Medal $medal) => [
+                'code' => $medal->code,
+                'name' => $medal->name(),
+                'description' => ($ar ? $medal->description_ar : $medal->description_en)
+                    ?? (__("rewards.medals.{$medal->code}.description") !== "rewards.medals.{$medal->code}.description" ? __("rewards.medals.{$medal->code}.description") : null),
+                'icon' => $medal->icon,
+                'current' => $earned->has($medal->code) ? $medal->target : min($medal->metric ? ($metrics[$medal->metric] ?? 0) : 0, $medal->target),
+                'target' => $medal->target,
+                'earned' => $earned->has($medal->code),
+                'awardedAt' => $earned->get($medal->code),
+            ])->values()->all();
     }
 
     /**
-     * Award the medals the user has reached and not received yet.
+     * Award the active medals the user has reached and not received yet.
      *
      * @return list<string> The codes awarded now.
      */
     public function syncMedals(User $user): array
     {
         $new = [];
+        $metrics = $this->metrics($user);
+        $earned = UserMedal::where('user_id', $user->id)->pluck('code')->all();
 
-        foreach ($this->medals($user) as $medal) {
-            if (! $medal['earned'] && $medal['current'] >= $medal['target']) {
-                UserMedal::firstOrCreate(['user_id' => $user->id, 'code' => $medal['code']], ['awarded_at' => now()]);
-                $user->notify(new ActivityNotification("medal.{$medal['code']}", null, []));
-                $new[] = $medal['code'];
+        foreach (Medal::where('is_active', true)->whereNotNull('metric')->get() as $medal) {
+            if (! in_array($medal->code, $earned, true) && ($metrics[$medal->metric] ?? 0) >= $medal->target) {
+                $this->giveMedal($user, $medal);
+                $new[] = $medal->code;
             }
         }
 
         return $new;
+    }
+
+    /**
+     * Give a medal, automatically or by an admin (with the reason kept). Returns null when the user already holds it.
+     */
+    public function giveMedal(User $user, Medal $medal, ?User $admin = null, ?string $reason = null): ?UserMedal
+    {
+        $award = UserMedal::firstOrCreate(['user_id' => $user->id, 'code' => $medal->code], ['awarded_at' => now(), 'awarded_by' => $admin?->id, 'reason' => $reason]);
+
+        if (! $award->wasRecentlyCreated) {
+            return null;
+        }
+
+        $user->notify(new ActivityNotification("medal.{$medal->code}", null, ['medal' => $medal->name_en, 'medalAr' => $medal->name_ar]));
+
+        return $award;
+    }
+
+    /**
+     * Grant (positive) or take (negative) points by hand, with the reason in the history. Never below zero.
+     */
+    public function adjust(User $user, int $amount, string $note, User $admin): PointTransaction
+    {
+        return DB::transaction(function () use ($user, $amount, $note, $admin) {
+            $balance = (int) User::whereKey($user->id)->lockForUpdate()->value('points');
+
+            if ($balance + $amount < 0) {
+                throw new ApiException(__('rewards.insufficient_points', ['points' => $balance]), 'insufficient_points');
+            }
+
+            User::whereKey($user->id)->increment('points', $amount);
+            $user->points = $balance + $amount;
+
+            $transaction = PointTransaction::create([
+                'user_id' => $user->id, 'amount' => $amount, 'reason' => 'admin_adjustment', 'meta' => ['note' => $note], 'created_by' => $admin->id,
+            ]);
+
+            if ($amount > 0) {
+                $user->notify(new ActivityNotification('points.earned', null, ['points' => $amount, 'reason' => $note]));
+            }
+
+            return $transaction;
+        });
     }
 
     /**

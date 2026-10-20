@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Notifications;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+/**
+ * The staff's answer to a contact-form message, emailed to the sender (who may have no account).
+ */
+class ContactReply extends Notification implements ShouldQueue
+{
+    use Queueable;
+
+    public function __construct(
+        private readonly string $name,
+        private readonly string $subject,
+        private readonly string $reply,
+        private readonly string $original,
+    ) {}
+
+    /**
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
+    {
+        return ['mail'];
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject(__('contact.reply_subject', ['subject' => $this->subject]))
+            ->greeting(__('notifications.email_greeting', ['name' => $this->name]))
+            ->line($this->reply)
+            ->line('---')
+            ->line(__('contact.reply_quote'))
+            ->line(str($this->original)->limit(600)->toString());
+    }
+}

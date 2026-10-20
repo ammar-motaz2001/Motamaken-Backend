@@ -17,4 +17,6 @@ return [
     'city_mismatch' => 'The city does not belong to the selected country.',
     'country_required' => 'Choose a country to go with the city.',
     'budget_range' => 'The highest budget cannot be lower than the lowest.',
+    'not_a_draft' => 'Only drafts can be published.',
+    'category_archived' => 'This category is no longer available. Choose another one.',
 ];

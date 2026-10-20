@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\RejectRequest;
 use App\Http\Resources\KycResource;
 use App\Http\Resources\UserBriefResource;
+use App\Models\KycEvent;
 use App\Models\KycSubmission;
 use App\Services\KycService;
 use Dedoc\Scramble\Attributes\Group;
@@ -29,7 +30,7 @@ class AdminKycController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $request->validate([
-            'status' => ['nullable', Rule::in([KycSubmission::PENDING, KycSubmission::APPROVED, KycSubmission::REJECTED])],
+            'status' => ['nullable', Rule::in([KycSubmission::PENDING, KycSubmission::APPROVED, KycSubmission::REJECTED, KycSubmission::NEEDS_UPDATE])],
             'perPage' => ['nullable', 'integer', 'min:1', 'max:100'],
         ]);
         $status = $request->input('status', KycSubmission::PENDING);
@@ -57,6 +58,16 @@ class AdminKycController extends Controller
             'user' => (new UserBriefResource($submission->user))->resolve(),
             /** The full number, which users only see masked. */
             'documentNumberFull' => $submission->document_number,
+            /** Every step of this user's identity checks, oldest first. */
+            'history' => KycEvent::with('actor')->where('user_id', $submission->user_id)->orderBy('id')->get()->map(fn (KycEvent $e) => [
+                'id' => $e->id,
+                'submissionId' => $e->kyc_submission_id,
+                /** `submitted`, `approved`, `rejected` or `needs_update`. */
+                'status' => $e->status,
+                'note' => $e->note,
+                'actor' => $e->actor ? ['id' => $e->actor->id, 'fullName' => $e->actor->full_name] : null,
+                'createdAt' => $e->created_at?->toIso8601String(),
+            ])->all(),
             'files' => [
                 'front' => $link('front'),
                 'back' => $submission->back_path ? $link('back') : null,
@@ -92,6 +103,17 @@ class AdminKycController extends Controller
      *
      * @unauthenticated
      */
+    /**
+     * Ask for an update.
+     *
+     * The documents are unclear or incomplete: the submission closes as `needs_update`, the user is told what to fix and can
+     * send a new one.
+     */
+    public function requestUpdate(RejectRequest $request, int $submission): KycResource
+    {
+        return new KycResource($this->kyc->requestUpdate(KycSubmission::findOrFail($submission), $request->user(), $request->input('reason')));
+    }
+
     public function file(int $submission, string $kind): StreamedResponse
     {
         $submission = KycSubmission::findOrFail($submission);

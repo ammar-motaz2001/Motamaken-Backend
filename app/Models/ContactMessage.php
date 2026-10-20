@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'name', 'email', 'topic', 'subject', 'message', 'status', 'admin_note', 'handled_by', 'handled_at'])]
+#[Fillable(['user_id', 'name', 'email', 'topic', 'subject', 'message', 'status', 'admin_note', 'handled_by', 'handled_at', 'reply', 'replied_at', 'archived_at'])]
 class ContactMessage extends Model
 {
     public const TOPICS = ['general', 'account', 'payments', 'disputes', 'technical', 'partnership', 'other'];
@@ -20,7 +20,7 @@ class ContactMessage extends Model
 
     protected function casts(): array
     {
-        return ['handled_at' => 'datetime'];
+        return ['handled_at' => 'datetime', 'replied_at' => 'datetime', 'archived_at' => 'datetime'];
     }
 
     /**

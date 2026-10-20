@@ -36,6 +36,8 @@ class UserResource extends JsonResource
             'theme' => $this->theme,
             /** Opens the admin panel on the website. */
             'isAdmin' => (bool) $this->is_admin,
+            /** What the admin may use in the panel (config/admin.php permissions); empty for everyone else. */
+            'adminPermissions' => $this->adminPermissions(),
             'createdAt' => $this->created_at,
         ];
     }

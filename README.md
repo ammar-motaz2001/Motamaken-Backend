@@ -379,3 +379,22 @@ tests use) keeps the development flow with `POST /wallet/deposits/{id}/simulate`
   (`purpose: purchase`, which waives the top-up minimum) and then pays from the wallet, so every purchase stays in the
   ledger. Withdrawals are still paid out by an admin.
 - Test card: `4111 1111 1111 1111`, any future expiry, any CVC; Moyasar's test bank page lets you approve or decline.
+
+## Admin panel: staff, audit, moderation and settings
+
+- **Staff roles**: `admin_roles` with permissions from `config/admin.php`; routes use `admin.can:<permission>`. An admin
+  without a role has full access. Every non-GET admin call is written to `admin_logs` (`GET /admin/audit`).
+- **Policies**: Site settings (`/admin/site-settings`) hold the site identity and links, maintenance mode (API answers
+  503 `maintenance` to everyone but the staff), upload limits, offered payment methods and "staff must use two-factor".
+  Values that replace config (promotion prices, point rules, payment methods, SMTP) are applied by
+  `App\Support\RuntimeConfig` at boot and before every queued job.
+- **Moderation**: blacklist (emails, phones, domains, IPs, words), report priorities and actions, hidden projects and
+  reviews, dispute appeals with ledger corrections, support tickets, contact replies, notification texts, announcements.
+- **Exports**: `GET /admin/export/{dataset}` streams CSV (UTF-8 with BOM, opens in Excel).
+
+### AI (optional)
+
+Off by default. Set `AI_ENABLED=true` and `OLLAMA_URL` (self-hosted Ollama with `llama3.2:3b` and
+`nomic-embed-text`). New content is screened in a queued job (`App\Jobs\ScreenContent`); suspicious items become reports
+with source `ai`. Matching needs pgvector: the Postgres image in `deploy/postgres` includes it; after it runs, migrate and
+`php artisan ai:embed` to fill the embeddings.

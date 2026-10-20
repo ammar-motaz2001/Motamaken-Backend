@@ -23,6 +23,7 @@ class Message extends Model
     protected function casts(): array
     {
         return [
+            'removed_at' => 'datetime',
             'attachment_size' => 'integer',
             'duration' => 'integer',
             'read_at' => 'datetime',

@@ -38,6 +38,9 @@ class AdminSettingsController extends Controller
      */
     public function update(UpdateSettingsRequest $request): array
     {
+        // The finance settings history: the audit log keeps the values before each change.
+        request()->attributes->set('audit.before', $this->current());
+
         foreach (self::MAP as $input => $key) {
             if ($request->has($input)) {
                 Setting::put($key, $request->input($input));

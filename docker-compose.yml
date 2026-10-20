@@ -32,7 +32,9 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:16-alpine
+    # Same image as production: postgres:16-alpine plus pgvector.
+    build: ./deploy/postgres
+    image: mutamakin-postgres:16
     environment:
       POSTGRES_DB: ${DB_DATABASE:-motamken}
       POSTGRES_USER: ${DB_USERNAME:-motamken}

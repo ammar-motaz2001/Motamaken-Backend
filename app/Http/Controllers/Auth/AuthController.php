@@ -44,6 +44,7 @@ class AuthController extends Controller
             $user->referred_by = User::where('referral_code', Str::upper($request->input('referralCode')))->value('id');
         }
 
+        $user->registration_ip ??= $request->ip();
         $user->forceFill([$method->column() => $identifier])->fill([
             'first_name' => $request->input('firstName') ?: null,
             'last_name' => $request->input('lastName') ?: null,

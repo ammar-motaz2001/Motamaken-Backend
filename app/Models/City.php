@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['country_id', 'name_en', 'name_ar'])]
+#[Fillable(['country_id', 'name_en', 'name_ar', 'is_active'])]
 class City extends Model
 {
     use HasFactory, HasLocalizedName;

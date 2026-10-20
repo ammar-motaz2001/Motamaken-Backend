@@ -24,7 +24,8 @@ class ProjectManagementController extends Controller
     /**
      * Post a project.
      *
-     * "Post Your Project": a project for freelancers, or a request for influencers. It is public right away.
+     * "Post Your Project": a project for freelancers, or a request for influencers. It is public right away, unless sent
+     * with `draft: true`: then it is saved for the owner only until published.
      */
     public function store(ProjectRequest $request): JsonResponse
     {
@@ -32,7 +33,7 @@ class ProjectManagementController extends Controller
             ...$this->attributes($request),
             'user_id' => $request->user()->id,
             'type' => $request->input('type'),
-            'status' => Project::STATUS_OPEN,
+            'status' => $request->boolean('draft') ? Project::STATUS_DRAFT : Project::STATUS_OPEN,
         ]);
 
         return (new ProjectResource($project->load(self::WITH)))->response()->setStatusCode(201);
@@ -41,14 +42,14 @@ class ProjectManagementController extends Controller
     /**
      * Edit a project.
      *
-     * Owner only, while the project is open. Send only the fields that change.
+     * Owner only, while the project is a draft or open. Send only the fields that change.
      */
     public function update(ProjectRequest $request, int $project): ProjectResource
     {
         $project = Project::findOrFail($project);
         Gate::authorize('manage', $project);
 
-        if (! $project->isOpen()) {
+        if (! $project->isEditable()) {
             throw new ApiException(__('proposals.project_not_editable'), 'project_not_editable');
         }
 
@@ -69,7 +70,7 @@ class ProjectManagementController extends Controller
         $project = Project::findOrFail($project);
         Gate::authorize('manage', $project);
 
-        if (! $project->isOpen()) {
+        if (! $project->isEditable()) {
             throw new ApiException(__('proposals.project_not_editable'), 'project_not_editable');
         }
 
@@ -80,6 +81,25 @@ class ProjectManagementController extends Controller
         $project->delete();
 
         return ['success' => true];
+    }
+
+    /**
+     * Publish a draft.
+     *
+     * Owner only: the draft goes public and starts receiving offers.
+     */
+    public function publish(Request $request, int $project): ProjectResource
+    {
+        $project = Project::findOrFail($project);
+        Gate::authorize('manage', $project);
+
+        if ($project->status !== Project::STATUS_DRAFT) {
+            throw new ApiException(__('proposals.not_a_draft'), 'not_a_draft');
+        }
+
+        $project->update(['status' => Project::STATUS_OPEN, 'created_at' => now()]);
+
+        return new ProjectResource($project->load(self::WITH));
     }
 
     /**

@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\AdminCan;
+use App\Http\Middleware\BlockBlacklistedIp;
+use App\Http\Middleware\CheckMaintenance;
 use App\Http\Middleware\RecordApiExamples;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocaleFromHeader;
@@ -23,7 +26,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Before the rate limiters run, so they count the real visitor and not the website's server.
         $middleware->prepend(TrustFrontendProxy::class);
 
-        $middleware->api(append: [SetLocaleFromHeader::class]);
+        $middleware->api(append: [SetLocaleFromHeader::class, CheckMaintenance::class, BlockBlacklistedIp::class]);
+        $middleware->alias(['admin.can' => AdminCan::class]);
         // Global, so 404s and other errors get them too; only API paths (the Swagger page needs its scripts).
         $middleware->append(SecurityHeaders::class);
 

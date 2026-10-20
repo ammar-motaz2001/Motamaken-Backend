@@ -5,12 +5,12 @@ namespace App\Http\Controllers;
 use App\Exceptions\ApiException;
 use App\Http\Requests\PaginatedRequest;
 use App\Http\Resources\ReviewResource;
-use App\Models\Profile;
 use App\Models\Project;
 use App\Models\Proposal;
 use App\Models\Review;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
+use App\Rules\CleanText;
 use App\Services\RewardsService;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -50,7 +50,7 @@ class ReviewController extends Controller
     {
         $data = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
-            'comment' => ['nullable', 'string', 'max:2000'],
+            'comment' => ['nullable', 'string', 'max:2000', new CleanText],
         ]);
         $project = Project::findOrFail($project);
         $reviewee = $this->otherSide($project, $request->user()) ?? throw new ApiException(__('profiles.review_not_allowed'), 'review_not_allowed', 403);
@@ -65,8 +65,7 @@ class ReviewController extends Controller
                 'rating' => $data['rating'], 'comment' => $data['comment'] ?? null,
             ]);
 
-            $stats = Review::where('reviewee_id', $reviewee->id)->selectRaw('avg(rating) as average, count(*) as total')->first();
-            Profile::where('user_id', $reviewee->id)->update(['rating' => round((float) $stats->average, 1), 'reviews_count' => $stats->total]);
+            Review::refreshStats($reviewee->id);
 
             return $review;
         });

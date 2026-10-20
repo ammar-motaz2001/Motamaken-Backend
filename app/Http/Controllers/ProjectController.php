@@ -51,7 +51,10 @@ class ProjectController extends Controller
         $project = Project::with(['user', 'category', 'country', 'city'])->findOrFail($project);
         $offer = $viewer ? $project->proposals()->where('user_id', $viewer->id)->first() : null;
 
-        abort_unless($project->isOpen() || $viewer?->id === $project->user_id || $offer, 404);
+        $isOwner = $viewer?->id === $project->user_id;
+        // Hidden by a moderator or still a draft: only the owner (and the staff) can open it.
+        abort_if(($project->hidden_at || $project->status === Project::STATUS_DRAFT) && ! $isOwner && ! $viewer?->is_admin, 404);
+        abort_unless($project->isOpen() || $isOwner || $offer || $viewer?->is_admin, 404);
 
         if ($viewer && $viewer->id !== $project->user_id) {
             $project->setRelation('viewerProposal', $offer);

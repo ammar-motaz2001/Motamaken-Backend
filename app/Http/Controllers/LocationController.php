@@ -22,7 +22,7 @@ class LocationController extends Controller
     {
         $column = app()->getLocale() === 'ar' ? 'name_ar' : 'name_en';
 
-        return CountryResource::collection(Country::orderBy($column)->get());
+        return CountryResource::collection(Country::where('is_active', true)->orderBy($column)->get());
     }
 
     /**
@@ -36,6 +36,6 @@ class LocationController extends Controller
     {
         $column = app()->getLocale() === 'ar' ? 'name_ar' : 'name_en';
 
-        return CityResource::collection($country->cities()->orderBy($column)->get());
+        return CityResource::collection($country->cities()->where('is_active', true)->orderBy($column)->get());
     }
 }

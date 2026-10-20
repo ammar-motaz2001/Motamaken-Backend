@@ -27,11 +27,20 @@ class AdminUserResource extends JsonResource
             'avatarUrl' => $this->avatar_url,
             'isAdmin' => (bool) $this->is_admin,
             'isVerified' => $this->isVerified(),
-            /** `none`, `pending`, `approved` or `rejected`. */
+            /** `none`, `pending`, `approved`, `rejected` or `needs_update`. */
             'kycStatus' => $this->kyc_status,
+            /** `client`, `freelancer` or `influencer`. */
+            'accountType' => $this->relationLoaded('profile') ? ($this->profile?->type ?? 'client') : null,
+            /** The staff role, for admins with a limited role. */
+            'adminRole' => $this->is_admin && $this->relationLoaded('adminRole') && $this->adminRole
+                ? ['id' => $this->adminRole->id, 'slug' => $this->adminRole->slug, 'nameEn' => $this->adminRole->name_en, 'nameAr' => $this->adminRole->name_ar]
+                : null,
+            'twoFactor' => $this->hasTwoFactor(),
             'points' => $this->points,
             'suspendedAt' => $this->suspended_at,
             'suspensionReason' => $this->suspension_reason,
+            /** End of a timed suspension; null with `suspendedAt` set means banned until lifted. */
+            'suspendedUntil' => $this->suspended_until,
             'lastSeenAt' => $this->last_seen_at,
             'createdAt' => $this->created_at,
             /** Only in the detail view. */

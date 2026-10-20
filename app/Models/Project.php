@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'type', 'category_id', 'title', 'description', 'budget_min', 'budget_max', 'currency', 'country_id', 'city_id', 'status', 'accepted_proposal_id', 'is_featured', 'featured_until'])]
+#[Fillable(['user_id', 'type', 'category_id', 'title', 'description', 'budget_min', 'budget_max', 'currency', 'country_id', 'city_id', 'status', 'accepted_proposal_id', 'is_featured', 'featured_until', 'hidden_at', 'hidden_reason'])]
 class Project extends Model
 {
     use HasFactory;
@@ -29,6 +29,9 @@ class Project extends Model
     public const TYPE_INFLUENCER_REQUEST = 'influencer_request';
 
     /** Accepting offers: shown on the homepage and in search. */
+    /** Saved by the owner and not published yet: visible to nobody else. */
+    public const STATUS_DRAFT = 'draft';
+
     public const STATUS_OPEN = 'open';
 
     /** An offer was accepted and the work is under way. */
@@ -46,6 +49,7 @@ class Project extends Model
             'budget_max' => 'integer',
             'is_featured' => 'boolean',
             'featured_until' => 'datetime',
+            'hidden_at' => 'datetime',
         ];
     }
 
@@ -101,7 +105,15 @@ class Project extends Model
 
     public function isOpen(): bool
     {
-        return $this->status === self::STATUS_OPEN;
+        return $this->status === self::STATUS_OPEN && $this->hidden_at === null;
+    }
+
+    /**
+     * The owner can still change or delete it.
+     */
+    public function isEditable(): bool
+    {
+        return in_array($this->status, [self::STATUS_DRAFT, self::STATUS_OPEN], true);
     }
 
     /**
@@ -120,7 +132,7 @@ class Project extends Model
 
     public function scopeOpen(Builder $query): Builder
     {
-        return $query->where('projects.status', self::STATUS_OPEN);
+        return $query->where('projects.status', self::STATUS_OPEN)->whereNull('projects.hidden_at');
     }
 
     /**
@@ -131,7 +143,7 @@ class Project extends Model
      */
     public function scopeDistinctive(Builder $query): Builder
     {
-        return $query->where('projects.is_featured', true)
+        return $query->where('projects.is_featured', true)->whereNull('projects.hidden_at')
             ->where(fn ($query) => $query->whereNull('projects.featured_until')->orWhere('projects.featured_until', '>', now()));
     }
 

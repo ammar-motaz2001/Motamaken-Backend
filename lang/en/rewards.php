@@ -17,6 +17,7 @@ return [
         'referral' => 'A friend you invited joined',
         'promotion' => 'Distinguish yourself (promotion)',
         'draw_tickets' => 'Prize draw tickets',
+        'admin_adjustment' => 'Adjusted by Mutamakin',
     ],
     'medals' => [
         'verified' => ['name' => 'Verified', 'description' => 'Your identity was verified.'],
