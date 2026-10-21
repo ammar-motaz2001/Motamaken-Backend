@@ -20,6 +20,9 @@ class TeamService
 {
     public const INVITATION_DAYS = 7;
 
+    /**
+     * Create a draft team with its lead as the first member, accepted and holding the full share.
+     */
     public function create(User $lead, string $name, ?string $description): Team
     {
         return DB::transaction(function () use ($lead, $name, $description) {
@@ -33,6 +36,10 @@ class TeamService
         });
     }
 
+    /**
+     * Invite a freelancer to a draft team with a share. A declined or expired member can be invited again; the team size
+     * and the shares are checked, the lead's share is rebalanced and the invitee is told.
+     */
     public function invite(Team $team, User $invitee, ?string $roleTitle, int $shareBp): TeamMember
     {
         $this->assertEditable($team);
@@ -101,6 +108,9 @@ class TeamService
         return $member->refresh();
     }
 
+    /**
+     * Remove a member from a draft team (never the lead); their share goes back to the lead.
+     */
     public function removeMember(Team $team, TeamMember $member): void
     {
         $this->assertEditable($team);
@@ -153,6 +163,9 @@ class TeamService
         $this->notify($team->owner, 'team.left', $member->user, $team);
     }
 
+    /**
+     * The invitee accepts a pending invitation; the lead is told.
+     */
     public function accept(TeamMember $member): TeamMember
     {
         $this->assertAnswerable($member);
@@ -162,6 +175,9 @@ class TeamService
         return $member;
     }
 
+    /**
+     * The invitee declines a pending invitation; the lead is told.
+     */
     public function decline(TeamMember $member): TeamMember
     {
         $this->assertAnswerable($member);
@@ -202,6 +218,9 @@ class TeamService
         return $team;
     }
 
+    /**
+     * Close a team for good. Not while it is working on a project.
+     */
     public function disband(Team $team): Team
     {
         $this->assertNotInUse($team);
@@ -261,6 +280,9 @@ class TeamService
         }
     }
 
+    /**
+     * Put the member back to invited, with a new invitation window.
+     */
     private function reinvite(TeamMember $member): void
     {
         $member->fill([
@@ -269,6 +291,9 @@ class TeamService
         ])->save();
     }
 
+    /**
+     * Members and shares can only change while the team is a draft.
+     */
     private function assertEditable(Team $team): void
     {
         if ($team->status !== Team::DRAFT) {
@@ -276,6 +301,9 @@ class TeamService
         }
     }
 
+    /**
+     * Refuse while the team is behind a project that is not finished.
+     */
     private function assertNotInUse(Team $team): void
     {
         if ($this->isInUse($team)) {
@@ -283,6 +311,9 @@ class TeamService
         }
     }
 
+    /**
+     * Only an invitation that is still waiting and has not expired can be accepted or declined.
+     */
     private function assertAnswerable(TeamMember $member): void
     {
         if ($member->status !== TeamMember::INVITED) {
@@ -294,6 +325,9 @@ class TeamService
         }
     }
 
+    /**
+     * Tell the invitee about the invitation, with their share and how many days they have to answer.
+     */
     private function notifyInvited(TeamMember $member): void
     {
         $member->loadMissing(['team.owner', 'user']);
@@ -303,6 +337,9 @@ class TeamService
         ]));
     }
 
+    /**
+     * Send a team notification carrying the team id and name.
+     */
     private function notify(User $to, string $type, ?User $actor, Team $team): void
     {
         $to->notify(new ActivityNotification($type, $actor, ['teamId' => $team->id, 'team' => $team->name]));

@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class TeamRequest extends FormRequest
 {
     /**
+     * Validates a team's name and description.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

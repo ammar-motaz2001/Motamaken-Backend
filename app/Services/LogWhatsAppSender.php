@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Log;
  */
 class LogWhatsAppSender implements WhatsAppSender
 {
+    /**
+     * Write the message to the application log instead of sending it.
+     */
     public function send(string $phone, string $message): void
     {
         Log::info("WhatsApp to {$phone}: {$message}");

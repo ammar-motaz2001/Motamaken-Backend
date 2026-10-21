@@ -12,6 +12,9 @@ use Throwable;
  */
 class Ollama
 {
+    /**
+     * Whether the Ollama server answers within 3 seconds.
+     */
     public function ping(): bool
     {
         try {
@@ -55,6 +58,8 @@ class Ollama
     }
 
     /**
+     * The embedding vector of a text (cut to 8000 characters), or null on failure.
+     *
      * @return list<float>|null
      */
     public function embed(string $text): ?array

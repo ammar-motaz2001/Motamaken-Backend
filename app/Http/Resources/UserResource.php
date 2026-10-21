@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class UserResource extends JsonResource
 {
     /**
+     * Returns the logged-in user's own account: names, contacts, points, preferences and admin permissions.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

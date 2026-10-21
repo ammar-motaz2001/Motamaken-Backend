@@ -103,6 +103,9 @@ class DepositService
         return $deposit->refresh();
     }
 
+    /**
+     * Mark a pending deposit as failed with the provider's reason. Nothing reaches the wallet; finished deposits are left as they are.
+     */
     public function fail(Deposit $deposit, string $reason): Deposit
     {
         if ($deposit->status === Deposit::PENDING) {
@@ -112,6 +115,10 @@ class DepositService
         return $deposit;
     }
 
+    /**
+     * Refuse an amount outside the deposit minimum and maximum from the settings. Topping up for a purchase only needs
+     * at least 1 unit.
+     */
     private function assertWithinLimits(int $cents, string $currency, bool $forPurchase = false): void
     {
         $min = $forPurchase ? 1.0 : (float) Setting::get('deposits.min');

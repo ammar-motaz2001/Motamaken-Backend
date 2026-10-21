@@ -5,7 +5,33 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $type
+ * @property string $owner_key
+ * @property int|null $user_id
+ * @property string $currency
+ * @property int $balance_cents
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User|null $user
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereBalanceCents($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereOwnerKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Account whereUserId($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['type', 'owner_key', 'user_id', 'currency', 'balance_cents'])]
 class Account extends Model
 {
@@ -33,6 +59,9 @@ class Account extends Model
     /** @var array<string, mixed> */
     protected $attributes = ['balance_cents' => 0];
 
+    /**
+     * Balances are whole cents as integers.
+     */
     protected function casts(): array
     {
         return ['balance_cents' => 'integer'];
@@ -47,6 +76,8 @@ class Account extends Model
     }
 
     /**
+     * The user who owns this wallet, null for the platform's own accounts.
+     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo

@@ -23,6 +23,8 @@ class ActivityEmail extends Notification implements ShouldQueue
     public function __construct(private readonly array $data) {}
 
     /**
+     * Sent by email only; the bell copy is a separate ActivityNotification.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -30,6 +32,9 @@ class ActivityEmail extends Notification implements ShouldQueue
         return ['mail'];
     }
 
+    /**
+     * The email: the notification text in the reader's language, with a link to the page it is about.
+     */
     public function toMail(object $notifiable): MailMessage
     {
         $params = $this->data['params'] ?? [];
@@ -47,6 +52,8 @@ class ActivityEmail extends Notification implements ShouldQueue
     }
 
     /**
+     * The website page the email links to, picked from the ids in the params.
+     *
      * @param  array<string, mixed>  $params
      */
     private function path(array $params): string

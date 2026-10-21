@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 class ProjectIndexRequest extends FormRequest
 {
     /**
+     * Validates the filters, sort and page size of the projects list.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

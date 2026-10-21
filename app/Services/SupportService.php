@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\URL;
  */
 class SupportService
 {
+    /**
+     * Open a ticket with its first message and tell the admins who handle support.
+     */
     public function open(User $user, string $subject, string $category, string $body, ?UploadedFile $file): SupportTicket
     {
         $ticket = DB::transaction(function () use ($user, $subject, $category, $body, $file) {
@@ -33,6 +36,10 @@ class SupportService
         return $ticket;
     }
 
+    /**
+     * Add a message to a ticket. A staff reply marks it answered and is assigned to that staff member if nobody has it;
+     * a user reply reopens it and tells the assignee. Users cannot write on a closed ticket.
+     */
     public function reply(SupportTicket $ticket, User $author, ?string $body, ?UploadedFile $file, bool $asStaff): SupportMessage
     {
         if ($ticket->status === SupportTicket::CLOSED && ! $asStaff) {
@@ -59,6 +66,9 @@ class SupportService
         return $message;
     }
 
+    /**
+     * Store one message of a ticket, with its optional attachment kept on the private disk.
+     */
     private function add(SupportTicket $ticket, User $author, ?string $body, ?UploadedFile $file, bool $asStaff): SupportMessage
     {
         return $ticket->messages()->create([
@@ -73,6 +83,8 @@ class SupportService
     }
 
     /**
+     * The API shape of a ticket, optionally with its messages. Staff names are hidden from users.
+     *
      * @return array<string, mixed>
      */
     public static function presentTicket(SupportTicket $t, bool $withMessages = false, bool $forStaff = false): array

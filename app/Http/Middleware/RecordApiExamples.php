@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class RecordApiExamples
 {
+    /**
+     * Saves the request and its response as an example for the API docs.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);

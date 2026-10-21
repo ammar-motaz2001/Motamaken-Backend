@@ -24,6 +24,9 @@ class SendBroadcast implements ShouldQueue
 
     public function __construct(public readonly Broadcast $broadcast) {}
 
+    /**
+     * Notify every user in the audience (and email them when chosen), then record how many were reached.
+     */
     public function handle(): void
     {
         $broadcast = $this->broadcast;

@@ -8,12 +8,17 @@ use Illuminate\Validation\Rule;
 
 class SignupRequest extends IdentifierRequest
 {
+    /**
+     * The identifier comes in `phone` or `email`, following the chosen method.
+     */
     protected function identifierField(): string
     {
         return $this->input('method') === 'phone' ? 'phone' : 'email';
     }
 
     /**
+     * Validates a new account: email or phone, names, username, a strong password and the optional extras.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

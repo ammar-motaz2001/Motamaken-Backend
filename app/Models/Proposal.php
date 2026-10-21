@@ -6,7 +6,42 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property int $user_id
+ * @property numeric $amount
+ * @property string $currency
+ * @property int $delivery_days
+ * @property string $message
+ * @property string $status
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int|null $team_id
+ * @property-read Project $project
+ * @property-read Team|null $team
+ * @property-read User $user
+ *
+ * @method static \Database\Factories\ProposalFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereAmount($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereCurrency($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereDeliveryDays($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereMessage($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereProjectId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereTeamId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Proposal whereUserId($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['project_id', 'user_id', 'team_id', 'amount', 'currency', 'delivery_days', 'message', 'status'])]
 class Proposal extends Model
 {
@@ -27,6 +62,9 @@ class Proposal extends Model
 
     public const STATUS_WITHDRAWN = 'withdrawn';
 
+    /**
+     * The amount keeps two decimals; delivery_days becomes an integer.
+     */
     protected function casts(): array
     {
         return [
@@ -36,6 +74,8 @@ class Proposal extends Model
     }
 
     /**
+     * The project the proposal answers.
+     *
      * @return BelongsTo<Project, $this>
      */
     public function project(): BelongsTo
@@ -63,6 +103,9 @@ class Proposal extends Model
         return $this->belongsTo(Team::class);
     }
 
+    /**
+     * Whether the proposal still waits for the project owner's answer.
+     */
     public function isPending(): bool
     {
         return $this->status === self::STATUS_PENDING;

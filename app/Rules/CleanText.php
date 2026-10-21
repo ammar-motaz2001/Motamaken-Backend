@@ -11,6 +11,9 @@ use Illuminate\Contracts\Validation\ValidationRule;
  */
 class CleanText implements ValidationRule
 {
+    /**
+     * Refuse text that contains a word on the blacklist, naming the word.
+     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (is_string($value) && $word = BlacklistEntry::blockedWord($value)) {

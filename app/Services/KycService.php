@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\DB;
 class KycService
 {
     /**
+     * Send identity documents for review. Refused while one is pending or after approval; the files are stored privately,
+     * the user's status becomes pending and the admins are told.
+     *
      * @param  array{documentType: string, documentNumber: string, fullName: string, dateOfBirth: string}  $data
      */
     public function submit(User $user, array $data, UploadedFile $front, ?UploadedFile $back, UploadedFile $selfie): KycSubmission
@@ -50,11 +53,17 @@ class KycService
         return $submission;
     }
 
+    /**
+     * Accept a pending submission: the user becomes verified.
+     */
     public function approve(KycSubmission $submission, User $admin): KycSubmission
     {
         return $this->review($submission, $admin, KycSubmission::APPROVED, null);
     }
 
+    /**
+     * Turn down a pending submission with a reason the user is shown.
+     */
     public function reject(KycSubmission $submission, User $admin, string $reason): KycSubmission
     {
         return $this->review($submission, $admin, KycSubmission::REJECTED, $reason);
@@ -68,6 +77,10 @@ class KycService
         return $this->review($submission, $admin, KycSubmission::NEEDS_UPDATE, $reason);
     }
 
+    /**
+     * Record an admin's decision on a pending submission, copy the status to the user, log the event and tell the user.
+     * The row is locked so two admins cannot decide the same submission.
+     */
     private function review(KycSubmission $submission, User $admin, string $status, ?string $reason): KycSubmission
     {
         DB::transaction(function () use ($submission, $admin, $status, $reason) {

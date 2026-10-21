@@ -9,6 +9,8 @@ class GroupRequest extends FormRequest
     public const MAX_MEMBERS = 20;
 
     /**
+     * Validates a group chat's title, members and optional project.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

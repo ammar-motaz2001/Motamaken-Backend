@@ -51,6 +51,8 @@ class AdminSettingsController extends Controller
     }
 
     /**
+     * The current fee, deposit and withdrawal settings.
+     *
      * @return array<string, mixed>
      */
     private function current(): array

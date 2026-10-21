@@ -9,6 +9,9 @@ use App\Enums\AuthMethod;
  */
 class Mask
 {
+    /**
+     * Hide most of an email or phone number for display, e.g. ab•••@mail.com or •••••567.
+     */
     public static function identifier(AuthMethod $method, ?string $value): ?string
     {
         if (! $value) {

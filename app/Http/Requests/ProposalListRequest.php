@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 class ProposalListRequest extends FormRequest
 {
     /**
+     * Validates the status filter and page size of an offers list.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

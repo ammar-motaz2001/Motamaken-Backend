@@ -54,6 +54,9 @@ class SiteSettingsController extends Controller
         ])];
     }
 
+    /**
+     * Drops the cached public site settings, called after an admin changes them.
+     */
     public static function forget(): void
     {
         Cache::forget('site-settings');

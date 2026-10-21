@@ -160,6 +160,8 @@ class SecurityController extends Controller
     }
 
     /**
+     * The unconfirmed two-factor setup; fails when it expired or was never started.
+     *
      * @return array{method: string, target: string}
      */
     private function pending(Request $request): array
@@ -167,11 +169,17 @@ class SecurityController extends Controller
         return Cache::get($this->pendingKey($request)) ?? throw new ApiException(__('auth_flow.two_factor_expired'), 'two_factor_expired');
     }
 
+    /**
+     * Cache key of the two-factor setup the user has started but not confirmed yet.
+     */
     private function pendingKey(Request $request): string
     {
         return "two_factor_setup:{$request->user()->id}";
     }
 
+    /**
+     * A readable device name such as "Chrome on macOS", guessed from the user agent.
+     */
     private function device(?string $agent): string
     {
         if (! $agent) {

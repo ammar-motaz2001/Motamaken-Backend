@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 class PaymentMethodRequest extends FormRequest
 {
     /**
+     * Validates a saved card (gateway token, or number, expiry and CVC) or a PayPal email.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -38,11 +40,17 @@ class PaymentMethodRequest extends FormRequest
         ];
     }
 
+    /**
+     * The card number with spaces and dashes removed.
+     */
     public function digits(): string
     {
         return preg_replace('/\D/', '', (string) $this->input('number'));
     }
 
+    /**
+     * Rejects card numbers that are not 13 to 19 digits or fail the Luhn checksum.
+     */
     private function luhn(string $attribute, mixed $value, Closure $fail): void
     {
         $digits = preg_replace('/[\s-]/', '', (string) $value);
@@ -64,6 +72,9 @@ class PaymentMethodRequest extends FormRequest
         }
     }
 
+    /**
+     * Rejects a card whose expiry month and year are already past.
+     */
     private function notExpired(string $attribute, mixed $value, Closure $fail): void
     {
         $month = (int) $this->input('expMonth');

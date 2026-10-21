@@ -16,6 +16,8 @@ use Illuminate\Validation\Validator;
 class ProjectRequest extends FormRequest
 {
     /**
+     * Validates a project's type, category, title, description, budget, currency, location and draft flag.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -43,6 +45,9 @@ class ProjectRequest extends FormRequest
         ];
     }
 
+    /**
+     * Checks fields against each other once each is valid on its own, such as the category matching the project type.
+     */
     public function after(): array
     {
         return [function (Validator $validator) {

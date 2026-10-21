@@ -1,0 +1,16 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+    - phpstan-baseline.neon
+
+parameters:
+    paths:
+        - app
+        - config
+        - database
+        - routes
+    level: 5
+    ignoreErrors:
+        # Relations are typed as never null, but the related row can be deleted (nullOnDelete foreign keys, removed
+        # users): the null-safe operators are deliberate.
+        - identifier: nullsafe.neverNull
+        - identifier: ternary.alwaysTrue

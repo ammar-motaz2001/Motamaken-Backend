@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class WithdrawalResource extends JsonResource
 {
     /**
+     * Returns the withdrawal's amount, fee, destination, status and payout or reject details.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

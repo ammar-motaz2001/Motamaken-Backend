@@ -84,6 +84,9 @@ class WithdrawalService
         return $withdrawal->refresh();
     }
 
+    /**
+     * An admin refuses a pending request with a reason: the money set aside returns to the wallet and the user is told.
+     */
     public function reject(Withdrawal $withdrawal, User $admin, string $reason): Withdrawal
     {
         $this->release($withdrawal, Withdrawal::REJECTED, 'withdrawal_rejected', $admin, $reason);
@@ -91,6 +94,9 @@ class WithdrawalService
         return $withdrawal->refresh();
     }
 
+    /**
+     * Return the amount and fee set aside for a pending request to the wallet and close it with the given status.
+     */
     private function release(Withdrawal $withdrawal, string $status, string $type, ?User $admin = null, ?string $reason = null): Withdrawal
     {
         DB::transaction(function () use ($withdrawal, $status, $type, $admin, $reason) {
@@ -117,6 +123,9 @@ class WithdrawalService
         return $withdrawal->refresh();
     }
 
+    /**
+     * Re-read the request under a row lock, refusing it once it is no longer pending, so it is never paid and refunded both.
+     */
     private function lock(Withdrawal $withdrawal): Withdrawal
     {
         $locked = Withdrawal::whereKey($withdrawal->id)->lockForUpdate()->firstOrFail();

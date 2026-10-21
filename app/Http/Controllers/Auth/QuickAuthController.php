@@ -92,6 +92,9 @@ class QuickAuthController extends Controller
         return [...$this->tokenResponse($user), 'isNew' => $isNew];
     }
 
+    /**
+     * Creates the account for a first quick sign-in, taking a name from the email when none was given.
+     */
     private function newUser(QuickVerifyRequest $request, AuthMethod $method, string $identifier): User
     {
         $name = trim((string) $request->input('name'));

@@ -147,6 +147,9 @@ class AdminReportController extends Controller
         }
     }
 
+    /**
+     * Hides a reported review and recomputes the reviewee's rating; does nothing if it was deleted.
+     */
     private function hideReview(int $id, string $reason, User $admin): void
     {
         $review = Review::withoutGlobalScope('visible')->find($id);
@@ -156,6 +159,9 @@ class AdminReportController extends Controller
         }
     }
 
+    /**
+     * Suspends a reported user with no end date and signs them out everywhere.
+     */
     private function suspend(User $user, string $reason): void
     {
         $user->forceFill(['suspended_at' => now(), 'suspended_until' => null, 'suspension_reason' => $reason])->save();
@@ -204,6 +210,8 @@ class AdminReportController extends Controller
     }
 
     /**
+     * A report for the admin list, with a summary of the flagged item.
+     *
      * @param  array<string, array{title: string, path: string|null}>  $targets
      * @return array<string, mixed>
      */

@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class KycResource extends JsonResource
 {
     /**
+     * Returns the check's status, document details with the number masked, and any rejection reason.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

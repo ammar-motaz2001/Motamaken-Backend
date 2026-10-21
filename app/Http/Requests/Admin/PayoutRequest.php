@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class PayoutRequest extends FormRequest
 {
     /**
+     * Validates the optional payout reference an admin records when paying a withdrawal.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

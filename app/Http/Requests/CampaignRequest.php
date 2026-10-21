@@ -12,6 +12,8 @@ use Illuminate\Validation\Rule;
 class CampaignRequest extends FormRequest
 {
     /**
+     * Validates the campaign's text, target, budget, cost per visit, dates and anti-fraud filters.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

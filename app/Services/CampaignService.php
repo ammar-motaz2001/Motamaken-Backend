@@ -29,6 +29,9 @@ class CampaignService
     public function __construct(private readonly LedgerService $ledger) {}
 
     /**
+     * Save a new campaign as a draft for the owner's profile or one of their open projects. No money moves until it is
+     * launched; the budget and cost per visit are checked against the currency minimums.
+     *
      * @param  array{title: string, description?: ?string, targetType: string, targetId?: ?int, currency: string, budget: float|int|string, costPerVisit: float|int|string, startsAt?: ?string, endsAt?: ?string, filters?: array<string, mixed>}  $data
      */
     public function create(User $owner, array $data): Campaign
@@ -111,6 +114,9 @@ class CampaignService
         return $campaign->refresh();
     }
 
+    /**
+     * Stop paying for visits for a while. Only a running campaign can be paused; the budget stays in the campaigns account.
+     */
     public function pause(Campaign $campaign): Campaign
     {
         if ($campaign->status !== Campaign::ACTIVE) {
@@ -122,6 +128,9 @@ class CampaignService
         return $campaign;
     }
 
+    /**
+     * Start a paused campaign again, unless its end date has already passed.
+     */
     public function resume(Campaign $campaign): Campaign
     {
         if ($campaign->status !== Campaign::PAUSED) {
@@ -298,6 +307,9 @@ class CampaignService
     }
 
     /**
+     * Merge filter changes over the current filters and the defaults, ignoring unknown keys and normalising the
+     * country codes.
+     *
      * @param  array<string, mixed>  $current
      * @param  array<string, mixed>  $changes
      * @return array<string, mixed>
@@ -311,6 +323,9 @@ class CampaignService
         return $filters;
     }
 
+    /**
+     * Refuse a cost per visit or a budget below the currency's minimum, or a budget that cannot pay for even one visit.
+     */
     private function assertAmounts(string $currency, int $budget, int $cost): void
     {
         $minCost = Money::toCents(config("marketplace.campaigns.min_cost_per_visit.{$currency}") ?? throw new ApiException(__('subscriptions.currency_unavailable'), 'currency_unavailable'));
@@ -329,6 +344,9 @@ class CampaignService
         }
     }
 
+    /**
+     * The owner's project the campaign promotes; it must belong to them and still be open for offers.
+     */
     private function ownOpenProject(User $owner, ?int $projectId): Project
     {
         $project = Project::where('user_id', $owner->id)->find($projectId) ?? throw new ApiException(__('subscriptions.project_not_yours'), 'project_not_yours');
@@ -340,6 +358,9 @@ class CampaignService
         return $project;
     }
 
+    /**
+     * A random 10-character referral code that no promoter uses yet.
+     */
     private function newCode(): string
     {
         do {

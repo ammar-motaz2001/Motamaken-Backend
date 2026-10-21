@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PromotionResource extends JsonResource
 {
     /**
+     * Returns the promotion's kind, package, project, days, price and active period.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

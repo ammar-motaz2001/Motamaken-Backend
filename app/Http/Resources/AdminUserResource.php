@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class AdminUserResource extends JsonResource
 {
     /**
+     * Returns the user with contact details, admin role, verification, points, suspension and stats.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

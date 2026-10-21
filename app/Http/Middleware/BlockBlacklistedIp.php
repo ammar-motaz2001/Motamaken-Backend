@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class BlockBlacklistedIp
 {
+    /**
+     * Refuses changes from blacklisted IP addresses; reads and payment webhooks still pass.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         if (! $request->isMethodSafe() && ! $request->is('api/webhooks/*') && BlacklistEntry::blocksIp($request->ip())) {

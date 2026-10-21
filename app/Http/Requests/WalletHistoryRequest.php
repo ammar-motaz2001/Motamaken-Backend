@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class WalletHistoryRequest extends FormRequest
 {
     /**
+     * Validates the currency, entry type and page size of the wallet history.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

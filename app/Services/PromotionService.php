@@ -34,6 +34,9 @@ class PromotionService
         return (int) round(Money::toCents($perDay) * $days * (100 - $this->discount($user)) / 100);
     }
 
+    /**
+     * The promotion discount percent of the user's plan, 0 without one.
+     */
     private function discount(User $user): float
     {
         return (float) ($this->subscriptions->planOf($user)?->features['promotion_discount_percent'] ?? 0);
@@ -55,6 +58,9 @@ class PromotionService
         ], config('marketplace.promotions.packages'));
     }
 
+    /**
+     * The price of one package in cents, in the given currency, after the user's plan discount.
+     */
     public function packagePriceCents(User $user, string $code, string $currency): int
     {
         $price = $this->package($code)['prices'][$currency]
@@ -64,6 +70,8 @@ class PromotionService
     }
 
     /**
+     * The package with this code from the config; unknown codes are refused.
+     *
      * @return array{code: string, days: int, reach: array{int, int}, prices: array<string, float>}
      */
     public function package(string $code): array
@@ -72,6 +80,10 @@ class PromotionService
             ?? throw new ApiException(__('subscriptions.package_unknown'), 'package_unknown');
     }
 
+    /**
+     * Pay from the wallet to feature a profile or an open project for some days (or a package). Days are added to an
+     * active feature, the price goes to revenue in the ledger, points are awarded and the user is told.
+     */
     public function buy(User $user, string $kind, ?int $projectId, int $days, string $currency, ?string $package = null): Promotion
     {
         return DB::transaction(function () use ($user, $kind, $projectId, $days, $currency, $package) {
@@ -112,6 +124,9 @@ class PromotionService
         });
     }
 
+    /**
+     * The user's project to feature; it must belong to them and still be open for offers.
+     */
     private function ownOpenProject(User $user, ?int $projectId): Project
     {
         $project = Project::where('user_id', $user->id)->find($projectId) ?? throw new ApiException(__('subscriptions.project_not_yours'), 'project_not_yours');

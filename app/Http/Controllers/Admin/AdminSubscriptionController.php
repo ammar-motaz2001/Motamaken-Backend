@@ -43,6 +43,8 @@ class AdminSubscriptionController extends Controller
     }
 
     /**
+     * The subscriptions query behind the list, shared with the CSV export.
+     *
      * @return Builder<Subscription>
      */
     public function filtered(Request $request): Builder
@@ -54,6 +56,8 @@ class AdminSubscriptionController extends Controller
     }
 
     /**
+     * A subscription for the admin list, with its plan and price.
+     *
      * @return array<string, mixed>
      */
     public static function present(Subscription $s): array

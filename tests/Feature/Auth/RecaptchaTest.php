@@ -39,7 +39,7 @@ class RecaptchaTest extends TestCase
 
         $this->postJson('/api/auth/signup', self::SIGNUP)->assertJsonValidationErrors('recaptchaToken');
         $this->postJson('/api/auth/signup', [...self::SIGNUP, 'recaptchaToken' => 'bad-token'])
-            ->assertJsonValidationErrors(['recaptchaToken' => 'Please tick "I\'m not a robot" again.']);
+            ->assertJsonValidationErrors(['recaptchaToken' => __('auth_flow.recaptcha_failed')]);
         $this->postJson('/api/auth/signup', [...self::SIGNUP, 'recaptchaToken' => 'good-token'])->assertSuccessful();
 
         Http::assertSent(fn (Request $request) => $request['secret'] === 'test-secret' && $request['response'] === 'good-token' && filled($request['remoteip']));

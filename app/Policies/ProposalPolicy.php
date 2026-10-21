@@ -25,11 +25,17 @@ class ProposalPolicy
         return $this->isProjectOwner($user, $proposal);
     }
 
+    /**
+     * Whether the user sent the proposal.
+     */
     private function isOfferer(User $user, Proposal $proposal): bool
     {
         return $user->id === $proposal->user_id;
     }
 
+    /**
+     * Whether the user owns the project the proposal was sent to.
+     */
     private function isProjectOwner(User $user, Proposal $proposal): bool
     {
         return $user->id === $proposal->project->user_id;

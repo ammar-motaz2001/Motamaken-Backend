@@ -4,12 +4,17 @@ namespace App\Http\Requests\Auth;
 
 class QuickVerifyRequest extends IdentifierRequest
 {
+    /**
+     * The identifier comes in `phone` or `email`, following the chosen method.
+     */
     protected function identifierField(): string
     {
         return $this->input('method') === 'phone' ? 'phone' : 'email';
     }
 
     /**
+     * Validates the identifier, the code, and the optional name and referral code for a new account.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

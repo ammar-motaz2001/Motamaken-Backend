@@ -85,6 +85,8 @@ class AdminBlacklistController extends Controller
     }
 
     /**
+     * Validates a blacklist entry, checking the value fits its type (email, phone, domain, IP or keyword).
+     *
      * @return array<string, mixed>
      */
     private function validated(Request $request): array
@@ -106,6 +108,8 @@ class AdminBlacklistController extends Controller
     }
 
     /**
+     * A blacklist entry for the admin list.
+     *
      * @return array<string, mixed>
      */
     public static function present(BlacklistEntry $e): array

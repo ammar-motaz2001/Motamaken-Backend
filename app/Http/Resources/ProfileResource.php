@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ProfileResource extends JsonResource
 {
     /**
+     * Returns the full profile with skills, languages, experience, education, certificates, channels and portfolio.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

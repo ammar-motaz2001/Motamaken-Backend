@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class StartConversationRequest extends FormRequest
 {
     /**
+     * Validates who to talk to, the optional project and the first message.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -22,6 +24,8 @@ class StartConversationRequest extends FormRequest
     }
 
     /**
+     * Custom error text for trying to message yourself.
+     *
      * @return array<string, string>
      */
     public function messages(): array

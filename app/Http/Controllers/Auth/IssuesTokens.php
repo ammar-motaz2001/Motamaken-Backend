@@ -8,6 +8,8 @@ use App\Models\User;
 trait IssuesTokens
 {
     /**
+     * The answer of every successful sign-in: a new access token and the user.
+     *
      * @return array{accessToken: string, user: UserResource}
      */
     protected function tokenResponse(User $user): array

@@ -19,6 +19,9 @@ class ApiException extends Exception
         parent::__construct($message);
     }
 
+    /**
+     * The JSON answer: the message, the stable error code and any extra fields, with the chosen status.
+     */
     public function render(): JsonResponse
     {
         return response()->json(['message' => $this->getMessage(), 'code' => $this->errorCode, ...$this->extra], $this->status);

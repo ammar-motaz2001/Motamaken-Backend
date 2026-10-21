@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\DB;
  */
 class Sql
 {
+    /**
+     * Whether the connection is SQLite (the test suite), whose date functions differ from PostgreSQL.
+     */
     private static function sqlite(): bool
     {
         return DB::getDriverName() === 'sqlite';

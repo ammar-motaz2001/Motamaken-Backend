@@ -96,6 +96,8 @@ class ApiExamples
     }
 
     /**
+     * The hand-written examples for every documented endpoint, keyed by method and path.
+     *
      * @return array<string, array{request?: array, requestJson?: array, requestMultipart?: array, responses?: array<int, array{0: string, 1: array}|null>}>
      */
     public static function operations(): array
@@ -104,6 +106,8 @@ class ApiExamples
     }
 
     /**
+     * Examples for the health check and the auth endpoints (sign-up, login, OTP, password, me, logout).
+     *
      * @return array<string, array{request?: array, requestJson?: array, requestMultipart?: array, responses?: array<int, array{0: string, 1: array}|null>}>
      */
     private static function auth(): array
@@ -298,6 +302,8 @@ class ApiExamples
     }
 
     /**
+     * A sample user as the API returns it, with any fields replaced.
+     *
      * @param  array<string, mixed>  $overrides
      * @return array<string, mixed>
      */
@@ -325,6 +331,8 @@ class ApiExamples
     }
 
     /**
+     * A sample 422 body in Laravel's format for one field.
+     *
      * @param  list<string>  $messages
      * @return array{message: string, errors: array<string, list<string>>}
      */
@@ -376,6 +384,8 @@ class ApiExamples
     }
 
     /**
+     * The schema of a plain `{message}` error body.
+     *
      * @return array<string, mixed>
      */
     private static function messageSchema(): array

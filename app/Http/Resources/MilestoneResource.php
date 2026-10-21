@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class MilestoneResource extends JsonResource
 {
     /**
+     * Returns the milestone's amount, status, notes, fee and funding, delivery and release times.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

@@ -15,6 +15,9 @@ use Throwable;
  */
 class Recaptcha implements ValidationRule
 {
+    /**
+     * Whether reCAPTCHA is on, i.e. a secret key is configured.
+     */
     public static function enabled(): bool
     {
         return filled(config('services.recaptcha.secret_key'));
@@ -30,6 +33,10 @@ class Recaptcha implements ValidationRule
         return self::enabled() ? ['required', 'string', 'max:4000', new self] : ['nullable'];
     }
 
+    /**
+     * Ask Google to verify the token and refuse it when it fails or scores below the threshold.
+     * An unreachable Google counts as a failure and is logged.
+     */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         try {

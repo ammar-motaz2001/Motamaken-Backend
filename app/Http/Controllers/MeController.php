@@ -49,6 +49,9 @@ class MeController extends Controller
         return new UserResource($request->user()->refresh());
     }
 
+    /**
+     * The user's wallet in their own currency, or an empty one when they have never had money.
+     */
     private function wallet(User $user): Account
     {
         return Account::firstWhere(['type' => 'wallet', 'user_id' => $user->id, 'currency' => $user->currency])

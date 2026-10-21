@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\URL;
 class MessageResource extends JsonResource
 {
     /**
+     * Returns the message with its sender, body or attachment, delivery status and who has seen it.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -37,7 +39,7 @@ class MessageResource extends JsonResource
                 'size' => $this->attachment_size,
                 /** Signed link, valid for an hour: use it directly as an `<img>`, `<audio>` or download link. */
                 'url' => URL::temporarySignedRoute(
-                    'messages.attachment', now()->addMinutes(config('marketplace.chat.attachment_url_minutes')), $this->id,
+                    'messages.attachment', now()->addMinutes(config('marketplace.chat.attachment_url_minutes')), ['message' => $this->id],
                 ),
             ]),
             /** For your own messages: `sent` (one check) or `read` (two checks; in a group, read by everyone). Null for messages you received. */

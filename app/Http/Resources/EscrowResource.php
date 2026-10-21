@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class EscrowResource extends JsonResource
 {
     /**
+     * Returns the escrow with its totals, milestones, payees and their shares, and tips.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

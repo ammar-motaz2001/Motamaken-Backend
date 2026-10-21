@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
  */
 trait HasLocalizedName
 {
+    /**
+     * The name in the request language, read as `name`.
+     *
+     * @return Attribute<string, never>
+     */
     protected function name(): Attribute
     {
         return Attribute::get(fn () => app()->getLocale() === 'ar' ? $this->name_ar : $this->name_en);

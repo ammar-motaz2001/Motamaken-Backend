@@ -123,6 +123,8 @@ class AdminEscrowController extends Controller
     }
 
     /**
+     * An escrow for the admin screens with its client and payees; the detail view adds the milestones.
+     *
      * @return array<string, mixed>
      */
     public static function present(Escrow $escrow, bool $detail = false): array

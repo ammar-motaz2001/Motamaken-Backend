@@ -10,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class MilestoneNoteRequest extends FormRequest
 {
     /**
+     * Validates the note sent with the milestone action.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

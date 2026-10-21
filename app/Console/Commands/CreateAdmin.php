@@ -15,6 +15,9 @@ use Illuminate\Support\Str;
 #[Description('Create an administrator account, or make an existing account an administrator')]
 class CreateAdmin extends Command
 {
+    /**
+     * Create the admin account, or promote an existing one, and print the password when it was set.
+     */
     public function handle(): int
     {
         $email = mb_strtolower(trim((string) $this->argument('email')));

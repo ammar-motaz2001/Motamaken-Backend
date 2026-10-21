@@ -13,6 +13,11 @@ use Illuminate\Http\JsonResponse;
  */
 class ApiDocsController extends Controller
 {
+    /**
+     * OpenAPI spec.
+     *
+     * The generated OpenAPI document as JSON, with our recorded request and response examples merged in.
+     */
     public function spec(CacheableGenerator $generator): JsonResponse
     {
         return response()->json(
@@ -21,6 +26,11 @@ class ApiDocsController extends Controller
         );
     }
 
+    /**
+     * Swagger UI.
+     *
+     * An interactive page to browse and try the API, reading the spec above.
+     */
     public function swagger(): View
     {
         return view('swagger');

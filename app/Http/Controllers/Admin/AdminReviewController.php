@@ -53,6 +53,8 @@ class AdminReviewController extends Controller
     }
 
     /**
+     * The reviews query behind the list, hidden ones included, shared with the CSV export.
+     *
      * @return Builder<Review>
      */
     public function filtered(Request $request): Builder
@@ -99,6 +101,8 @@ class AdminReviewController extends Controller
     }
 
     /**
+     * A review for the admin list, with how many times it was reported.
+     *
      * @return array<string, mixed>
      */
     public static function present(Review $r, int $reports = 0): array

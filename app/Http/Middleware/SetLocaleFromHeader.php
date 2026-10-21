@@ -13,6 +13,9 @@ class SetLocaleFromHeader
 {
     private const SUPPORTED = ['ar', 'en', 'fr'];
 
+    /**
+     * Switches the app language to the best supported match of the `Accept-Language` header.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $locale = $request->getPreferredLanguage(self::SUPPORTED);

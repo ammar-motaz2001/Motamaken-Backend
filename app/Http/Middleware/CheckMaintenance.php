@@ -15,6 +15,9 @@ class CheckMaintenance
 {
     private const OPEN = ['api/health', 'api/auth/*', 'api/site-settings', 'api/webhooks/*', 'api/payments/*'];
 
+    /**
+     * Answers 503 with the maintenance message while maintenance mode is on, except for admins and open routes.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         if (! Setting::get('maintenance.enabled') || $request->is(...self::OPEN) || $request->user('sanctum')?->is_admin) {

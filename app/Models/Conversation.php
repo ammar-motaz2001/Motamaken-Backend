@@ -4,13 +4,50 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property string|null $pair_key
+ * @property int|null $project_id
+ * @property int|null $last_message_id
+ * @property Carbon|null $last_message_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property string $type
+ * @property string|null $title
+ * @property int|null $created_by
+ * @property-read Message|null $lastMessage
+ * @property-read Collection<int, Message> $messages
+ * @property-read int|null $messages_count
+ * @property-read Collection<int, User> $participants
+ * @property-read int|null $participants_count
+ * @property-read Project|null $project
+ *
+ * @method static Builder<static>|Conversation forUser(\App\Models\User $user)
+ * @method static Builder<static>|Conversation newModelQuery()
+ * @method static Builder<static>|Conversation newQuery()
+ * @method static Builder<static>|Conversation query()
+ * @method static Builder<static>|Conversation whereCreatedAt($value)
+ * @method static Builder<static>|Conversation whereCreatedBy($value)
+ * @method static Builder<static>|Conversation whereId($value)
+ * @method static Builder<static>|Conversation whereLastMessageAt($value)
+ * @method static Builder<static>|Conversation whereLastMessageId($value)
+ * @method static Builder<static>|Conversation wherePairKey($value)
+ * @method static Builder<static>|Conversation whereProjectId($value)
+ * @method static Builder<static>|Conversation whereTitle($value)
+ * @method static Builder<static>|Conversation whereType($value)
+ * @method static Builder<static>|Conversation whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['pair_key', 'project_id', 'type', 'title', 'created_by', 'last_message_id', 'last_message_at'])]
 class Conversation extends Model
 {
@@ -23,22 +60,33 @@ class Conversation extends Model
     /** @var array<string, mixed> */
     protected $attributes = ['type' => 'direct'];
 
+    /**
+     * last_message_at becomes a date, used to sort the inbox.
+     */
     protected function casts(): array
     {
         return ['last_message_at' => 'datetime'];
     }
 
+    /**
+     * Whether it is a group conversation rather than a one-to-one chat.
+     */
     public function isGroup(): bool
     {
         return $this->type === self::GROUP;
     }
 
+    /**
+     * The key that identifies a direct conversation between two users, the same whichever of them starts it.
+     */
     public static function pairKey(int $first, int $second): string
     {
         return min($first, $second).':'.max($first, $second);
     }
 
     /**
+     * The users in the conversation, with the last message each has read.
+     *
      * @return BelongsToMany<User, $this>
      */
     public function participants(): BelongsToMany
@@ -47,6 +95,8 @@ class Conversation extends Model
     }
 
     /**
+     * Every message in the conversation.
+     *
      * @return HasMany<Message, $this>
      */
     public function messages(): HasMany
@@ -55,6 +105,8 @@ class Conversation extends Model
     }
 
     /**
+     * The newest message, for the inbox preview.
+     *
      * @return BelongsTo<Message, $this>
      */
     public function lastMessage(): BelongsTo
@@ -63,6 +115,8 @@ class Conversation extends Model
     }
 
     /**
+     * The project the conversation was started about, if any.
+     *
      * @return BelongsTo<Project, $this>
      */
     public function project(): BelongsTo

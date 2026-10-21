@@ -47,6 +47,8 @@ class AdminContactController extends Controller
     }
 
     /**
+     * The contact messages query behind the inbox, shared with the CSV export.
+     *
      * @return Builder<ContactMessage>
      */
     public function filtered(Request $request): Builder
@@ -116,6 +118,8 @@ class AdminContactController extends Controller
     }
 
     /**
+     * A contact message with the admin's note and reply.
+     *
      * @return array<string, mixed>
      */
     private function present(ContactMessage $m): array

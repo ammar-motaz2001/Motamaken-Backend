@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class UserBriefResource extends JsonResource
 {
     /**
+     * Returns the public name, username, avatar and online status.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class ConversationIndexRequest extends FormRequest
 {
     /**
+     * Validates the search, sort and page size of the conversations list.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

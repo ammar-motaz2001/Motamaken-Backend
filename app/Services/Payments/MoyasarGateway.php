@@ -24,6 +24,10 @@ class MoyasarGateway implements PaymentGateway
 
     private const FAILED = ['failed', 'expired', 'voided', 'refunded'];
 
+    /**
+     * Charge a browser-made card token at Moyasar for the deposit. Returns the 3-D Secure page to send the customer to,
+     * or the outcome when Moyasar decided at once; a refusal is logged and shown to the user.
+     */
     public function createCheckout(Deposit $deposit, ?string $cardToken = null): array
     {
         if (! $cardToken) {
@@ -56,6 +60,9 @@ class MoyasarGateway implements PaymentGateway
         ];
     }
 
+    /**
+     * Ask Moyasar how the deposit's payment ended. A payment Moyasar does not know yet is still pending.
+     */
     public function paymentStatus(Deposit $deposit): array
     {
         $response = $this->send(fn (PendingRequest $http) => $http->get('/payments/'.rawurlencode($deposit->provider_ref)));
@@ -78,12 +85,18 @@ class MoyasarGateway implements PaymentGateway
         ];
     }
 
+    /**
+     * Typed card numbers never reach this server with Moyasar, so this is always refused.
+     */
     public function saveCard(User $user, array $card): string
     {
         // Typed card numbers are refused: the website tokenises the card with Moyasar first.
         throw new ApiException(__('payments.card_token_required'), 'card_token_required');
     }
 
+    /**
+     * Read a saved card's details from Moyasar. Only a token the customer verified with their bank is accepted.
+     */
     public function cardFromToken(User $user, string $token): array
     {
         $response = $this->send(fn (PendingRequest $http) => $http->get('/tokens/'.rawurlencode($token)));
@@ -108,6 +121,8 @@ class MoyasarGateway implements PaymentGateway
     }
 
     /**
+     * Call the Moyasar API with the secret key. A network failure is logged and becomes a "provider unavailable" error.
+     *
      * @param  callable(PendingRequest): Response  $call
      */
     private function send(callable $call): Response
@@ -124,7 +139,11 @@ class MoyasarGateway implements PaymentGateway
         }
     }
 
-    /** @return 'pending'|'paid'|'failed' */
+    /**
+     * Map a Moyasar payment status to ours.
+     *
+     * @return 'pending'|'paid'|'failed'
+     */
     private function status(?string $moyasar): string
     {
         return match (true) {
@@ -134,6 +153,9 @@ class MoyasarGateway implements PaymentGateway
         };
     }
 
+    /**
+     * A readable message from a Moyasar error response, with the first field error when there is one.
+     */
     private function errorMessage(Response $response): string
     {
         $body = $response->json() ?? [];

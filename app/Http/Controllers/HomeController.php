@@ -35,6 +35,8 @@ class HomeController extends Controller
     }
 
     /**
+     * Turns the cached home page models into API resources.
+     *
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */
@@ -53,6 +55,8 @@ class HomeController extends Controller
     }
 
     /**
+     * Reads everything the home page shows: featured profiles and projects, categories and the first tab of each list.
+     *
      * @return array<string, mixed>
      */
     private function load(): array

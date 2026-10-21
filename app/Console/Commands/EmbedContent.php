@@ -13,6 +13,9 @@ use Illuminate\Console\Command;
 #[Description('Store the embeddings of every open project and every profile, for AI matching (needs AI_ENABLED and pgvector)')]
 class EmbedContent extends Command
 {
+    /**
+     * Store the embeddings for open projects and/or profiles. Fails when AI matching is not available.
+     */
     public function handle(Matcher $matcher): int
     {
         if (! Matcher::available()) {

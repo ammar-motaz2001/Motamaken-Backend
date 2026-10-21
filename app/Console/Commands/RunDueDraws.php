@@ -12,6 +12,9 @@ use Illuminate\Console\Command;
 #[Description('Pick the winners of every prize draw whose time has come')]
 class RunDueDraws extends Command
 {
+    /**
+     * Pick the winners of every open draw whose draw time has come.
+     */
     public function handle(DrawService $draws): int
     {
         Draw::where('status', Draw::OPEN)->where('draw_at', '<=', now())->each(function (Draw $draw) use ($draws) {

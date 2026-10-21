@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class DisputeResource extends JsonResource
 {
     /**
+     * Returns the dispute with both parties, milestone, resolution, what I may do, appeals and timeline.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

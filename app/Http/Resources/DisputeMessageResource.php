@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\URL;
 class DisputeMessageResource extends JsonResource
 {
     /**
+     * Returns the message with its author, text and attachment link.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -35,7 +37,7 @@ class DisputeMessageResource extends JsonResource
                 'size' => $this->attachment_size,
                 /** Signed link, valid for an hour. */
                 'url' => URL::temporarySignedRoute(
-                    'disputes.attachment', now()->addMinutes(config('marketplace.chat.attachment_url_minutes')), $this->id,
+                    'disputes.attachment', now()->addMinutes(config('marketplace.chat.attachment_url_minutes')), ['message' => $this->id],
                 ),
             ]),
             'createdAt' => $this->created_at,

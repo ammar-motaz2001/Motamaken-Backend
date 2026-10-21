@@ -21,6 +21,10 @@ class DisputeService
 {
     public function __construct(private readonly EscrowService $escrows) {}
 
+    /**
+     * Open a case on a funded or submitted milestone. The milestone is frozen as disputed (its previous status is kept for a
+     * withdrawal), the other side and the admins are told.
+     */
     public function open(Milestone $milestone, User $opener, string $reason, string $description): Dispute
     {
         $dispute = DB::transaction(function () use ($milestone, $opener, $reason, $description) {
@@ -142,6 +146,10 @@ class DisputeService
         return $this->settle($dispute, $admin, $resolution, $clientPercent, $note, 'dispute.resolved');
     }
 
+    /**
+     * Split the disputed milestone between the client and the freelancer: the client's part is refunded from escrow and
+     * the rest released, then the case is closed as resolved and both sides are told.
+     */
     private function settle(Dispute $dispute, User $by, string $resolution, ?int $clientPercent, ?string $note, string $event): Dispute
     {
         DB::transaction(function () use ($dispute, $by, $resolution, $clientPercent, $note, $event) {
@@ -189,6 +197,9 @@ class DisputeService
         return $locked;
     }
 
+    /**
+     * Write a system event (opened, resolved, ...) on the case timeline.
+     */
     private function record(Dispute $dispute, string $event, User $by): void
     {
         $dispute->messages()->create(['user_id' => $by->id, 'kind' => DisputeMessage::SYSTEM, 'body' => $event]);
@@ -207,6 +218,8 @@ class DisputeService
     }
 
     /**
+     * The case, project and milestone labels every dispute notification carries.
+     *
      * @return array<string, scalar|null>
      */
     private function params(Dispute $dispute): array
@@ -221,6 +234,8 @@ class DisputeService
     }
 
     /**
+     * Send the same notification to every admin.
+     *
      * @param  array<string, scalar|null>  $params
      */
     private function notifyAdmins(string $type, User $actor, array $params): void

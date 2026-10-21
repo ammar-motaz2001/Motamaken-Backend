@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class CreateEscrowRequest extends FormRequest
 {
     /**
+     * Validates the milestones of a new escrow: each with a title, amount and optional due date.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

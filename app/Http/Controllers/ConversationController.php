@@ -100,6 +100,9 @@ class ConversationController extends Controller
         return ['marked' => $this->conversations->markRead($conversation, $me)];
     }
 
+    /**
+     * Loads one of my conversations with what the list card shows, ready to return.
+     */
     private function resource(int $id, User $me): ConversationResource
     {
         return new ConversationResource(

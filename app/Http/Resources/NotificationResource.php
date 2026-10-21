@@ -13,6 +13,8 @@ use Illuminate\Notifications\DatabaseNotification;
 class NotificationResource extends JsonResource
 {
     /**
+     * Returns the notification's type, text, related user and items, and read time.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

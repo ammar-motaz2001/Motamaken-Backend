@@ -46,6 +46,8 @@ class AdminDepositController extends Controller
     }
 
     /**
+     * The deposits query behind the list, shared with the CSV export.
+     *
      * @return Builder<Deposit>
      */
     public function filtered(Request $request): Builder
@@ -75,6 +77,8 @@ class AdminDepositController extends Controller
     }
 
     /**
+     * A deposit for the admin list, with the gateway details.
+     *
      * @return array<string, mixed>
      */
     public static function present(Deposit $d): array

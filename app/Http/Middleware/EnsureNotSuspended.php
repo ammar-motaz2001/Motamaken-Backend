@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureNotSuspended
 {
+    /**
+     * Blocks suspended users with 403, and lifts a suspension whose end date has passed.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();

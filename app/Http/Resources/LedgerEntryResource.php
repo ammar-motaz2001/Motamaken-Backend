@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class LedgerEntryResource extends JsonResource
 {
     /**
+     * Returns the entry's type, label, related project and milestone, amount and balance after.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

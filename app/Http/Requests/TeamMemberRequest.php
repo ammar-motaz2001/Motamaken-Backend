@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class TeamMemberRequest extends FormRequest
 {
     /**
+     * Validates the invited user, their role title and share percent.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -23,6 +25,9 @@ class TeamMemberRequest extends FormRequest
         ];
     }
 
+    /**
+     * The share percent in basis points (25.5% gives 2550), or null when it was not sent.
+     */
     public function shareBp(): ?int
     {
         return $this->has('sharePercent') ? (int) round(((float) $this->input('sharePercent')) * 100) : null;

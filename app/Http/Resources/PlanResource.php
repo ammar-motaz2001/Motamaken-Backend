@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PlanResource extends JsonResource
 {
     /**
+     * Returns the plan's audience, localized name, price, perks and whether it is my current plan.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

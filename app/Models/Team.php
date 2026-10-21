@@ -7,8 +7,38 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * @property int $id
+ * @property int $owner_id
+ * @property string $name
+ * @property string|null $description
+ * @property string $status
+ * @property Carbon|null $published_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, TeamMember> $members
+ * @property-read int|null $members_count
+ * @property-read User $owner
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Proposal> $proposals
+ * @property-read int|null $proposals_count
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereOwnerId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team wherePublishedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Team whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['owner_id', 'name', 'description', 'status', 'published_at'])]
 class Team extends Model
 {
@@ -33,12 +63,17 @@ class Team extends Model
     /** @var array<string, mixed> */
     protected $attributes = ['status' => 'draft'];
 
+    /**
+     * published_at becomes a date.
+     */
     protected function casts(): array
     {
         return ['published_at' => 'datetime'];
     }
 
     /**
+     * The user who created the team and manages it.
+     *
      * @return BelongsTo<User, $this>
      */
     public function owner(): BelongsTo
@@ -47,6 +82,8 @@ class Team extends Model
     }
 
     /**
+     * The members and invitations, the lead first.
+     *
      * @return HasMany<TeamMember, $this>
      */
     public function members(): HasMany
@@ -55,6 +92,8 @@ class Team extends Model
     }
 
     /**
+     * The proposals sent in the team's name.
+     *
      * @return HasMany<Proposal, $this>
      */
     public function proposals(): HasMany
@@ -62,6 +101,9 @@ class Team extends Model
         return $this->hasMany(Proposal::class);
     }
 
+    /**
+     * Whether the team is published and can send proposals.
+     */
     public function isActive(): bool
     {
         return $this->status === self::ACTIVE;

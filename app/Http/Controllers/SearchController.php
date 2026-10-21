@@ -58,6 +58,8 @@ class SearchController extends Controller
     }
 
     /**
+     * Open projects or influencer requests matching the filters, in the chosen order.
+     *
      * @param  array<string, mixed>  $filters
      * @return Builder<Project>
      */
@@ -75,6 +77,8 @@ class SearchController extends Controller
     }
 
     /**
+     * Freelancer or influencer profiles matching the filters, in the chosen order.
+     *
      * @param  array<string, mixed>  $filters
      * @return Builder<Profile>
      */

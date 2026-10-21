@@ -75,6 +75,9 @@ class ProposalService
         return $proposal;
     }
 
+    /**
+     * The offerer takes back an offer nobody has answered yet.
+     */
     public function withdraw(Proposal $proposal): Proposal
     {
         $this->assertPending($proposal);
@@ -121,6 +124,9 @@ class ProposalService
         return $proposal;
     }
 
+    /**
+     * The project owner turns down a pending offer; the offerer is told.
+     */
     public function decline(Proposal $proposal): Proposal
     {
         $this->assertPending($proposal);
@@ -145,6 +151,10 @@ class ProposalService
         return $project;
     }
 
+    /**
+     * The owner marks a project in progress as done. Refused while any of its escrows is not completed, since those
+     * complete the project themselves.
+     */
     public function complete(Project $project): Project
     {
         if ($project->status !== Project::STATUS_IN_PROGRESS) {
@@ -161,6 +171,9 @@ class ProposalService
         return $project;
     }
 
+    /**
+     * Decline every offer still pending on the project and tell each offerer.
+     */
     private function declinePending(Project $project, User $owner): void
     {
         $project->proposals()->where('status', Proposal::STATUS_PENDING)->with('user')->get()
@@ -192,6 +205,10 @@ class ProposalService
         return $team;
     }
 
+    /**
+     * The rules for sending an offer: the project is open and not the offerer's own, the offerer has a profile of the
+     * right type (freelancer for projects, influencer for requests) and has not offered on it yet.
+     */
     private function assertCanOffer(Project $project, User $offerer): void
     {
         $this->assertProjectOpen($project);
@@ -218,6 +235,9 @@ class ProposalService
         }
     }
 
+    /**
+     * Refuse when the project no longer takes offers.
+     */
     private function assertProjectOpen(Project $project): void
     {
         if (! $project->isOpen()) {
@@ -225,6 +245,9 @@ class ProposalService
         }
     }
 
+    /**
+     * Refuse when the offer was already accepted, declined or withdrawn.
+     */
     private function assertPending(Proposal $proposal): void
     {
         if (! $proposal->isPending()) {

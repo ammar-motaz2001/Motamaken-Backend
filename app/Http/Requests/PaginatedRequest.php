@@ -10,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class PaginatedRequest extends FormRequest
 {
     /**
+     * Validates the page size.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

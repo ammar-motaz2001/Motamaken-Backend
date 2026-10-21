@@ -81,6 +81,8 @@ class AdminCategoryController extends Controller
     }
 
     /**
+     * Validates a category and maps it to columns; a category with subcategories cannot become one itself.
+     *
      * @return array<string, mixed>
      */
     private function validated(Request $request, ?Category $category = null): array
@@ -117,6 +119,8 @@ class AdminCategoryController extends Controller
     }
 
     /**
+     * A category for the admin list, with its number of projects.
+     *
      * @return array<string, mixed>
      */
     private function present(Category $c, int $projects): array

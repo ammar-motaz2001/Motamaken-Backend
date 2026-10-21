@@ -17,6 +17,8 @@ use Illuminate\Support\Collection;
 class AffiliateService
 {
     /**
+     * The referral tiers from the config, from the lowest to the highest.
+     *
      * @return Collection<int, array{code: string, min: int, percent: int}>
      */
     public function tiers(): Collection
@@ -33,6 +35,8 @@ class AffiliateService
     }
 
     /**
+     * The highest tier the referrer has reached with their qualified referrals.
+     *
      * @return array{code: string, min: int, percent: int}
      */
     public function tierFor(User $referrer): array

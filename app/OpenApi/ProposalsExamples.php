@@ -8,6 +8,8 @@ namespace App\OpenApi;
 class ProposalsExamples
 {
     /**
+     * Examples for the proposal endpoints.
+     *
      * @return array<string, array{request?: array, requestJson?: array, requestMultipart?: array, responses?: array<int, array{0: string, 1: array}|null>}>
      */
     public static function operations(): array
@@ -218,6 +220,8 @@ class ProposalsExamples
     }
 
     /**
+     * A sample proposal with its sender's profile card.
+     *
      * @return array<string, mixed>
      */
     private static function proposal(
@@ -242,6 +246,8 @@ class ProposalsExamples
     }
 
     /**
+     * A sample freelancer profile for the profile endpoints.
+     *
      * @return array<string, mixed>
      */
     private static function profile(): array

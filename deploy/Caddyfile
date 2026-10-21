@@ -24,6 +24,10 @@
 	request_body {
 		max_size 25MB
 	}
+	# Visitors who typed http:// go to https:// (Cloudflare reports the visitor's scheme in Cf-Visitor, so this never
+	# loops, whatever the Cloudflare SSL mode).
+	@plainHttp header Cf-Visitor *"scheme":"http"*
+	redir @plainHttp https://{host}{uri} 301
 }
 
 http://mutamakin.com, https://mutamakin.com, http://www.mutamakin.com, https://www.mutamakin.com {
@@ -40,4 +44,9 @@ http://api.mutamakin.com, https://api.mutamakin.com {
 http://admin.mutamakin.com, https://admin.mutamakin.com {
 	import common
 	redir https://mutamakin.com/admin{uri} 302
+}
+
+# Anything else (the bare IP, unknown host names) is refused.
+http:// {
+	abort
 }

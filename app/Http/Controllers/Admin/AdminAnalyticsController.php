@@ -111,6 +111,8 @@ class AdminAnalyticsController extends Controller
     }
 
     /**
+     * Revenue by source, top-ups and paid withdrawals per currency in the period, and what escrow holds now.
+     *
      * @return list<array<string, mixed>>
      */
     private function money($from, $to): array

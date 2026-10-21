@@ -65,6 +65,8 @@ class AdminBroadcastController extends Controller
     }
 
     /**
+     * A sent broadcast for the admin list.
+     *
      * @return array<string, mixed>
      */
     public static function present(Broadcast $b): array

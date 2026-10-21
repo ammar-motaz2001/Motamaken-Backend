@@ -78,6 +78,8 @@ class PortfolioController extends Controller
     }
 
     /**
+     * Validation for a portfolio item's title, description and link.
+     *
      * @return array<string, mixed>
      */
     private function rules(): array
@@ -89,12 +91,17 @@ class PortfolioController extends Controller
         ];
     }
 
+    /**
+     * Finds a portfolio item on the current user's profile, or fails with 404.
+     */
     private function own(Request $request, int $id): PortfolioItem
     {
         return PortfolioItem::whereIn('profile_id', $request->user()->profile()->select('id'))->findOrFail($id);
     }
 
     /**
+     * A portfolio item for the API.
+     *
      * @return array<string, mixed>
      */
     private function present(PortfolioItem $item): array

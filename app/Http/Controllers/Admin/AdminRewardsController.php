@@ -88,6 +88,8 @@ class AdminRewardsController extends Controller
     }
 
     /**
+     * The point transactions query behind the list, shared with the CSV export.
+     *
      * @return Builder<PointTransaction>
      */
     public function filtered(Request $request): Builder

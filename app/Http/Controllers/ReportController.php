@@ -85,6 +85,8 @@ class ReportController extends Controller
     }
 
     /**
+     * A report as its reporter sees it.
+     *
      * @return array<string, mixed>
      */
     private function present(Report $report): array

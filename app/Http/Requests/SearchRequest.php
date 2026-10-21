@@ -10,6 +10,8 @@ class SearchRequest extends FormRequest
     public const TYPES = ['all', 'projects', 'influencer_requests', 'influencers', 'freelancers'];
 
     /**
+     * Validates the search type, text, filters, sort and page size.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

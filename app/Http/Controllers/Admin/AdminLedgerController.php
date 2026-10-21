@@ -63,14 +63,6 @@ class AdminLedgerController extends Controller
     }
 
     /**
-     * Trial balance.
-     *
-     * Every account type per currency. In a correct double-entry book the balances of all accounts add up to zero
-     * (`balanced`): the gateway account is negative by exactly the money the platform holds for users and itself.
-     *
-     * @return array{data: list<array{currency: string, balanced: bool, accounts: list<array{type: string, accounts: int, balance: float}>}>}
-     */
-    /**
      * The transactions query behind the list, shared with the CSV export.
      *
      * @return Builder<LedgerTransaction>
@@ -98,6 +90,14 @@ class AdminLedgerController extends Controller
                 ->when(ctype_digit($ref), fn ($q) => $q->orWhere('id', (int) $ref)->orWhere('reference_id', (int) $ref))));
     }
 
+    /**
+     * Trial balance.
+     *
+     * Every account type per currency. In a correct double-entry book the balances of all accounts add up to zero
+     * (`balanced`): the gateway account is negative by exactly the money the platform holds for users and itself.
+     *
+     * @return array{data: list<array{currency: string, balanced: bool, accounts: list<array{type: string, accounts: int, balance: float}>}>}
+     */
     public function trialBalance(): array
     {
         $rows = Account::query()

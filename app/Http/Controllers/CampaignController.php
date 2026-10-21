@@ -182,6 +182,9 @@ class CampaignController extends Controller
         })->all()];
     }
 
+    /**
+     * Finds a campaign the current user may manage, or fails with 404 / 403.
+     */
     private function owned(int $id): Campaign
     {
         $campaign = Campaign::findOrFail($id);
@@ -190,6 +193,9 @@ class CampaignController extends Controller
         return $campaign;
     }
 
+    /**
+     * Attaches visit and promoter counts to a campaign; the detailed view adds reject reasons and the top 5 promoters.
+     */
     private function withStats(Campaign $campaign, bool $detailed = false): Campaign
     {
         $counts = $campaign->visits()->selectRaw('status, reject_reason, count(*) as total')->groupBy('status', 'reject_reason')->get();

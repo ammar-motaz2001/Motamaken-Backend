@@ -10,6 +10,8 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 class Paged
 {
     /**
+     * A paginated API answer: the items run through the presenter, plus page numbers and the total.
+     *
      * @param  callable(mixed): array<string, mixed>  $present
      * @param  array<string, mixed>  $extra
      * @return array{data: list<array<string, mixed>>, meta: array{current_page: int, last_page: int, per_page: int, total: int}}

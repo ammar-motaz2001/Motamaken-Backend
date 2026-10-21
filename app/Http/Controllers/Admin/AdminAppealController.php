@@ -70,6 +70,8 @@ class AdminAppealController extends Controller
     }
 
     /**
+     * An appeal for the admin list, with its dispute summary.
+     *
      * @return array<string, mixed>
      */
     public static function present(DisputeAppeal $a): array

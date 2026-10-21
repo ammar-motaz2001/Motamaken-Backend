@@ -17,6 +17,9 @@ class AuditAdminActions
     /** Never stored, even scrubbed. */
     private const SECRET = ['password', 'password_confirmation', 'mailPassword', 'token', 'secret', 'file', 'image', 'logo'];
 
+    /**
+     * After a successful admin change, writes what was done and to what into the audit log, without secrets.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);

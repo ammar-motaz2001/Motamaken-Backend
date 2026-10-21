@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CategoryResource extends JsonResource
 {
     /**
+     * Returns the category's type, slug, localized name, icon and parent.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

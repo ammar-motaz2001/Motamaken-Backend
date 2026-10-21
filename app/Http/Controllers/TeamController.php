@@ -180,6 +180,9 @@ class TeamController extends Controller
         return ['success' => true];
     }
 
+    /**
+     * Loads a team and checks the current user is its lead.
+     */
     private function ledBy(int $id, Request $request): Team
     {
         $team = Team::findOrFail($id);

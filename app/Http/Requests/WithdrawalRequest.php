@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class WithdrawalRequest extends FormRequest
 {
     /**
+     * Validates a withdrawal: amount, currency, method and the bank or PayPal destination.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

@@ -183,6 +183,8 @@ class AdminUserController extends Controller
     }
 
     /**
+     * A review on the user's admin page, with the other person in it.
+     *
      * @return array<string, mixed>
      */
     private function review(Review $review, ?User $other): array
@@ -243,6 +245,9 @@ class AdminUserController extends Controller
         return new AdminUserResource($target->load(['profile', 'adminRole']));
     }
 
+    /**
+     * Suspends a user until the given date (or for good) and signs them out; admins cannot be suspended.
+     */
     private function lockOut(int $user, string $reason, mixed $until): User
     {
         $target = User::findOrFail($user);

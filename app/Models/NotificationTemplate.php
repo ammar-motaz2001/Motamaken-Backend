@@ -4,16 +4,51 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @property int $id
+ * @property string $type
+ * @property string $text_en
+ * @property string $text_ar
+ * @property string|null $subject_en
+ * @property string|null $subject_ar
+ * @property bool $is_active
+ * @property int|null $updated_by
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereIsActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereSubjectAr($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereSubjectEn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereTextAr($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereTextEn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|NotificationTemplate whereUpdatedBy($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['type', 'text_en', 'text_ar', 'subject_en', 'subject_ar', 'is_active', 'updated_by'])]
 class NotificationTemplate extends Model
 {
+    /**
+     * is_active becomes a boolean.
+     */
     protected function casts(): array
     {
         return ['is_active' => 'boolean'];
     }
 
+    /**
+     * Any save or delete clears the cached templates, so edits apply to the next notification.
+     */
     protected static function booted(): void
     {
         static::saved(fn () => Cache::forget('notification_templates'));
@@ -56,7 +91,7 @@ class NotificationTemplate extends Model
 
         $text = app()->getLocale() === 'ar' ? $template['text_ar'] : $template['text_en'];
 
-        return static::substitute($text, $replace);
+        return self::substitute($text, $replace);
     }
 
     /**
@@ -69,7 +104,7 @@ class NotificationTemplate extends Model
         $template = static::active()[$type] ?? null;
         $subject = $template ? (app()->getLocale() === 'ar' ? $template['subject_ar'] : $template['subject_en']) : null;
 
-        return $subject ? static::substitute($subject, $replace) : null;
+        return $subject ? self::substitute($subject, $replace) : null;
     }
 
     /**

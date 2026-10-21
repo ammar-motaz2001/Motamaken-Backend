@@ -45,6 +45,9 @@ class ConversationService
     }
 
     /**
+     * Post a message (text, voice or attachment) and make it the conversation's latest. In a group the sender's read
+     * marker moves to it.
+     *
      * @param  array{type: string, body?: ?string, duration?: ?int}  $content
      */
     public function send(Conversation $conversation, User $sender, array $content, ?UploadedFile $file = null): Message
@@ -147,6 +150,8 @@ class ConversationService
     }
 
     /**
+     * Add users to a group. They start with everything already read and are told they were added.
+     *
      * @param  list<int>  $userIds
      */
     public function addMembers(Conversation $conversation, User $by, array $userIds): void
@@ -162,11 +167,17 @@ class ConversationService
         $this->tellAdded($conversation, $by, $new);
     }
 
+    /**
+     * Take a user out of a group conversation.
+     */
     public function removeMember(Conversation $conversation, int $userId): void
     {
         $conversation->participants()->detach($userId);
     }
 
+    /**
+     * Notify each new member that they were added to the group.
+     */
     private function tellAdded(Conversation $conversation, User $by, Collection $userIds): void
     {
         foreach (User::whereIn('id', $userIds)->get() as $user) {

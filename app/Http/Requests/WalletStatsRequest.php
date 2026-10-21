@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class WalletStatsRequest extends FormRequest
 {
     /**
+     * Validates the currency and number of months of the wallet chart.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

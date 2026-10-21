@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CampaignPromoterResource extends JsonResource
 {
     /**
+     * Returns a promoter's place in a campaign: their link, visits counted and money earned.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

@@ -194,6 +194,9 @@ class RewardsService
         }
     }
 
+    /**
+     * Award the one-time project completion points to the client and the hired freelancer, then update their medals.
+     */
     public function onProjectCompleted(Project $project): void
     {
         $freelancerId = $project->accepted_proposal_id ? Proposal::whereKey($project->accepted_proposal_id)->value('user_id') : null;

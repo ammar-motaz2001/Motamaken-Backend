@@ -18,6 +18,9 @@ class Moderator
     public function __construct(private readonly Ollama $ollama) {}
 
     /**
+     * Ask the model about a piece of content and file an automatic report when it is flagged with enough confidence.
+     * Short texts are skipped, and an item never gets more than one AI report.
+     *
      * @return Report|null The report filed, if any.
      */
     public function screen(string $targetType, int $targetId, string $text): ?Report

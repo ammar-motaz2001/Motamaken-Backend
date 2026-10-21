@@ -148,6 +148,8 @@ class ProjectManagementController extends Controller
     }
 
     /**
+     * Maps the sent request fields to project columns, keeping only the ones that came.
+     *
      * @return array<string, mixed>
      */
     private function attributes(ProjectRequest $request): array

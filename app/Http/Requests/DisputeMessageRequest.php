@@ -9,6 +9,8 @@ use Illuminate\Validation\Validator;
 class DisputeMessageRequest extends FormRequest
 {
     /**
+     * Validates the text and optional attachment of a dispute message.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -20,6 +22,9 @@ class DisputeMessageRequest extends FormRequest
         ];
     }
 
+    /**
+     * A dispute message needs some text or a file.
+     */
     public function after(): array
     {
         return [function (Validator $validator) {

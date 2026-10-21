@@ -6,18 +6,51 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @property int $id
+ * @property string $type
+ * @property string $value
+ * @property string $reason
+ * @property int|null $created_by
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read User|null $creator
+ *
+ * @method static Builder<static>|BlacklistEntry inForce()
+ * @method static Builder<static>|BlacklistEntry newModelQuery()
+ * @method static Builder<static>|BlacklistEntry newQuery()
+ * @method static Builder<static>|BlacklistEntry query()
+ * @method static Builder<static>|BlacklistEntry whereCreatedAt($value)
+ * @method static Builder<static>|BlacklistEntry whereCreatedBy($value)
+ * @method static Builder<static>|BlacklistEntry whereExpiresAt($value)
+ * @method static Builder<static>|BlacklistEntry whereId($value)
+ * @method static Builder<static>|BlacklistEntry whereReason($value)
+ * @method static Builder<static>|BlacklistEntry whereType($value)
+ * @method static Builder<static>|BlacklistEntry whereUpdatedAt($value)
+ * @method static Builder<static>|BlacklistEntry whereValue($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['type', 'value', 'reason', 'created_by', 'expires_at'])]
 class BlacklistEntry extends Model
 {
     public const TYPES = ['email', 'phone', 'domain', 'ip', 'keyword'];
 
+    /**
+     * expires_at becomes a date; null means the entry never expires.
+     */
     protected function casts(): array
     {
         return ['expires_at' => 'datetime'];
     }
 
+    /**
+     * Any save or delete clears the cached blacklist, so the change applies on the next check.
+     */
     protected static function booted(): void
     {
         static::saved(fn () => Cache::forget('blacklist'));
@@ -25,6 +58,8 @@ class BlacklistEntry extends Model
     }
 
     /**
+     * Keep the entries that have no expiry or have not expired yet.
+     *
      * @param  Builder<self>  $query
      * @return Builder<self>
      */
@@ -34,6 +69,8 @@ class BlacklistEntry extends Model
     }
 
     /**
+     * The admin who added the entry.
+     *
      * @return BelongsTo<User, $this>
      */
     public function creator(): BelongsTo
@@ -52,6 +89,9 @@ class BlacklistEntry extends Model
             ->groupBy('type')->map(fn ($rows) => $rows->pluck('value')->all())->all());
     }
 
+    /**
+     * The form a value is stored and compared in: phones keep only digits and +, domains lose a leading @, the rest is lowercased.
+     */
     public static function normalize(string $type, string $value): string
     {
         $value = trim($value);
@@ -84,6 +124,9 @@ class BlacklistEntry extends Model
         return in_array(static::normalize('phone', $identifier), $list['phone'] ?? [], true);
     }
 
+    /**
+     * Whether the IP address is on the active blacklist. A missing IP is never blocked.
+     */
     public static function blocksIp(?string $ip): bool
     {
         return $ip !== null && in_array($ip, static::active()['ip'] ?? [], true);

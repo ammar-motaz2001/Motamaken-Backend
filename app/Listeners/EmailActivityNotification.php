@@ -12,6 +12,9 @@ use Illuminate\Notifications\Events\NotificationSent;
  */
 class EmailActivityNotification
 {
+    /**
+     * Sends the email copy, in the user's language, only for stored activity notifications of a group they opted into.
+     */
     public function handle(NotificationSent $event): void
     {
         if (! $event->notification instanceof ActivityNotification || $event->channel !== 'database' || ! $event->notifiable instanceof User) {

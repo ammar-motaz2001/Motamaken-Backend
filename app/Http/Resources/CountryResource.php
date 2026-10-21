@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CountryResource extends JsonResource
 {
     /**
+     * Returns the country code and localized name.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

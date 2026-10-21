@@ -18,6 +18,9 @@ class OtpService
 {
     private const RECORD_TTL_MINUTES = 60;
 
+    /**
+     * Send a code for this purpose to the email or phone, unless one was sent within the resend cooldown.
+     */
     public function send(OtpPurpose $purpose, AuthMethod $method, string $target): void
     {
         $record = Cache::get($this->key($purpose, $method, $target));
@@ -31,6 +34,8 @@ class OtpService
     }
 
     /**
+     * Send a fresh code for a pending one, once the resend cooldown has passed.
+     *
      * @return bool false when there is no pending code for this identifier
      */
     public function resend(OtpPurpose $purpose, AuthMethod $method, string $target): bool
@@ -76,6 +81,9 @@ class OtpService
         Cache::forget($key);
     }
 
+    /**
+     * Make a new code, keep only its hash with a fresh attempt count and expiry, and send it by email or WhatsApp.
+     */
     private function issue(OtpPurpose $purpose, AuthMethod $method, string $target): void
     {
         $key = $this->key($purpose, $method, $target);
@@ -93,11 +101,17 @@ class OtpService
             ->notify((new OtpCode($code, $purpose))->locale(app()->getLocale()));
     }
 
+    /**
+     * The cache key of the code record, one per purpose, channel and identifier (case-insensitive).
+     */
     private function key(OtpPurpose $purpose, AuthMethod $method, string $target): string
     {
         return "otp:{$purpose->value}:{$method->value}:".sha1(mb_strtolower($target));
     }
 
+    /**
+     * Hash a code with the app key, so the cache never holds the code itself.
+     */
     private function hash(string $key, string $code): string
     {
         return hash_hmac('sha256', $key.'|'.$code, config('app.key'));

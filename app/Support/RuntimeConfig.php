@@ -29,6 +29,10 @@ class RuntimeConfig
         'mail.from_name' => 'mail.from.name',
     ];
 
+    /**
+     * Copy the saved settings over their config values (and turn on SMTP mail when enabled).
+     * Does nothing while there is no database yet.
+     */
     public static function apply(): void
     {
         try {

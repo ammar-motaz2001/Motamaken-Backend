@@ -54,6 +54,9 @@ class PasswordController extends Controller
         return ['success' => true];
     }
 
+    /**
+     * Cache key of a password reset token; only its hash is stored.
+     */
     public static function resetTokenKey(string $token): string
     {
         return 'password-reset:'.hash('sha256', $token);

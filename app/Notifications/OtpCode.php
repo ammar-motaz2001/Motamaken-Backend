@@ -19,6 +19,8 @@ class OtpCode extends Notification implements ShouldQueue
     ) {}
 
     /**
+     * By email when the user has one, otherwise by WhatsApp.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -26,6 +28,9 @@ class OtpCode extends Notification implements ShouldQueue
         return $notifiable->routeNotificationFor('mail') ? ['mail'] : [WhatsAppChannel::class];
     }
 
+    /**
+     * The email carrying the one-time code and how long it stays valid.
+     */
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
@@ -35,6 +40,9 @@ class OtpCode extends Notification implements ShouldQueue
             ->line(__('auth_flow.otp_expiry', ['minutes' => config('auth_flow.otp.ttl')]));
     }
 
+    /**
+     * The WhatsApp text carrying the one-time code, for users who signed up by phone.
+     */
     public function toWhatsApp(object $notifiable): string
     {
         return __('auth_flow.otp_whatsapp', [

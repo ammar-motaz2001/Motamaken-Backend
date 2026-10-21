@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class UpdatePreferencesRequest extends FormRequest
 {
     /**
+     * Validates the language, currency and theme preferences.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

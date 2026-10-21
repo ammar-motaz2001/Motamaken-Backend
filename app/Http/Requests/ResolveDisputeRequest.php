@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 class ResolveDisputeRequest extends FormRequest
 {
     /**
+     * Validates an admin's ruling: the resolution, the client's share when split, and a note.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

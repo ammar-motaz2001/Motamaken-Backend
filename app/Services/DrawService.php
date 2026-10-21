@@ -33,6 +33,10 @@ class DrawService
             ?? Draw::where('status', Draw::DRAWN)->latest('drawn_at')->first();
     }
 
+    /**
+     * Buy tickets for an open draw with points. Tickets add up on one entry per member, capped by the draw's per-member
+     * limit; the points are spent in the same transaction.
+     */
     public function enter(Draw $draw, User $user, int $tickets): DrawEntry
     {
         if (! $draw->isOpenForEntries()) {
@@ -123,6 +127,8 @@ class DrawService
     }
 
     /**
+     * Pick one user at random, each ticket being one chance.
+     *
      * @param  array<int, int>  $pool  user id => tickets
      */
     private function pick(array $pool): int

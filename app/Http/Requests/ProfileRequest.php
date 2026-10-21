@@ -14,6 +14,8 @@ class ProfileRequest extends FormRequest
     public const PLATFORMS = ['instagram', 'facebook', 'youtube', 'tiktok', 'snapchat', 'x', 'pinterest', 'telegram', 'whatsapp', 'linkedin'];
 
     /**
+     * Validates the profile: type, job title, bio, location, skills, languages, experience, education and more.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -65,6 +67,9 @@ class ProfileRequest extends FormRequest
         ];
     }
 
+    /**
+     * A city needs its country, and must belong to that country.
+     */
     public function after(): array
     {
         return [function (Validator $validator) {

@@ -46,6 +46,8 @@ class AdminProposalController extends Controller
     }
 
     /**
+     * The offers query behind the list, shared with the CSV export; the counts per status skip the status filter.
+     *
      * @return Builder<Proposal>
      */
     public function filtered(Request $request, bool $withStatus = true): Builder
@@ -60,6 +62,8 @@ class AdminProposalController extends Controller
     }
 
     /**
+     * An offer for the admin list, with its project, sender and team.
+     *
      * @return array<string, mixed>
      */
     public static function present(Proposal $p): array

@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 class MyProjectsRequest extends FormRequest
 {
     /**
+     * Validates the status filter and page size of my projects.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class TeamResource extends JsonResource
 {
     /**
+     * Returns the team with its members, readiness to publish and my own membership.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

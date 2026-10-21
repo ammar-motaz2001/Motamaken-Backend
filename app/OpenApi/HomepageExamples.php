@@ -8,6 +8,8 @@ namespace App\OpenApi;
 class HomepageExamples
 {
     /**
+     * Examples for the homepage, browsing, lookup lists and notification endpoints.
+     *
      * @return array<string, array{request?: array, responses?: array<int, array{0: string, 1: array}|null>}>
      */
     public static function operations(): array
@@ -199,6 +201,8 @@ class HomepageExamples
     }
 
     /**
+     * A sample category as the API returns it.
+     *
      * @return array<string, mixed>
      */
     public static function category(int $id, string $slug, string $name, string $icon, string $type = 'project'): array
@@ -207,6 +211,8 @@ class HomepageExamples
     }
 
     /**
+     * A sample profile card as the API returns it.
+     *
      * @return array<string, mixed>
      */
     public static function profile(int $id, int $userId, string $fullName, string $username, string $jobTitle, float $rating, int $reviews): array
@@ -227,6 +233,8 @@ class HomepageExamples
     }
 
     /**
+     * A sample project as the API returns it, with any extra fields added.
+     *
      * @param  array<string, mixed>  $category
      * @return array<string, mixed>
      */
@@ -257,6 +265,8 @@ class HomepageExamples
     }
 
     /**
+     * A sample conversation.started notification.
+     *
      * @return array<string, mixed>
      */
     public static function notification(string $id, string $name, int $userId, int $conversationId, ?string $readAt): array

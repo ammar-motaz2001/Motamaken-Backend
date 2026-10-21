@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ProfileCardResource extends JsonResource
 {
     /**
+     * Returns the short card details: name, avatar, type, job title, rating and location.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

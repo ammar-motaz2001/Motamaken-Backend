@@ -25,6 +25,9 @@ class AiScreeningObserver
         PortfolioItem::class => ['portfolio', ['title', 'description']],
     ];
 
+    /**
+     * Queue a screening when watched content is created or one of its watched fields changes.
+     */
     public function saved(Model $model): void
     {
         if (! config('ai.enabled')) {

@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class TouchLastSeen
 {
+    /**
+     * Updates the user's last seen time, at most once a minute, for the online badge.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();

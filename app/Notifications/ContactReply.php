@@ -22,6 +22,8 @@ class ContactReply extends Notification implements ShouldQueue
     ) {}
 
     /**
+     * Sent by email only.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -29,6 +31,9 @@ class ContactReply extends Notification implements ShouldQueue
         return ['mail'];
     }
 
+    /**
+     * The admin's reply to a contact message, quoting the original.
+     */
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)

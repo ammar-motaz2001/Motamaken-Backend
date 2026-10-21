@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class DepositRequest extends FormRequest
 {
     /**
+     * Validates a top-up: amount, currency, method, purpose, and a new card token or a saved card.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

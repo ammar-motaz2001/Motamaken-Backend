@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CampaignVisitResource extends JsonResource
 {
     /**
+     * Returns the visit's status, reject reason, promoter, visitor country, referrer and reward.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

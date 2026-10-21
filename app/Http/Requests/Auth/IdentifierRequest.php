@@ -20,6 +20,9 @@ abstract class IdentifierRequest extends FormRequest
      */
     abstract protected function identifierField(): string;
 
+    /**
+     * Whether the user signs in with email or phone.
+     */
     public function authMethod(): AuthMethod
     {
         return AuthMethod::from($this->input('method'));
@@ -38,6 +41,8 @@ abstract class IdentifierRequest extends FormRequest
     }
 
     /**
+     * Rules for the method and the identifier: a valid email or international phone number, not blacklisted.
+     *
      * @return array<string, mixed>
      */
     protected function identifierRules(): array

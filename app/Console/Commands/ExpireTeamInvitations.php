@@ -11,6 +11,9 @@ use Illuminate\Console\Command;
 #[Description('Expire team invitations nobody answered in time')]
 class ExpireTeamInvitations extends Command
 {
+    /**
+     * Expire team invitations nobody answered in time and print how many.
+     */
     public function handle(TeamService $teams): int
     {
         $this->info("Expired {$teams->expireInvitations()} invitation(s).");

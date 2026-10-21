@@ -13,12 +13,17 @@ class SendMessageRequest extends FormRequest
 {
     private const VOICE_MIME_TYPES = 'audio/webm,video/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/x-wav';
 
+    /**
+     * The message type sent, or guessed: an attachment when a file came, text otherwise.
+     */
     public function messageType(): string
     {
         return $this->input('type') ?: ($this->hasFile('file') ? Message::TYPE_ATTACHMENT : Message::TYPE_TEXT);
     }
 
     /**
+     * Validates the message type, text, file (audio types for voice notes) and voice duration.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -41,6 +46,9 @@ class SendMessageRequest extends FormRequest
         ];
     }
 
+    /**
+     * Text messages need a body and no file; other types need a file, and voice notes their duration.
+     */
     public function after(): array
     {
         return [function (Validator $validator) {

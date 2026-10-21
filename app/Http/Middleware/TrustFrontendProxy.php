@@ -14,6 +14,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class TrustFrontendProxy
 {
+    /**
+     * Uses the visitor IP sent by our frontend server when the request carries the shared proxy secret.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $secret = (string) config('services.frontend_proxy.secret');

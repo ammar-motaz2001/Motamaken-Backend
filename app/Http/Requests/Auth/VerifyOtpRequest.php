@@ -8,6 +8,8 @@ use Illuminate\Validation\Rule;
 class VerifyOtpRequest extends ResendOtpRequest
 {
     /**
+     * Validates the one-time code and what it is for.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

@@ -10,6 +10,8 @@ use Illuminate\Validation\Rule;
 class KycRequest extends FormRequest
 {
     /**
+     * Validates the identity document details and the photos of its front, back and a selfie.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array
@@ -31,6 +33,8 @@ class KycRequest extends FormRequest
     }
 
     /**
+     * Custom error text for an applicant who is under age.
+     *
      * @return array<string, string>
      */
     public function messages(): array

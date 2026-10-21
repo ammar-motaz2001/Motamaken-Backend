@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class RejectRequest extends FormRequest
 {
     /**
+     * Validates the reason an admin gives when rejecting something; the user sees it.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

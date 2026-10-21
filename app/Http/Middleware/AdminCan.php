@@ -11,6 +11,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class AdminCan
 {
+    /**
+     * Lets the request through when the admin has any one of the `|`-separated permissions, otherwise answers 403.
+     */
     public function handle(Request $request, Closure $next, string $permissions): Response
     {
         foreach (explode('|', $permissions) as $permission) {

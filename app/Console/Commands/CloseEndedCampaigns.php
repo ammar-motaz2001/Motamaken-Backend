@@ -11,6 +11,9 @@ use Illuminate\Console\Command;
 #[Description('Close the campaigns whose end date passed and refund what is left of their budgets')]
 class CloseEndedCampaigns extends Command
 {
+    /**
+     * Close the campaigns whose end date has passed and print how many were closed.
+     */
     public function handle(CampaignService $campaigns): int
     {
         $this->info("Closed {$campaigns->closeEnded()} campaign(s).");

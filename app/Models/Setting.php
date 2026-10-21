@@ -4,11 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
  * Values admins can change without a deploy (fees, limits, site details). Defaults live in config/payments.php and
  * config/site.php; some override other config values at boot (App\Support\RuntimeConfig).
+ *
+ * @property string $key
+ * @property array<array-key, mixed> $value
+ * @property Carbon|null $updated_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereKey($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereValue($value)
+ *
+ * @mixin \Eloquent
  */
 class Setting extends Model
 {
@@ -22,11 +36,18 @@ class Setting extends Model
 
     protected $fillable = ['key', 'value'];
 
+    /**
+     * The value is stored as JSON, so any scalar or array round-trips.
+     */
     protected function casts(): array
     {
         return ['value' => 'json', 'updated_at' => 'datetime'];
     }
 
+    /**
+     * A setting saved in the panel, or its default from config when it was never saved.
+     * Reads go through a one-minute cache.
+     */
     public static function get(string $key, mixed $default = null): mixed
     {
         try {
@@ -40,6 +61,9 @@ class Setting extends Model
         return array_key_exists($key, $values) ? $values[$key] : (config('payments.defaults')[$key] ?? config('site.defaults')[$key] ?? $default);
     }
 
+    /**
+     * Save a setting (null deletes it, bringing the default back) and clear the cache.
+     */
     public static function put(string $key, mixed $value): void
     {
         if ($value === null) {
@@ -54,6 +78,8 @@ class Setting extends Model
     }
 
     /**
+     * Every setting: the saved values over the payment defaults.
+     *
      * @return array<string, mixed>
      */
     public static function everything(): array

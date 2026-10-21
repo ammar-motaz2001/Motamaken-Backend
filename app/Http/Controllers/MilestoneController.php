@@ -65,6 +65,9 @@ class MilestoneController extends Controller
         return new MilestoneResource($this->escrows->requestChanges($milestone, $request->user(), $request->input('note')));
     }
 
+    /**
+     * Loads a milestone and checks the user may do the given action on its escrow.
+     */
     private function find(int $id, string $ability): Milestone
     {
         $milestone = Milestone::with('escrow.payees')->findOrFail($id);

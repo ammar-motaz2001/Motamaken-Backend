@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ReviewResource extends JsonResource
 {
     /**
+     * Returns the rating, comment, reviewer and project of the review.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

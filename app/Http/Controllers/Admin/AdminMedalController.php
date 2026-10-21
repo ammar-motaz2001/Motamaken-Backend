@@ -117,6 +117,8 @@ class AdminMedalController extends Controller
     }
 
     /**
+     * Validates a medal and maps it to columns; the code is set once and cannot change.
+     *
      * @return array<string, mixed>
      */
     private function validated(Request $request, ?Medal $medal = null): array
@@ -144,6 +146,8 @@ class AdminMedalController extends Controller
     }
 
     /**
+     * A medal for the admin list, with how many users hold it.
+     *
      * @return array<string, mixed>
      */
     public static function present(Medal $m, int $holders = 0): array

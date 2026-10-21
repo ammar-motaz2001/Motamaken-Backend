@@ -30,6 +30,9 @@ class ExampleRecorder
 
     private static bool $registered = false;
 
+    /**
+     * Collect one API call made by a test: its request body and response, if not already seen enough times.
+     */
     public static function record(Request $request, Response $response): void
     {
         $uri = $request->route()?->uri();
@@ -119,6 +122,8 @@ class ExampleRecorder
     }
 
     /**
+     * The request body to show, with uploaded files replaced by their names; null when empty.
+     *
      * @return array<string, mixed>|null
      */
     private static function requestBody(Request $request): ?array
@@ -147,6 +152,8 @@ class ExampleRecorder
     }
 
     /**
+     * The example's name in Swagger, from its status and error code.
+     *
      * @param  mixed  $body
      */
     private static function exampleName(int $status, $body): string
@@ -163,6 +170,9 @@ class ExampleRecorder
         };
     }
 
+    /**
+     * The response description Swagger shows for a status code.
+     */
     private static function describe(int $status): string
     {
         return match ($status) {

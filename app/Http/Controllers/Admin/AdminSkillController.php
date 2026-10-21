@@ -77,6 +77,8 @@ class AdminSkillController extends Controller
     }
 
     /**
+     * Validates a skill and maps it to columns; a new skill without a slug gets a unique one from its English name.
+     *
      * @return array<string, mixed>
      */
     private function validated(Request $request, ?Skill $skill = null): array
@@ -108,6 +110,8 @@ class AdminSkillController extends Controller
     }
 
     /**
+     * A skill for the admin list, with its category.
+     *
      * @return array<string, mixed>
      */
     public static function present(Skill $s): array

@@ -121,7 +121,7 @@ class MessageController extends Controller
         $positions = DB::table('conversation_user')->where('conversation_id', $conversation->id)->pluck('last_read_message_id', 'user_id');
 
         foreach ($messages as $message) {
-            $others = $positions->except($message->sender_id);
+            $others = $positions->except([$message->sender_id]);
             $message->others_count = $others->count();
             $message->seen_by = $others->filter(fn ($read) => (int) $read >= $message->id)->count();
         }

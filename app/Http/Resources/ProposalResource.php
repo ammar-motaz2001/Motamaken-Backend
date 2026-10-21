@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class ProposalResource extends JsonResource
 {
     /**
+     * Returns the offer with its amount, delivery time, message, freelancer or team, and project.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

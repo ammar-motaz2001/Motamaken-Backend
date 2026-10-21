@@ -10,6 +10,8 @@ use Illuminate\Contracts\Database\Query\Builder;
 class LikeSearch
 {
     /**
+     * Keep the rows where any of the columns contains the term, ignoring case; % and _ are matched literally.
+     *
      * @param  array<int, string>  $columns  Fully qualified column names, matched with OR.
      */
     public static function apply(Builder $query, array $columns, string $term): Builder

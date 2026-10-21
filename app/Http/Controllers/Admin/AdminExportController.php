@@ -90,11 +90,17 @@ class AdminExportController extends Controller
         }
     }
 
+    /**
+     * A date as `Y-m-d H:i` for a CSV cell, or null when it is empty.
+     */
     private function time(mixed $value): ?string
     {
         return $value?->format('Y-m-d H:i');
     }
 
+    /**
+     * The dashboard numbers per day (signups, projects, offers, revenue and top-ups per currency), from the overview screen.
+     */
     private function overview(Request $request): array
     {
         $request->merge(['days' => (int) $request->input('days', 30)]);
@@ -108,6 +114,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Users with the filters of the users screen: contact details, account type, identity, points and suspension.
+     */
     private function users(Request $request): array
     {
         return [
@@ -119,6 +128,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Projects with the filters of the projects screen, with owner, budget and number of offers.
+     */
     private function projects(Request $request): array
     {
         return [
@@ -130,6 +142,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Offers with the filters of the offers screen, with their project, sender and team.
+     */
     private function proposals(Request $request): array
     {
         return [
@@ -141,6 +156,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Reviews with the filters of the reviews screen, hidden ones included.
+     */
     private function reviews(Request $request): array
     {
         return [
@@ -151,16 +169,19 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * One row per ledger entry, so a transaction with two entries gives two rows that share its number.
+     */
     private function ledger(Request $request): array
     {
         return [
             ['transaction', 'type', 'description', 'account', 'user id', 'currency', 'amount', 'balance after', 'by', 'date'],
             (function () use ($request) {
+                /** @var LedgerTransaction $t */
                 foreach (app(AdminLedgerController::class)->filtered($request)->with(['entries.account', 'creator'])->lazyById(500) as $i => $t) {
                     if ($i >= self::LIMIT) {
                         break;
                     }
-                    /** @var LedgerTransaction $t */
                     foreach ($t->entries as $e) {
                         yield [$t->id, $t->type, $t->description, $e->account->type, $e->account->user_id, $e->account->currency,
                             Money::fromCents($e->amount_cents), Money::fromCents($e->balance_after_cents), $t->creator?->full_name, $this->time($t->created_at)];
@@ -170,6 +191,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Wallet top-ups with the filters of the deposits screen, with the gateway reference and failure reason.
+     */
     private function deposits(Request $request): array
     {
         return [
@@ -181,6 +205,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Withdrawal requests, filtered by status and creation date, with fee, payout reference and reject reason.
+     */
     private function withdrawals(Request $request): array
     {
         $query = Withdrawal::with('user')
@@ -197,6 +224,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Subscriptions with the filters of the subscriptions screen, with plan and billing period.
+     */
     private function subscriptions(Request $request): array
     {
         return [
@@ -208,6 +238,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Bought promotions (featured profiles and projects) with the filters of the promotions screen.
+     */
     private function promotions(Request $request): array
     {
         return [
@@ -219,6 +252,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Disputes, filtered by status, with the milestone amount, both parties and the resolution.
+     */
     private function disputes(Request $request): array
     {
         $query = Dispute::with(['opener', 'respondent', 'escrow.project', 'milestone'])
@@ -234,6 +270,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Point transactions with the filters of the rewards screen; `manual` marks the ones an admin gave or took.
+     */
     private function points(Request $request): array
     {
         return [
@@ -244,6 +283,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Content reports, filtered by status and target type, with what was done about them.
+     */
     private function reports(Request $request): array
     {
         $query = Report::with('reporter')
@@ -259,6 +301,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * Contact form messages with the filters of the inbox screen, with the admin note and reply.
+     */
     private function contact(Request $request): array
     {
         return [
@@ -269,6 +314,9 @@ class AdminExportController extends Controller
         ];
     }
 
+    /**
+     * The admin audit log, filtered by admin, action prefix and date.
+     */
     private function audit(Request $request): array
     {
         $query = AdminLog::with('admin')

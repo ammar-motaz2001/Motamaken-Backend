@@ -7,6 +7,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class UpdateSettingsRequest extends FormRequest
 {
     /**
+     * Validates the site fee, deposit and withdrawal limits, withdrawal fee and KYC switch.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

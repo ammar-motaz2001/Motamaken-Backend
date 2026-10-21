@@ -12,6 +12,9 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class EnsureAdmin
 {
+    /**
+     * Lets only admins through, and asks them to turn on two-factor first when the site requires it.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();

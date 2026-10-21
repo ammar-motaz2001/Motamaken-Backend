@@ -6,12 +6,71 @@ use App\Services\RewardsService;
 use App\Support\LikeSearch;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $type
+ * @property int $category_id
+ * @property string $title
+ * @property string $description
+ * @property int $budget_min
+ * @property int $budget_max
+ * @property string $currency
+ * @property int|null $country_id
+ * @property int|null $city_id
+ * @property string $status
+ * @property bool $is_featured
+ * @property Carbon|null $featured_until
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int|null $accepted_proposal_id
+ * @property Carbon|null $hidden_at
+ * @property string|null $hidden_reason
+ * @property-read Category $category
+ * @property-read City|null $city
+ * @property-read Country|null $country
+ * @property-read Collection<int, Proposal> $proposals
+ * @property-read int|null $proposals_count
+ * @property-read User $user
+ * @property-read Proposal|null $viewerProposal
+ *
+ * @method static Builder<static>|Project distinctive()
+ * @method static \Database\Factories\ProjectFactory factory($count = null, $state = [])
+ * @method static Builder<static>|Project filter(array $filters)
+ * @method static Builder<static>|Project newModelQuery()
+ * @method static Builder<static>|Project newQuery()
+ * @method static Builder<static>|Project open()
+ * @method static Builder<static>|Project query()
+ * @method static Builder<static>|Project whereAcceptedProposalId($value)
+ * @method static Builder<static>|Project whereBudgetMax($value)
+ * @method static Builder<static>|Project whereBudgetMin($value)
+ * @method static Builder<static>|Project whereCategoryId($value)
+ * @method static Builder<static>|Project whereCityId($value)
+ * @method static Builder<static>|Project whereCountryId($value)
+ * @method static Builder<static>|Project whereCreatedAt($value)
+ * @method static Builder<static>|Project whereCurrency($value)
+ * @method static Builder<static>|Project whereDescription($value)
+ * @method static Builder<static>|Project whereFeaturedUntil($value)
+ * @method static Builder<static>|Project whereHiddenAt($value)
+ * @method static Builder<static>|Project whereHiddenReason($value)
+ * @method static Builder<static>|Project whereId($value)
+ * @method static Builder<static>|Project whereIsFeatured($value)
+ * @method static Builder<static>|Project whereStatus($value)
+ * @method static Builder<static>|Project whereTitle($value)
+ * @method static Builder<static>|Project whereType($value)
+ * @method static Builder<static>|Project whereUpdatedAt($value)
+ * @method static Builder<static>|Project whereUserId($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['user_id', 'type', 'category_id', 'title', 'description', 'budget_min', 'budget_max', 'currency', 'country_id', 'city_id', 'status', 'accepted_proposal_id', 'is_featured', 'featured_until', 'hidden_at', 'hidden_reason'])]
 class Project extends Model
 {
@@ -42,6 +101,9 @@ class Project extends Model
     /** Cancelled by the owner before any offer was accepted. */
     public const STATUS_CLOSED = 'closed';
 
+    /**
+     * Budget bounds become integers, is_featured a boolean, the featured and hidden times dates.
+     */
     protected function casts(): array
     {
         return [
@@ -54,6 +116,8 @@ class Project extends Model
     }
 
     /**
+     * The client who posted the project.
+     *
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo
@@ -62,6 +126,8 @@ class Project extends Model
     }
 
     /**
+     * The category the project is listed under.
+     *
      * @return BelongsTo<Category, $this>
      */
     public function category(): BelongsTo
@@ -70,6 +136,8 @@ class Project extends Model
     }
 
     /**
+     * The country the project is for.
+     *
      * @return BelongsTo<Country, $this>
      */
     public function country(): BelongsTo
@@ -78,6 +146,8 @@ class Project extends Model
     }
 
     /**
+     * The city the project is for.
+     *
      * @return BelongsTo<City, $this>
      */
     public function city(): BelongsTo
@@ -86,6 +156,8 @@ class Project extends Model
     }
 
     /**
+     * The proposals freelancers and teams sent for it.
+     *
      * @return HasMany<Proposal, $this>
      */
     public function proposals(): HasMany
@@ -103,6 +175,9 @@ class Project extends Model
         return $this->hasOne(Proposal::class);
     }
 
+    /**
+     * Whether the project takes proposals: open and not hidden by a moderator.
+     */
     public function isOpen(): bool
     {
         return $this->status === self::STATUS_OPEN && $this->hidden_at === null;
@@ -117,8 +192,7 @@ class Project extends Model
     }
 
     /**
-     * @param  Builder<self>  $query
-     * @return Builder<self>
+     * Awards the completion rewards when the status changes to completed.
      */
     protected static function booted(): void
     {
@@ -130,6 +204,12 @@ class Project extends Model
         });
     }
 
+    /**
+     * Projects visible on the site: open and not hidden by a moderator.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
     public function scopeOpen(Builder $query): Builder
     {
         return $query->where('projects.status', self::STATUS_OPEN)->whereNull('projects.hidden_at');

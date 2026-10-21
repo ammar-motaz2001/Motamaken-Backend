@@ -34,6 +34,9 @@ class LedgerService
     }
 
     /**
+     * Move money between accounts as one balanced transaction. A movement with an idempotency key that was already
+     * posted returns the first one instead of moving the money again.
+     *
      * @param  list<array{0: Account, 1: int}>  $legs  Positive adds to the account, negative takes from it. Must add up to zero.
      * @param  array{reference?: Model, key?: string, description?: string, meta?: array<string, mixed>, by?: User}  $options
      */
@@ -56,6 +59,9 @@ class LedgerService
     }
 
     /**
+     * Write the transaction and its entries with every account locked (in id order, to avoid deadlocks). Fails when an
+     * account that may not go negative would end below zero.
+     *
      * @param  list<array{0: Account, 1: int}>  $legs
      * @param  array<string, mixed>  $options
      */
@@ -99,6 +105,9 @@ class LedgerService
         return $transaction;
     }
 
+    /**
+     * Find or create an account; when two requests create it at once, the one that lost reads the winner's row.
+     */
     private function account(string $type, string $ownerKey, string $currency, ?int $userId = null): Account
     {
         $attributes = ['type' => $type, 'owner_key' => $ownerKey, 'currency' => $currency];

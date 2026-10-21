@@ -82,6 +82,9 @@ class AdminLocationController extends Controller
         return ['success' => true];
     }
 
+    /**
+     * Drops the cached country and city lists, so edits show up right away.
+     */
     private function forget(): void
     {
         Cache::forget('countries');

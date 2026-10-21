@@ -7,8 +7,48 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * @property int $id
+ * @property int $conversation_id
+ * @property int $sender_id
+ * @property string $type
+ * @property string|null $body
+ * @property string|null $attachment_path
+ * @property string|null $attachment_name
+ * @property string|null $attachment_mime
+ * @property int|null $attachment_size
+ * @property int|null $duration
+ * @property Carbon|null $read_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $removed_at
+ * @property-read Conversation $conversation
+ * @property-read User $sender
+ *
+ * @method static Builder<static>|Message newModelQuery()
+ * @method static Builder<static>|Message newQuery()
+ * @method static Builder<static>|Message query()
+ * @method static Builder<static>|Message unreadFor(\App\Models\User $user)
+ * @method static Builder<static>|Message whereAttachmentMime($value)
+ * @method static Builder<static>|Message whereAttachmentName($value)
+ * @method static Builder<static>|Message whereAttachmentPath($value)
+ * @method static Builder<static>|Message whereAttachmentSize($value)
+ * @method static Builder<static>|Message whereBody($value)
+ * @method static Builder<static>|Message whereConversationId($value)
+ * @method static Builder<static>|Message whereCreatedAt($value)
+ * @method static Builder<static>|Message whereDuration($value)
+ * @method static Builder<static>|Message whereId($value)
+ * @method static Builder<static>|Message whereReadAt($value)
+ * @method static Builder<static>|Message whereRemovedAt($value)
+ * @method static Builder<static>|Message whereSenderId($value)
+ * @method static Builder<static>|Message whereType($value)
+ * @method static Builder<static>|Message whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['conversation_id', 'sender_id', 'type', 'body', 'attachment_path', 'attachment_name', 'attachment_mime', 'attachment_size', 'duration'])]
 class Message extends Model
 {
@@ -20,6 +60,9 @@ class Message extends Model
 
     public const TYPE_ATTACHMENT = 'attachment';
 
+    /**
+     * The removal and read times become dates; attachment size (bytes) and voice note duration (seconds) integers.
+     */
     protected function casts(): array
     {
         return [
@@ -40,6 +83,8 @@ class Message extends Model
     }
 
     /**
+     * The conversation the message was posted in.
+     *
      * @return BelongsTo<Conversation, $this>
      */
     public function conversation(): BelongsTo
@@ -48,6 +93,8 @@ class Message extends Model
     }
 
     /**
+     * The user who sent the message.
+     *
      * @return BelongsTo<User, $this>
      */
     public function sender(): BelongsTo

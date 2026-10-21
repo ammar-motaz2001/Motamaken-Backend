@@ -6,7 +6,50 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $escrow_id
+ * @property int $position
+ * @property string $title
+ * @property int $amount_cents
+ * @property string $status
+ * @property Carbon|null $due_date
+ * @property int $fee_cents
+ * @property string|null $submission_note
+ * @property string|null $changes_note
+ * @property Carbon|null $funded_at
+ * @property Carbon|null $submitted_at
+ * @property Carbon|null $released_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int $refunded_cents
+ * @property-read Escrow $escrow
+ *
+ * @method static \Database\Factories\MilestoneFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereAmountCents($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereChangesNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereDueDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereEscrowId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereFeeCents($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereFundedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone wherePosition($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereRefundedCents($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereReleasedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereSubmissionNote($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereSubmittedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Milestone whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 #[Fillable(['escrow_id', 'position', 'title', 'amount_cents', 'status', 'due_date', 'fee_cents', 'submission_note', 'changes_note', 'refunded_cents', 'funded_at', 'submitted_at', 'released_at'])]
 class Milestone extends Model
 {
@@ -36,6 +79,9 @@ class Milestone extends Model
     /** @var array<string, mixed> */
     protected $attributes = ['status' => 'pending', 'fee_cents' => 0, 'refunded_cents' => 0];
 
+    /**
+     * Money columns are whole cents; the due date and the funding, submission and release times become dates.
+     */
     protected function casts(): array
     {
         return [
@@ -50,6 +96,8 @@ class Milestone extends Model
     }
 
     /**
+     * The escrow the milestone is paid from.
+     *
      * @return BelongsTo<Escrow, $this>
      */
     public function escrow(): BelongsTo

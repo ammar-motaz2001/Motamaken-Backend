@@ -73,6 +73,8 @@ class AdminIntegrationController extends Controller
     }
 
     /**
+     * Health of the job queue: driver, pending and failed jobs.
+     *
      * @return array{service: string, status: string, details: array<string, mixed>}
      */
     private function queue(): array
@@ -91,6 +93,8 @@ class AdminIntegrationController extends Controller
     }
 
     /**
+     * Health of file storage, checked by writing and reading a small file.
+     *
      * @return array{service: string, status: string, details: array<string, mixed>}
      */
     private function storage(): array
@@ -106,6 +110,8 @@ class AdminIntegrationController extends Controller
     }
 
     /**
+     * Health of the AI service: whether it is on and reachable, its models and stored embeddings.
+     *
      * @return array{service: string, status: string, details: array<string, mixed>}
      */
     private function ai(): array

@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PaymentMethodResource extends JsonResource
 {
     /**
+     * Returns the saved method with only safe details: card brand and expiry, or a masked PayPal email.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

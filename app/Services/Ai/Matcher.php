@@ -17,16 +17,25 @@ class Matcher
 {
     public function __construct(private readonly Ollama $ollama) {}
 
+    /**
+     * Whether matching can run: the AI is enabled and the embeddings table exists.
+     */
     public static function available(): bool
     {
         return config('ai.enabled') && Schema::hasTable('embeddings');
     }
 
+    /**
+     * The text a project is embedded from: its title and description.
+     */
     public static function projectText(Project $project): string
     {
         return "{$project->title}\n{$project->description}";
     }
 
+    /**
+     * The text a profile is embedded from: job title, skills and bio.
+     */
     public static function profileText(Profile $profile): string
     {
         return trim(($profile->job_title ?? '')."\n".implode(', ', $profile->skills ?? [])."\n".($profile->bio ?? ''));

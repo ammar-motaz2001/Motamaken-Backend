@@ -15,6 +15,8 @@ use Illuminate\Support\Str;
 class ProjectResource extends JsonResource
 {
     /**
+     * Returns the project card with budget, status, offer count, my offer, category, owner and location.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

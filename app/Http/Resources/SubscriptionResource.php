@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class SubscriptionResource extends JsonResource
 {
     /**
+     * Returns the subscription's plan, status, auto renew and billing period.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

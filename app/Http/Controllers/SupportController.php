@@ -115,6 +115,9 @@ class SupportController extends Controller
         return Storage::disk('local')->download($message->attachment_path, $message->attachment_name, ['X-Content-Type-Options' => 'nosniff']);
     }
 
+    /**
+     * Finds a support ticket of the current user, or fails with 404.
+     */
     private function mine(Request $request, int $ticket): SupportTicket
     {
         return SupportTicket::where('user_id', $request->user()->id)->findOrFail($ticket);

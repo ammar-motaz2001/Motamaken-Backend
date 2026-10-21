@@ -30,6 +30,9 @@ class ScreenContent implements ShouldQueue
         public readonly ?int $embedId = null,
     ) {}
 
+    /**
+     * Screen the text for abuse and, when asked, store its embedding for matching.
+     */
     public function handle(Moderator $moderator, Matcher $matcher): void
     {
         $moderator->screen($this->targetType, $this->targetId, $this->text);

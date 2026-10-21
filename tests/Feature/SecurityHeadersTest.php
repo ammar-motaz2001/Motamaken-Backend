@@ -18,4 +18,14 @@ class SecurityHeadersTest extends TestCase
 
         $this->getJson('/api/nope')->assertNotFound()->assertHeader('X-Content-Type-Options', 'nosniff');
     }
+
+    public function test_the_api_root_is_a_plain_pointer_with_headers_and_no_cookies(): void
+    {
+        $response = $this->get('/')->assertOk()->assertJsonPath('health', url('/api/health'));
+
+        $response->assertHeader('X-Frame-Options', 'DENY')
+            ->assertHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; sandbox")
+            ->assertHeader('Cross-Origin-Opener-Policy', 'same-origin');
+        $this->assertEmpty($response->headers->getCookies());
+    }
 }

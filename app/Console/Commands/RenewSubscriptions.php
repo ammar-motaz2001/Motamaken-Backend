@@ -11,6 +11,9 @@ use Illuminate\Console\Command;
 #[Description('Charge the subscriptions that are due and expire the ones that cannot be renewed')]
 class RenewSubscriptions extends Command
 {
+    /**
+     * Charge the subscriptions due for renewal and print how many renewed, failed or expired.
+     */
     public function handle(SubscriptionService $subscriptions): int
     {
         $result = $subscriptions->renewDue();

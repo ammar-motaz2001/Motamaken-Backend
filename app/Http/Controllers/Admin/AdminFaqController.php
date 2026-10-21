@@ -108,6 +108,8 @@ class AdminFaqController extends Controller
     }
 
     /**
+     * Validates an FAQ category and maps it to columns; on edit every field is optional.
+     *
      * @return array<string, mixed>
      */
     private function categoryData(Request $request, bool $partial = false): array
@@ -123,6 +125,8 @@ class AdminFaqController extends Controller
     }
 
     /**
+     * Validates a question and answer and maps it to columns; on edit every field is optional.
+     *
      * @return array<string, mixed>
      */
     private function faqData(Request $request, bool $partial = false): array
@@ -143,6 +147,8 @@ class AdminFaqController extends Controller
     }
 
     /**
+     * An FAQ category for the admin screens.
+     *
      * @return array<string, mixed>
      */
     private static function category(FaqCategory $c): array
@@ -151,6 +157,8 @@ class AdminFaqController extends Controller
     }
 
     /**
+     * A question and its answer, in both languages, for the admin screens.
+     *
      * @return array<string, mixed>
      */
     private static function faq(Faq $f): array
@@ -161,6 +169,9 @@ class AdminFaqController extends Controller
         ];
     }
 
+    /**
+     * Drops the cached public FAQ in every language, so edits show up right away.
+     */
     public static function forget(): void
     {
         foreach (['en', 'ar', 'fr'] as $locale) {

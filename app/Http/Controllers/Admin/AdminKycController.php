@@ -97,13 +97,6 @@ class AdminKycController extends Controller
     }
 
     /**
-     * View a document.
-     *
-     * Reached through the signed links of the review page. Never cached.
-     *
-     * @unauthenticated
-     */
-    /**
      * Ask for an update.
      *
      * The documents are unclear or incomplete: the submission closes as `needs_update`, the user is told what to fix and can
@@ -114,6 +107,13 @@ class AdminKycController extends Controller
         return new KycResource($this->kyc->requestUpdate(KycSubmission::findOrFail($submission), $request->user(), $request->input('reason')));
     }
 
+    /**
+     * View a document.
+     *
+     * Reached through the signed links of the review page. Never cached.
+     *
+     * @unauthenticated
+     */
     public function file(int $submission, string $kind): StreamedResponse
     {
         $submission = KycSubmission::findOrFail($submission);

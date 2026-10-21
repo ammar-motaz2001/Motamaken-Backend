@@ -87,6 +87,9 @@ class GroupConversationController extends Controller
         return ['success' => true];
     }
 
+    /**
+     * Loads a group chat that the current user created; only the creator may change it.
+     */
     private function managed(int $id, Request $request): Conversation
     {
         $group = Conversation::forUser($request->user())->where('type', Conversation::GROUP)->findOrFail($id);
@@ -98,6 +101,9 @@ class GroupConversationController extends Controller
         return $group;
     }
 
+    /**
+     * Returns the group as a conversation resource with the given HTTP status.
+     */
     private function respond(int $id, Request $request, int $status = 200): JsonResponse
     {
         $conversation = Conversation::forUser($request->user())->with(['participants', 'lastMessage', 'project'])->findOrFail($id);

@@ -9,6 +9,8 @@ use Illuminate\Validation\Rule;
 class OpenDisputeRequest extends FormRequest
 {
     /**
+     * Validates the reason and description of a new dispute.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

@@ -129,6 +129,8 @@ class AdminOverviewController extends Controller
     }
 
     /**
+     * Money per currency right now: in wallets, in escrow, earned by the platform and waiting to be withdrawn.
+     *
      * @return list<array<string, mixed>>
      */
     private function money(): array
@@ -185,12 +187,17 @@ class AdminOverviewController extends Controller
         return DB::table('ledger_entries')->join('accounts', 'accounts.id', '=', 'ledger_entries.account_id')->where('accounts.type', Account::REVENUE);
     }
 
+    /**
+     * Top-ups that were actually paid, the base for the deposit totals.
+     */
     private function depositQuery(): Builder
     {
         return Deposit::where('status', Deposit::SUCCEEDED);
     }
 
     /**
+     * Counts rows created in the current period and in the period before it.
+     *
      * @return array{current: int, previous: int}
      */
     private function compare(Builder $query, Carbon $since, Carbon $previous): array
@@ -202,6 +209,8 @@ class AdminOverviewController extends Controller
     }
 
     /**
+     * Sums amounts per currency in the current period and in the period before it.
+     *
      * @return array<string, array{current: float, previous: float}>
      */
     private function compareMoney(Builder|\Illuminate\Database\Query\Builder $query, string $column, Carbon $since, Carbon $previous): array
@@ -220,6 +229,8 @@ class AdminOverviewController extends Controller
     }
 
     /**
+     * The six categories with the most new projects since the given date.
+     *
      * @return list<array{id: int, name: string, projects: int}>
      */
     private function topCategories(Carbon $since): array

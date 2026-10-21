@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class DepositResource extends JsonResource
 {
     /**
+     * Returns the top-up's amount, method, status, checkout link and payment time.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

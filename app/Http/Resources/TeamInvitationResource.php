@@ -14,6 +14,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class TeamInvitationResource extends JsonResource
 {
     /**
+     * Returns the team, who invited me, the offered role and share, and when it expires.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

@@ -105,6 +105,8 @@ class DrawController extends Controller
     }
 
     /**
+     * A draw as the public sees it, with the total tickets and, when signed in, my tickets and prize.
+     *
      * @return array<string, mixed>
      */
     private function present(Draw $draw, Request $request): array
@@ -138,6 +140,8 @@ class DrawController extends Controller
     }
 
     /**
+     * One prize in the current language.
+     *
      * @param  array<string, mixed>  $prize
      * @return array<string, mixed>
      */

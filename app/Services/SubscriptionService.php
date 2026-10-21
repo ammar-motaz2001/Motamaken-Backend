@@ -57,11 +57,17 @@ class SubscriptionService
             : config('marketplace.subscriptions.free_monthly_offers');
     }
 
+    /**
+     * How many offers the user has sent since the start of the calendar month.
+     */
     public function offersSentThisMonth(User $user): int
     {
         return Proposal::where('user_id', $user->id)->where('created_at', '>=', now()->startOfMonth())->count();
     }
 
+    /**
+     * Refuse a new offer once the monthly limit of the user's plan is reached, hinting that an upgrade lifts it.
+     */
     public function assertCanSendOffer(User $user): void
     {
         $limit = $this->monthlyOfferLimit($user);
@@ -112,6 +118,9 @@ class SubscriptionService
         });
     }
 
+    /**
+     * Turn off renewal: the plan keeps working until the paid period ends, with no refund.
+     */
     public function cancel(User $user): Subscription
     {
         $subscription = $user->subscription()->first() ?? throw new ApiException(__('subscriptions.none'), 'no_subscription');
@@ -120,6 +129,9 @@ class SubscriptionService
         return $subscription;
     }
 
+    /**
+     * Turn renewal back on for a subscription that was cancelled but has not run out yet.
+     */
     public function resume(User $user): Subscription
     {
         $subscription = $user->subscription()->first() ?? throw new ApiException(__('subscriptions.none'), 'no_subscription');
@@ -176,6 +188,10 @@ class SubscriptionService
         return $result;
     }
 
+    /**
+     * Take one month's price from the user's wallet into revenue. The key includes the period start, so a period is
+     * never charged twice.
+     */
     private function charge(User $user, Plan $plan, Subscription $subscription, int $periodStart): void
     {
         $this->ledger->post('subscription', [

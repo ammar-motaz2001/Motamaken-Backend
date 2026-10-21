@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 class ConversationResource extends JsonResource
 {
     /**
+     * Returns the conversation with its participants, last message preview, unread count and project.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

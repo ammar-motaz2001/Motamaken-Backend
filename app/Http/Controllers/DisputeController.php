@@ -154,6 +154,9 @@ class DisputeController extends Controller
         );
     }
 
+    /**
+     * Loads a dispute that the user is a party to; admins can open any.
+     */
     private function find(int $id, Request $request): Dispute
     {
         $dispute = Dispute::with(['escrow.payees', 'opener'])->findOrFail($id);

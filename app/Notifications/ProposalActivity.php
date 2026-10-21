@@ -32,6 +32,8 @@ class ProposalActivity extends Notification
     }
 
     /**
+     * Stored in the database for the bell list.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -40,6 +42,8 @@ class ProposalActivity extends Notification
     }
 
     /**
+     * The stored data: the event type, the actor, and the project and proposal it is about.
+     *
      * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array

@@ -12,6 +12,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class CampaignResource extends JsonResource
 {
     /**
+     * Returns the campaign with its budget, spending, prices, filters, stats and dates.
+     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array

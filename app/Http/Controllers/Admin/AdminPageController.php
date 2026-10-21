@@ -81,6 +81,8 @@ class AdminPageController extends Controller
     }
 
     /**
+     * A content page in both languages for the admin screens.
+     *
      * @return array<string, mixed>
      */
     private function present(Page $page): array

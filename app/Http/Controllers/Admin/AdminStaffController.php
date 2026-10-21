@@ -227,6 +227,8 @@ class AdminStaffController extends Controller
     }
 
     /**
+     * Refuses a change that would leave the panel without any admin who has full access.
+     *
      * @param  array<string, mixed>  $data
      */
     private function assertKeepsAnOwner(User $user, array $data): void
@@ -245,6 +247,8 @@ class AdminStaffController extends Controller
     }
 
     /**
+     * Validates a staff role's names and permissions; on edit every field is optional.
+     *
      * @return array<string, mixed>
      */
     private function roleData(Request $request, bool $partial = false): array
@@ -260,6 +264,8 @@ class AdminStaffController extends Controller
     }
 
     /**
+     * A staff role for the admin screens.
+     *
      * @return array<string, mixed>
      */
     private static function role(AdminRole $r): array

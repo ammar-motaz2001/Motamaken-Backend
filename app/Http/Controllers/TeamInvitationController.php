@@ -51,6 +51,9 @@ class TeamInvitationController extends Controller
         return new TeamResource($this->teams->decline($member)->team);
     }
 
+    /**
+     * Finds a team invitation sent to the current user, or fails with 404.
+     */
     private function mine(Request $request, int $id): TeamMember
     {
         return TeamMember::with(['team.owner', 'user'])->where('user_id', $request->user()->id)->findOrFail($id);

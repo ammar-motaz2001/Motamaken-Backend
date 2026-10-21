@@ -367,6 +367,10 @@ class EscrowService
         return $payouts;
     }
 
+    /**
+     * Once every milestone is released or refunded, complete the escrow and tell everyone. The project is completed when
+     * anything was paid out, otherwise closed.
+     */
     private function completeIfFinished(Escrow $escrow): void
     {
         $escrow->load('milestones');
@@ -398,6 +402,8 @@ class EscrowService
     }
 
     /**
+     * The project, milestone and amount labels escrow notifications carry.
+     *
      * @return array<string, scalar|null>
      */
     private function labels(Escrow $escrow, Milestone $milestone): array
@@ -410,6 +416,8 @@ class EscrowService
     }
 
     /**
+     * Send the same notification to everyone being paid on the escrow.
+     *
      * @param  array<string, scalar|null>  $params
      */
     private function notifyPayees(Escrow $escrow, string $type, ?User $actor, array $params): void

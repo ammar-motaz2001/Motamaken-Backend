@@ -25,6 +25,9 @@ class ActivityNotification extends Notification
         $this->id = (string) Str::orderedUuid();
     }
 
+    /**
+     * The notification type, e.g. proposal.accepted, which picks its text and settings group.
+     */
     public function type(): string
     {
         return $this->type;
@@ -47,6 +50,8 @@ class ActivityNotification extends Notification
     }
 
     /**
+     * Stored in the database for the bell list.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -55,6 +60,8 @@ class ActivityNotification extends Notification
     }
 
     /**
+     * The stored data: type, actor and params; the text itself is built when it is read.
+     *
      * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array

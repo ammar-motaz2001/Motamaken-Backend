@@ -1,0 +1,511 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Notifications\\Notification\:\:toWhatsApp\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Channels/WhatsAppChannel.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AffiliateEarning\:\:\$earned\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminAffiliateController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AffiliateEarning\:\:\$referrals\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminAffiliateController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AffiliateEarning\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminAffiliateController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminAppealController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminAppealController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminBlacklistController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminBlacklistController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Campaign\:\:\$visit_stats\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminCampaignController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminContactController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminContactController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminDepositController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminDepositController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Milestone\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminEscrowController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Milestone\:\:\$held\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminEscrowController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminEscrowController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, totals\: list\<array\{currency\: string, held\: float\}\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminEscrowController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Milestone\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Admin/AdminEscrowController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminKycController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Account\:\:\$accounts\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminLedgerController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Account\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminLedgerController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Message\:\:\$first_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminMessageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Message\:\:\$last_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminMessageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Message\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminMessageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Message\:\:\$username\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminMessageController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Message\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Admin/AdminMessageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Account\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Admin/AdminOverviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Plan\:\:\$subscribers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminPlanController.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: mixed$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Http/Controllers/Admin/AdminPromotionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminPromotionController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, summary\: array\{active\: int, total\: int\}\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminPromotionController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Database\\Query\\Builder\:\:orWhereHas\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminProposalController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminProposalController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminProposalController.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminReviewController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, summary\: array\{average\: float, total\: int, hidden\: int, stars\: array\<string, int\>\}\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminReviewController.php
+
+		-
+			message: '#^Parameter \#1 \$items of method Illuminate\\Support\\Collection\<int,int\>\:\:merge\(\) expects Illuminate\\Contracts\\Support\\Arrayable\<int, int\>\|iterable\<int, int\>, Illuminate\\Support\\Collection\<string, int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminReviewController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PointTransaction\:\:\$earned\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminRewardsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PointTransaction\:\:\$spent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminRewardsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\PointTransaction\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminRewardsController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Admin/AdminRewardsController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminSkillController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, suggestions\: list\<array\{name\: string, profiles\: int\}\>\} but returns array\{data\: array\<int, array\<string, mixed\>\>, suggestions\: array\<int, array\{name\: int, profiles\: mixed\}\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminSkillController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,stdClass\>\:\:map\(\) expects callable\(stdClass, int\)\: array\<string, mixed\>, Closure\(App\\Models\\Skill\)\: array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminSkillController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AdminLog\:\:\$last\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminStaffController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminStaffController\:\:audit\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, actions\: list\<string\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminStaffController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Admin/AdminStaffController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Plan\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminSubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminSubscriptionController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>, byPlan\: list\<array\{plan\: string, active\: int\}\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminSubscriptionController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Admin\\AdminSupportController\:\:index\(\) should return array\{data\: list\<array\<string, mixed\>\>, meta\: array\<string, int\>, counts\: array\<string, int\>\} but returns array\{data\: list\<array\<string, mixed\>\>, meta\: array\{current_page\: int, last_page\: int, per_page\: int, total\: int\}\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Admin/AdminSupportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$stats\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminUserController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Query\\Builder\:\:whereDoesntHave\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Admin/AdminUserController.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: mixed$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Http/Controllers/Admin/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AffiliateEarning\:\:\$cents\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/AffiliateController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Auth\\QuickAuthController\:\:verify\(\) should return array\{accessToken\: string, user\: array\<string, mixed\>, isNew\: bool\} but returns array\{accessToken\: string, user\: App\\Http\\Resources\\UserResource, isNew\: bool\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Auth/QuickAuthController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Campaign\:\:\$visit_stats\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CampaignController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\CampaignVisit\:\:\$day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CampaignController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\CampaignVisit\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CampaignController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\CampaignVisit\:\:\$day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CampaignPromotingController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\CampaignVisit\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/CampaignPromotingController.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<string, bool\> is incompatible with native type Illuminate\\Http\\JsonResponse\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: app/Http/Controllers/ContactController.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<string, bool\> is incompatible with native type Illuminate\\Http\\JsonResponse\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: app/Http/Controllers/FavoriteController.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<string, bool\> is incompatible with native type Illuminate\\Http\\JsonResponse\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: app/Http/Controllers/FeedbackController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Message\:\:\$others_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MessageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Message\:\:\$seen_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/MessageController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Plan\:\:\$is_current\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PlanController.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: mixed$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Http/Controllers/ReportController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\SearchController\:\:profiles\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Profile\> but returns Illuminate\\Database\\Query\\Builder\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/SearchController.php
+
+		-
+			message: '#^PHPDoc tag @return with type array\<string, App\\Http\\Resources\\SubscriptionResource\|null\> is incompatible with native type Illuminate\\Http\\JsonResponse\.$#'
+			identifier: return.phpDocType
+			count: 1
+			path: app/Http/Controllers/SubscriptionController.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/SupportController.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AdminUserResource\:\:\$stats\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CampaignResource\:\:\$visit_stats\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CampaignResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\ConversationResource\:\:\$unread_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/ConversationResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\MessageResource\:\:\$seen_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/MessageResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanResource\:\:\$is_current\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PlanResource\:\:\$subscribers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PlanResource.php
+
+		-
+			message: '#^Access to an undefined property \$this\(App\\Models\\Message\)\:\:\$seen_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Message.php
+
+		-
+			message: '#^Method App\\Models\\Project\:\:scopeFilter\(\) should return Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Project\> but returns Illuminate\\Database\\Query\\Builder\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Project.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Review\:\:\$average\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Review.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Review\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Review.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$bio\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$comment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$job_title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$skills\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Observers/AiScreeningObserver.php
+
+		-
+			message: '#^Offset ''requestJsonSchema'' on array\{request\?\: array, requestJson\: array, requestMultipart\?\: array, responses\?\: array\<int, array\{string, array\}\|null\>\} on left side of \?\? does not exist\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/OpenApi/ApiExamples.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Profile\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Services/Ai/Matcher.php
+
+		-
+			message: '#^Match expression does not handle remaining value\: string$#'
+			identifier: match.unhandled
+			count: 1
+			path: app/Services/DisputeService.php
+
+		-
+			message: '#^PHPDoc tag @var for constant Database\\Seeders\\ReferenceDataSeeder\:\:COUNTRIES with type array\<string, array\{string, array\<int, array\{string, string\}\>\}\> is incompatible with value array\{Egypt\: array\{''EG'', ''مصر'', array\{array\{''Cairo'', ''القاهرة''\}, array\{''Alexandria'', ''الإسكندرية''\}, array\{''Giza'', ''الجيزة''\}\}\}, ''Saudi Arabia''\: array\{''SA'', ''السعودية'', array\{array\{''Riyadh'', ''الرياض''\}, array\{''Jeddah'', ''جدة''\}, array\{''Dammam'', ''الدمام''\}\}\}, ''United Arab Emirates''\: array\{''AE'', ''الإمارات'', array\{array\{''Dubai'', ''دبي''\}, array\{''Abu Dhabi'', ''أبو ظبي''\}, array\{''Sharjah'', ''الشارقة''\}\}\}, Kuwait\: array\{''KW'', ''الكويت'', array\{array\{''Kuwait City'', ''مدينة الكويت''\}\}\}, Qatar\: array\{''QA'', ''قطر'', array\{array\{''Doha'', ''الدوحة''\}\}\}, Bahrain\: array\{''BH'', ''البحرين'', array\{array\{''Manama'', ''المنامة''\}\}\}, Oman\: array\{''OM'', ''عُمان'', array\{array\{''Muscat'', ''مسقط''\}\}\}, Jordan\: array\{''JO'', ''الأردن'', array\{array\{''Amman'', ''عمّان''\}\}\}, \.\.\.\}\.$#'
+			identifier: classConstant.phpDocType
+			count: 1
+			path: database/seeders/ReferenceDataSeeder.php
+
+		-
+			message: '#^PHPDoc tag @var for constant Database\\Seeders\\ReferenceDataSeeder\:\:PLANS with type array\<int, array\<string, mixed\>\> is incompatible with value array\{array\{''freelancer\-free'', ''freelancer'', ''Free'', ''مجاني'', 0, array\{\}, 0, false\}, array\{''freelancer\-pro'', ''freelancer'', ''Pro'', ''احترافي'', 1699, array\{monthly_offers\: 50, fee_percent\: 8, promotion_discount_percent\: 10\}, 1, true\}, array\{''freelancer\-elite'', ''freelancer'', ''Elite'', ''نخبة'', 3999, array\{monthly_offers\: null, fee_percent\: 5, promotion_discount_percent\: 25, priority_support\: true\}, 2, false\}, array\{''client\-free'', ''client'', ''Free'', ''مجاني'', 0, array\{\}, 0, false\}, array\{''client\-business'', ''client'', ''Business'', ''أعمال'', 2999, array\{monthly_offers\: 15, promotion_discount_percent\: 20, priority_support\: true\}, 1, true\}, array\{''influencer\-free'', ''influencer'', ''Free'', ''مجاني'', 0, array\{\}, 0, false\}, array\{''influencer\-pro'', ''influencer'', ''Pro'', ''احترافي'', 999, array\{monthly_offers\: 50, fee_percent\: 8, promotion_discount_percent\: 10\}, 1, false\}, array\{''influencer\-elite'', ''influencer'', ''Elite'', ''نخبة'', 4999, array\{monthly_offers\: null, fee_percent\: 5, promotion_discount_percent\: 25, priority_support\: true\}, 2, true\}\}\.$#'
+			identifier: classConstant.phpDocType
+			count: 1
+			path: database/seeders/ReferenceDataSeeder.php

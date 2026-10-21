@@ -20,6 +20,8 @@ class ConversationStarted extends Notification
     }
 
     /**
+     * Stored in the database for the bell list.
+     *
      * @return array<int, string>
      */
     public function via(object $notifiable): array
@@ -28,6 +30,8 @@ class ConversationStarted extends Notification
     }
 
     /**
+     * The stored data: the conversation and the user who started it.
+     *
      * @return array<string, mixed>
      */
     public function toArray(object $notifiable): array

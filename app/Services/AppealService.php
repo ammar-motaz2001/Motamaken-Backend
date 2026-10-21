@@ -32,6 +32,10 @@ class AppealService
             && ! DisputeAppeal::where('dispute_id', $dispute->id)->where('user_id', $user->id)->exists();
     }
 
+    /**
+     * File the one appeal a party may make within the appeal window. Stores the reason (and an optional attachment)
+     * as an appeal message on the case timeline and tells every admin.
+     */
     public function file(Dispute $dispute, User $user, string $reason, ?UploadedFile $file): DisputeAppeal
     {
         if (! $this->canAppeal($dispute, $user)) {
@@ -110,6 +114,9 @@ class AppealService
         return $appeal->refresh();
     }
 
+    /**
+     * Whether the user is the client or one of the people being paid on the dispute's escrow.
+     */
     private function isParty(Dispute $dispute, User $user): bool
     {
         $dispute->loadMissing('escrow.payees');

@@ -43,6 +43,8 @@ class AdminPromotionController extends Controller
     }
 
     /**
+     * The promotions query behind the list, shared with the CSV export.
+     *
      * @return Builder<Promotion>
      */
     public function filtered(Request $request): Builder
@@ -131,6 +133,8 @@ class AdminPromotionController extends Controller
     }
 
     /**
+     * A promotion for the admin list, with its project and price.
+     *
      * @return array<string, mixed>
      */
     public static function present(Promotion $p): array

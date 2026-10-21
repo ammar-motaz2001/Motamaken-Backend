@@ -11,6 +11,8 @@ use Illuminate\Foundation\Http\FormRequest;
 class ProposalRequest extends FormRequest
 {
     /**
+     * Validates an offer's amount, delivery days, message and optional team.
+     *
      * @return array<string, mixed>
      */
     public function rules(): array

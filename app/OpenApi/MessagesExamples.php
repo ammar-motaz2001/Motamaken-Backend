@@ -8,6 +8,8 @@ namespace App\OpenApi;
 class MessagesExamples
 {
     /**
+     * Examples for the conversation and message endpoints.
+     *
      * @return array<string, array{request?: array, requestJson?: array, requestMultipart?: array, responses?: array<int, array{0: string, 1: array}|null>}>
      */
     public static function operations(): array
@@ -132,6 +134,8 @@ class MessagesExamples
     private const URL = 'http://localhost:8000/api/messages/';
 
     /**
+     * A sample message as the API returns it; fields that do not apply are left out.
+     *
      * @param  array<string, mixed>|null  $attachment
      * @return array<string, mixed>
      */

@@ -7,22 +7,27 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Browser hardening for API responses: they are JSON or files, never pages, so nothing may run, frame or sniff them.
+ * Browser hardening for every response. API responses are JSON or files, never pages, so nothing may run, frame or
+ * sniff them; the Swagger page keeps its scripts but gets the same framing, sniffing and transport rules.
  */
 class SecurityHeaders
 {
+    /**
+     * Adds the security headers; the strict content policy goes on everything except the Swagger UI page.
+     */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
-        if (! $request->is('api/*')) {
-            return $response;
-        }
 
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('Referrer-Policy', 'no-referrer');
-        $response->headers->set('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; sandbox");
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
         $response->headers->set('Cross-Origin-Resource-Policy', 'cross-origin');
+        if (! $request->routeIs('docs.swagger')) {
+            $response->headers->set('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'; sandbox");
+        }
         $response->headers->remove('X-Powered-By');
 
         if (app()->isProduction()) {

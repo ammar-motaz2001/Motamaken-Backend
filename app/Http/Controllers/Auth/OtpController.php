@@ -53,6 +53,8 @@ class OtpController extends Controller
             OtpPurpose::Signup => ['verified' => true],
             OtpPurpose::Login => $this->tokenResponse($user),
             OtpPurpose::Reset => ['token' => $this->issueResetToken($user)],
+            // Quick sign-in and two-factor codes have their own endpoints; validation never lets them here.
+            default => abort(422, __('auth_flow.otp_invalid')),
         };
     }
 
@@ -76,6 +78,9 @@ class OtpController extends Controller
         return ['sent' => true];
     }
 
+    /**
+     * Creates a one-time password reset token for the user after their code was checked.
+     */
     private function issueResetToken(User $user): string
     {
         $token = Str::random(64);

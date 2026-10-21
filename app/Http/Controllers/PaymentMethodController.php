@@ -119,6 +119,8 @@ class PaymentMethodController extends Controller
     }
 
     /**
+     * Asks the gateway for the card behind a browser token and maps it to our columns.
+     *
      * @return array<string, mixed>
      */
     private function fromToken(User $user, string $token): array
@@ -131,6 +133,9 @@ class PaymentMethodController extends Controller
         ];
     }
 
+    /**
+     * Guesses the card brand from the number's prefix; `other` when nothing matches.
+     */
     private function brand(string $digits): string
     {
         foreach (self::BRANDS as $brand => $pattern) {
