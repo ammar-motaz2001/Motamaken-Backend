@@ -2,6 +2,8 @@
 
 Laravel 13 API · PHP 8.4 · PostgreSQL 16 · Redis 7 — all running in Docker.
 
+How the whole platform fits together: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Production runs on a VPS: [deploy/README.md](deploy/README.md).
+
 ## Services
 
 | Service    | Purpose                          | Host port |
@@ -244,6 +246,8 @@ Rules:
 - Notifications `points.*`, `medal.*`, `draw.*` form the `rewards` group (not emailed by default).
 
 ## Deploy on Render
+
+An alternative to the VPS setup in [deploy/README.md](deploy/README.md), which is what production uses.
 
 Everything is described in [`render.yaml`](render.yaml) (a Render Blueprint) and built from [`Dockerfile.render`](Dockerfile.render)
 (FrankenPHP, PHP 8.4, production settings in `docker/render/`). Local development keeps using `Dockerfile` + `docker-compose.yml`.
