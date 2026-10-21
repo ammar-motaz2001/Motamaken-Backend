@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Support\BrandedMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,12 +37,11 @@ class ContactReply extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return BrandedMail::message(['quote' => str($this->original)->limit(600)->toString(), 'preheader' => str($this->reply)->limit(120)->toString()])
             ->subject(__('contact.reply_subject', ['subject' => $this->subject]))
             ->greeting(__('notifications.email_greeting', ['name' => $this->name]))
             ->line($this->reply)
-            ->line('---')
-            ->line(__('contact.reply_quote'))
-            ->line(str($this->original)->limit(600)->toString());
+            ->action(__('notifications.email_action'), config('auth_flow.frontend_url'))
+            ->line(__('contact.reply_quote'));
     }
 }

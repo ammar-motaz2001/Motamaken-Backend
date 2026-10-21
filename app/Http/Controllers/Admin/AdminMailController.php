@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\IntegrationLog;
 use App\Models\MailLog;
 use App\Models\Setting;
+use App\Support\BrandedMail;
 use App\Support\Paged;
 use App\Support\RuntimeConfig;
 use Dedoc\Scramble\Attributes\Group;
@@ -102,7 +103,8 @@ class AdminMailController extends Controller
         abort_unless($to, 422, __('admin.no_email'));
 
         try {
-            Mail::raw(__('admin.test_email_body'), fn ($message) => $message->to($to)->subject(__('admin.test_email_subject')));
+            Mail::send(BrandedMail::VIEWS, ['heading' => __('admin.test_email_subject'), 'introLines' => [__('admin.test_email_body')]],
+                fn ($message) => $message->to($to)->subject(__('admin.test_email_subject')));
 
             return ['success' => true, 'error' => null];
         } catch (Throwable $e) {

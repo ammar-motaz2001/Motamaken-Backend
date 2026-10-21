@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Http\Resources\NotificationResource;
 use App\Models\NotificationTemplate;
+use App\Support\BrandedMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -43,7 +44,7 @@ class ActivityEmail extends Notification implements ShouldQueue
             ? (app()->getLocale() === 'ar' ? ($params['titleAr'] ?? '') : ($params['titleEn'] ?? ''))
             : NotificationTemplate::subject($this->data['type'], ['name' => $this->data['user']['fullName'] ?? '', ...$params]);
 
-        return (new MailMessage)
+        return BrandedMail::message(['heading' => $subject ?: __('notifications.email_subject'), 'preheader' => $text])
             ->subject($subject ?: __('notifications.email_subject'))
             ->greeting(__('notifications.email_greeting', ['name' => $notifiable->first_name ?: $notifiable->username]))
             ->line($text)

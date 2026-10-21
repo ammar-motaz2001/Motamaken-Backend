@@ -4,6 +4,7 @@ namespace App\Notifications;
 
 use App\Channels\WhatsAppChannel;
 use App\Enums\OtpPurpose;
+use App\Support\BrandedMail;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -33,11 +34,15 @@ class OtpCode extends Notification implements ShouldQueue
      */
     public function toMail(object $notifiable): MailMessage
     {
-        return (new MailMessage)
+        return BrandedMail::message([
+            'heading' => __('mail.otp_heading'),
+            'code' => $this->code,
+            'preheader' => __('auth_flow.otp_whatsapp', ['code' => $this->code, 'minutes' => config('auth_flow.otp.ttl')]),
+            // Shown under the code (there is no button to split the lines on).
+            'outroLines' => [__('auth_flow.otp_expiry', ['minutes' => config('auth_flow.otp.ttl')])],
+        ])
             ->subject(__("auth_flow.otp_subject.{$this->purpose->value}"))
-            ->line(__('auth_flow.otp_line'))
-            ->line("**{$this->code}**")
-            ->line(__('auth_flow.otp_expiry', ['minutes' => config('auth_flow.otp.ttl')]));
+            ->line(__('auth_flow.otp_line'));
     }
 
     /**

@@ -34,7 +34,7 @@ return [
         'login' => 'Your Mutamakin login code',
         'reset' => 'Reset your Mutamakin password',
     ],
-    'otp_line' => 'Your verification code is:',
+    'otp_line' => 'Enter this code on Mutamakin to continue:',
     'otp_expiry' => 'This code expires in :minutes minutes. If you did not request it, you can ignore this message.',
     'otp_whatsapp' => 'Your Mutamakin verification code is :code. It expires in :minutes minutes.',
     'suspended' => 'Account suspended. Contact support.',
