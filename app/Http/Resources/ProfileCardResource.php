@@ -26,6 +26,8 @@ class ProfileCardResource extends JsonResource
             'fullName' => $this->user->full_name,
             'username' => $this->user->username,
             'avatarUrl' => $this->user->avatar_url,
+            /** Identity checked by the platform (approved KYC): shown as a verified badge. */
+            'verified' => $this->user->kyc_status === 'approved',
             /** `freelancer` or `influencer`. */
             'type' => $this->type,
             /** E.g. "Designer", "Web Developer". */

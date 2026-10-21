@@ -19,6 +19,7 @@ use App\Services\SubscriptionService;
 use App\Support\Money;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Payment protection: the client pays each milestone into escrow, the freelancer delivers, the client approves and the
@@ -131,9 +132,9 @@ class EscrowService
     /**
      * A person being paid hands in the work for a funded milestone.
      */
-    public function submit(Milestone $milestone, User $payee, ?string $note): Milestone
+    public function submit(Milestone $milestone, User $payee, ?string $note, array $links = []): Milestone
     {
-        DB::transaction(function () use ($milestone, $payee, $note) {
+        DB::transaction(function () use ($milestone, $payee, $note, $links) {
             [$milestone, $escrow] = $this->lockMilestone($milestone);
 
             if ($milestone->status !== Milestone::FUNDED) {
@@ -143,7 +144,13 @@ class EscrowService
                 );
             }
 
-            $milestone->update(['status' => Milestone::SUBMITTED, 'submitted_at' => now(), 'submission_note' => $note, 'changes_note' => null]);
+            // An influencer delivers proof of publishing: at least one link to the published post.
+            if ($escrow->project->type === Project::TYPE_INFLUENCER_REQUEST && ! $links) {
+                throw ValidationException::withMessages(['links' => __('payments.proof_required')]);
+            }
+
+            $milestone->update(['status' => Milestone::SUBMITTED, 'submitted_at' => now(), 'submission_note' => $note,
+                'delivery_links' => array_values($links) ?: null, 'changes_note' => null]);
 
             $escrow->client->notify(new ActivityNotification('milestone.submitted', $payee, $this->labels($escrow, $milestone)));
         });

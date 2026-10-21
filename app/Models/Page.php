@@ -38,17 +38,34 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['slug', 'section', 'title_en', 'title_ar', 'body_en', 'body_ar', 'is_published', 'sort_order', 'updated_by'])]
+#[Fillable(['slug', 'section', 'title_en', 'title_ar', 'body_en', 'body_ar', 'meta_title_en', 'meta_title_ar', 'meta_description_en',
+    'meta_description_ar', 'noindex', 'is_published', 'sort_order', 'updated_by'])]
 class Page extends Model
 {
     public const SECTIONS = ['about', 'help', 'legal'];
 
     /**
-     * is_published becomes a boolean, sort_order an integer.
+     * is_published and noindex become booleans, sort_order an integer.
      */
     protected function casts(): array
     {
-        return ['is_published' => 'boolean', 'sort_order' => 'integer'];
+        return ['is_published' => 'boolean', 'noindex' => 'boolean', 'sort_order' => 'integer'];
+    }
+
+    /**
+     * Search-engine title and description in the request language; null where the admins left them empty.
+     *
+     * @return array{title: ?string, description: ?string, noindex: bool}
+     */
+    public function seo(): array
+    {
+        $ar = app()->getLocale() === 'ar';
+
+        return [
+            'title' => ($ar ? $this->meta_title_ar : $this->meta_title_en) ?: null,
+            'description' => ($ar ? $this->meta_description_ar : $this->meta_description_en) ?: null,
+            'noindex' => (bool) $this->noindex,
+        ];
     }
 
     /**

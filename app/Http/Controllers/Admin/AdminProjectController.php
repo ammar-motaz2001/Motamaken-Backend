@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\AgreementChangeController;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ProjectResource;
 use App\Models\AdminLog;
+use App\Models\AgreementChange;
 use App\Models\Dispute;
 use App\Models\Escrow;
 use App\Models\Profile;
@@ -98,6 +100,9 @@ class AdminProjectController extends Controller
                 'message' => $p->message, 'status' => $p->status, 'createdAt' => $time($p->created_at),
             ])->all(),
             'escrow' => $escrow ? AdminEscrowController::present($escrow, true) : null,
+            // Change and cancel requests between the client and the freelancer, newest first.
+            'agreementChanges' => AgreementChange::with(['requester', 'responder'])->where('project_id', $project->id)->latest('id')->get()
+                ->map(fn (AgreementChange $change) => AgreementChangeController::present($change))->all(),
             'disputes' => Dispute::with(['opener', 'respondent'])->whereIn('escrow_id', $escrow ? [$escrow->id] : [])->latest('id')->get()->map(fn (Dispute $d) => [
                 'id' => $d->id, 'status' => $d->status, 'reason' => $d->reason, 'resolution' => $d->resolution,
                 'openedBy' => Paged::user($d->opener), 'against' => Paged::user($d->respondent), 'createdAt' => $time($d->created_at),

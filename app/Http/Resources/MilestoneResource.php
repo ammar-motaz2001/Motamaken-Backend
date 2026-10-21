@@ -33,6 +33,8 @@ class MilestoneResource extends JsonResource
             'fee' => $this->fee_cents / 100,
             /** What the freelancer wrote when delivering. */
             'submissionNote' => $this->submission_note,
+            /** Links handed in with the delivery (for influencer requests: the published posts). */
+            'deliveryLinks' => $this->delivery_links ?? [],
             /** What the client asked to change after a delivery. */
             'changesNote' => $this->changes_note,
             'fundedAt' => $this->funded_at,

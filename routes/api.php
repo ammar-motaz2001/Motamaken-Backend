@@ -43,6 +43,7 @@ use App\Http\Controllers\Admin\AdminTeamController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\AffiliateController;
+use App\Http\Controllers\AgreementChangeController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordController;
@@ -268,6 +269,12 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::post('projects/{project}/escrow/split/object', [EscrowController::class, 'objectSplit'])->whereNumber('project');
     Route::post('projects/{project}/escrow/tip', [EscrowController::class, 'tip'])->whereNumber('project')->middleware('throttle:money');
     Route::post('projects/{project}/escrow/cancel', [EscrowController::class, 'cancel'])->whereNumber('project');
+    // Changing or cancelling an accepted offer by agreement of both sides.
+    Route::get('projects/{project}/agreement-changes', [AgreementChangeController::class, 'index'])->whereNumber('project');
+    Route::post('projects/{project}/agreement-changes', [AgreementChangeController::class, 'store'])->whereNumber('project')->middleware('throttle:writes');
+    Route::post('agreement-changes/{change}/accept', [AgreementChangeController::class, 'accept'])->whereNumber('change')->middleware('throttle:money');
+    Route::post('agreement-changes/{change}/decline', [AgreementChangeController::class, 'decline'])->whereNumber('change');
+    Route::post('agreement-changes/{change}/withdraw', [AgreementChangeController::class, 'withdraw'])->whereNumber('change');
     Route::post('milestones/{milestone}/fund', [MilestoneController::class, 'fund'])->whereNumber('milestone')->middleware('throttle:money');
     Route::post('milestones/{milestone}/submit', [MilestoneController::class, 'submit'])->whereNumber('milestone');
     Route::post('milestones/{milestone}/approve', [MilestoneController::class, 'approve'])->whereNumber('milestone')->middleware('throttle:money');
@@ -379,6 +386,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
             Route::get('affiliate', AdminAffiliateController::class);
             Route::get('affiliate/suspicious', [AdminAffiliateController::class, 'suspicious']);
             Route::post('affiliate/referrals/{user}/revoke', [AdminAffiliateController::class, 'revoke'])->whereNumber('user');
+            Route::post('affiliate/referrals/{user}/approve', [AdminAffiliateController::class, 'approve'])->whereNumber('user');
             Route::get('draws', [AdminDrawController::class, 'index']);
             Route::post('draws', [AdminDrawController::class, 'store']);
             Route::post('draws/{draw}/run', [AdminDrawController::class, 'run'])->whereNumber('draw');
@@ -452,6 +460,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
             Route::put('mail', [AdminMailController::class, 'update']);
             Route::post('mail/test', [AdminMailController::class, 'test']);
             Route::get('integrations', [AdminIntegrationController::class, 'status']);
+            Route::put('integrations/payments/mode', [AdminIntegrationController::class, 'paymentsMode']);
             Route::get('integrations/logs', [AdminIntegrationController::class, 'logs']);
             Route::get('integrations/failed-jobs', [AdminIntegrationController::class, 'failedJobs']);
             Route::post('integrations/failed-jobs/{uuid}/retry', [AdminIntegrationController::class, 'retry']);

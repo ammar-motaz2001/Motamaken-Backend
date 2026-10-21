@@ -61,6 +61,10 @@ class RuntimeConfig
             config(['mail.default' => 'smtp']);
         }
 
+        if (! empty($values['payments.moyasar_mode'])) {
+            MoyasarMode::apply($values['payments.moyasar_mode']);
+        }
+
         if (isset($values['uploads.chat_mb'])) {
             config(['marketplace.chat.max_file_kb' => (int) $values['uploads.chat_mb'] * 1024]);
         }

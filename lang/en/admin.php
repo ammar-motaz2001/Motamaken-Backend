@@ -30,4 +30,5 @@ return [
         'none' => 'No action', 'warned' => 'a warning', 'hidden' => 'hidden', 'removed' => 'removed',
         'suspended' => 'account suspended', 'closed' => 'closed',
     ],
+    'moyasar_keys_missing' => 'There are no Moyasar :mode keys on the server. Add MOYASAR_:MODE_SECRET_KEY and MOYASAR_:MODE_PUBLISHABLE_KEY to backend.env first.',
 ];

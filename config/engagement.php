@@ -23,6 +23,9 @@ return [
         'promotion' => ['amount' => 200, 'once' => false],
     ],
 
+    // Referral rewards one inviter can earn per day before the rest are held for an admin to review.
+    'referral_daily_cap' => (int) env('REFERRAL_DAILY_CAP', 10),
+
     /*
     |--------------------------------------------------------------------------
     | Medals ("Medals system")

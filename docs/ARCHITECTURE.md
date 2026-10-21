@@ -58,6 +58,8 @@ All balances come from `ledger_entries`; nothing stores a balance number that co
   secret), never from what the browser says.
 - Escrow: the client funds milestones (wallet → escrow), the freelancer delivers, and approval releases the money
   (escrow → freelancer minus the platform fee). Disputes and appeals move money only through the same ledger.
+- Changing the deal: either side can ask to change the price or delivery time, or to cancel (`AgreementService`);
+  the price is fixed once money is in escrow, and an accepted cancellation refunds what is held to the client.
 
 ### Auth and accounts
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
+use App\Support\MoyasarMode;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Support\Facades\Cache;
 
@@ -48,6 +49,13 @@ class SiteSettingsController extends Controller
                 'documentMb' => (int) Setting::get('uploads.document_mb'),
                 'chatMb' => (int) Setting::get('uploads.chat_mb'),
                 'attachmentTypes' => Setting::get('uploads.attachment_types'),
+            ],
+            // Default search-engine description; null means the website's built-in text.
+            'seo' => ['descriptionEn' => Setting::get('seo.description_en'), 'descriptionAr' => Setting::get('seo.description_ar')],
+            // Card payments: the publishable key of the Moyasar mode in use (public by design), null when cards are off.
+            'payments' => [
+                'moyasarPublishableKey' => config('payments.driver') === 'moyasar' ? config('payments.moyasar.publishable_key') : null,
+                'mode' => config('payments.driver') === 'moyasar' ? MoyasarMode::current() : null,
             ],
             'depositMethods' => config('payments.deposit_methods'),
             'withdrawalMethods' => config('payments.withdrawal_methods'),

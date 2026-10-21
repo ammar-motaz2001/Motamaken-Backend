@@ -53,4 +53,5 @@ return [
         'draw_prize' => 'Prize draw winnings',
         'adjustment' => 'Adjustment by support',
     ],
+    'proof_required' => 'Add at least one link to the published post as proof.',
 ];

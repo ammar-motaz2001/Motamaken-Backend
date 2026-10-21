@@ -22,6 +22,7 @@ class AdminSiteSettingsController extends Controller
         'uploads' => ['avatarMb' => 'uploads.avatar_mb', 'portfolioMb' => 'uploads.portfolio_mb', 'documentMb' => 'uploads.document_mb',
             'chatMb' => 'uploads.chat_mb', 'attachmentTypes' => 'uploads.attachment_types'],
         'security' => ['requireAdmin2fa' => 'admin.require_2fa'],
+        'seo' => ['descriptionEn' => 'seo.description_en', 'descriptionAr' => 'seo.description_ar'],
         'payments' => ['depositMethods' => 'payments.deposit_methods', 'withdrawalMethods' => 'payments.withdrawal_methods'],
     ];
 
@@ -29,7 +30,7 @@ class AdminSiteSettingsController extends Controller
      * Site settings.
      *
      * The platform's name, logo, contact details and social links, the mobile app links, maintenance mode, upload limits,
-     * the staff sign-in policy and which payment methods are offered (in order).
+     * the default search-engine description, the staff sign-in policy and which payment methods are offered (in order).
      *
      * @return array{data: array<string, mixed>}
      */
@@ -96,6 +97,9 @@ class AdminSiteSettingsController extends Controller
             'uploads.chatMb' => ['sometimes', 'integer', 'between:1,100'],
             'uploads.attachmentTypes' => ['sometimes', 'array', 'min:1'],
             'uploads.attachmentTypes.*' => [Rule::in(config('site.attachment_choices'))],
+            'seo' => ['sometimes', 'array'],
+            'seo.descriptionEn' => ['sometimes', 'nullable', 'string', 'max:170'],
+            'seo.descriptionAr' => ['sometimes', 'nullable', 'string', 'max:170'],
             'security' => ['sometimes', 'array'],
             'security.requireAdmin2fa' => ['sometimes', 'boolean'],
             'payments' => ['sometimes', 'array'],
@@ -104,7 +108,7 @@ class AdminSiteSettingsController extends Controller
             'payments.withdrawalMethods' => ['sometimes', 'array', 'min:1'],
             'payments.withdrawalMethods.*' => ['distinct', Rule::in(config('payments.withdrawal_method_choices'))],
         ]);
-        request()->attributes->set('audit.before', collect($this->show()['data'])->only(array_keys($request->only(['site', 'social', 'apps', 'maintenance', 'uploads', 'security', 'payments'])))->all());
+        request()->attributes->set('audit.before', collect($this->show()['data'])->only(array_keys($request->only(['site', 'social', 'apps', 'maintenance', 'uploads', 'seo', 'security', 'payments'])))->all());
 
         foreach (self::FIELDS as $section => $fields) {
             foreach ($fields as $input => $key) {

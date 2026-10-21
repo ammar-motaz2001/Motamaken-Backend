@@ -3,17 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\SiteSettingsController;
 use App\Models\IntegrationLog;
 use App\Models\MailLog;
+use App\Models\Setting;
 use App\Services\Ai\Ollama;
+use App\Support\MoyasarMode;
 use App\Support\Paged;
+use App\Support\RuntimeConfig;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 #[Group('Admin', 'The admin panel. Every call needs an administrator account.', weight: 99)]
@@ -40,8 +46,11 @@ class AdminIntegrationController extends Controller
                     'status' => config('payments.driver') === 'moyasar' ? ($secret ? 'ok' : 'error') : 'warning',
                     'details' => [
                         'driver' => config('payments.driver'),
-                        /** `test` or `live`, from the key type. */
-                        'mode' => str_starts_with($secret, 'sk_live') ? 'live' : ($secret ? 'test' : null),
+                        /** `test` or `live`, from the key in use. */
+                        'mode' => MoyasarMode::current(),
+                        /** The modes the server has keys for; switch with PUT /admin/integrations/payments/mode. */
+                        'availableModes' => MoyasarMode::available(),
+                        'publishableKey' => filled(config('payments.moyasar.publishable_key')),
                         'secretKey' => filled($secret),
                         'webhookSecret' => filled(config('payments.moyasar.webhook_secret')),
                         'webhookUrl' => url('/api/webhooks/moyasar'),
@@ -70,6 +79,29 @@ class AdminIntegrationController extends Controller
                 $this->ai(),
             ],
         ];
+    }
+
+    /**
+     * Switch Moyasar between test and live.
+     *
+     * Uses the keys the server holds for that mode (MOYASAR_TEST_* / MOYASAR_LIVE_*, or the single MOYASAR_SECRET_KEY
+     * for its own mode); refused when there are none. Takes effect at once for the API and within a minute on the
+     * website. In test mode no real money moves.
+     *
+     * @return array{data: list<array{service: string, status: string, details: array<string, mixed>}>, environment: string}
+     */
+    public function paymentsMode(Request $request): array
+    {
+        $data = $request->validate(['mode' => ['required', Rule::in(MoyasarMode::MODES)]]);
+        abort_unless(in_array($data['mode'], MoyasarMode::available(), true), 422, __('admin.moyasar_keys_missing', ['mode' => $data['mode']]));
+
+        request()->attributes->set('audit.before', ['mode' => MoyasarMode::current()]);
+        Setting::put('payments.moyasar_mode', $data['mode']);
+        Cache::forget('settings');
+        RuntimeConfig::apply();
+        SiteSettingsController::forget();
+
+        return $this->status();
     }
 
     /**

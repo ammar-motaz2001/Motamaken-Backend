@@ -49,6 +49,7 @@ use Laravel\Sanctum\PersonalAccessToken;
  * @property string|null $suspension_reason
  * @property string|null $referral_code
  * @property int|null $referred_by
+ * @property Carbon|null $referral_held_at
  * @property string|null $two_factor_method
  * @property string|null $two_factor_target
  * @property Carbon|null $two_factor_enabled_at
@@ -153,6 +154,7 @@ class User extends Authenticatable
             'last_seen_at' => 'datetime',
             'suspended_at' => 'datetime',
             'suspended_until' => 'datetime',
+            'referral_held_at' => 'datetime',
             'is_admin' => 'boolean',
         ];
     }

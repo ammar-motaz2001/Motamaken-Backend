@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $due_date
  * @property int $fee_cents
  * @property string|null $submission_note
+ * @property list<string>|null $delivery_links
  * @property string|null $changes_note
  * @property Carbon|null $funded_at
  * @property Carbon|null $submitted_at
@@ -50,7 +51,7 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['escrow_id', 'position', 'title', 'amount_cents', 'status', 'due_date', 'fee_cents', 'submission_note', 'changes_note', 'refunded_cents', 'funded_at', 'submitted_at', 'released_at'])]
+#[Fillable(['escrow_id', 'position', 'title', 'amount_cents', 'status', 'due_date', 'fee_cents', 'submission_note', 'delivery_links', 'changes_note', 'refunded_cents', 'funded_at', 'submitted_at', 'released_at'])]
 class Milestone extends Model
 {
     use HasFactory;
@@ -84,7 +85,7 @@ class Milestone extends Model
      */
     protected function casts(): array
     {
-        return [
+        return ['delivery_links' => 'array',
             'amount_cents' => 'integer',
             'fee_cents' => 'integer',
             'refunded_cents' => 'integer',

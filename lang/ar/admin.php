@@ -30,4 +30,5 @@ return [
         'none' => 'دون إجراء', 'warned' => 'تنبيه', 'hidden' => 'إخفاء', 'removed' => 'حذف',
         'suspended' => 'تعليق الحساب', 'closed' => 'إغلاق',
     ],
+    'moyasar_keys_missing' => 'لا توجد مفاتيح Moyasar لوضع :mode على الخادم. أضف MOYASAR_:MODE_SECRET_KEY و MOYASAR_:MODE_PUBLISHABLE_KEY إلى backend.env أولاً.',
 ];

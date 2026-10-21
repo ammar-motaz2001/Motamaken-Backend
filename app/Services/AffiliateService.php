@@ -5,9 +5,11 @@ namespace App\Services;
 use App\Models\AffiliateEarning;
 use App\Models\Escrow;
 use App\Models\Milestone;
+use App\Models\PointTransaction;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * The referral programme. When someone who was invited earns money, the person who invited them gets a share of the platform
@@ -60,6 +62,49 @@ class AffiliateService
     }
 
     /**
+     * Why an invitation looks like self-referral: the same sign-up IP as the inviter, an IP both signed in from, or
+     * the inviter already earning their daily share of referral rewards. Empty when nothing stands out.
+     *
+     * @param  array<int, list<string>>|null  $loginIps  Sign-in IPs per user id, when already loaded for many users.
+     * @return list<string>
+     */
+    public function suspicion(User $invited, ?array $loginIps = null, bool $countToday = false): array
+    {
+        $referrer = $invited->referrer;
+        if (! $referrer) {
+            return [];
+        }
+
+        $reasons = [];
+        if ($invited->registration_ip && $invited->registration_ip === $referrer->registration_ip) {
+            $reasons[] = 'same_signup_ip';
+        }
+        $loginIps ??= $this->loginIps([$invited->id, $referrer->id]);
+        if (array_intersect($loginIps[$invited->id] ?? [], $loginIps[$referrer->id] ?? [])) {
+            $reasons[] = 'shared_login_ip';
+        }
+        if ($countToday && PointTransaction::where('user_id', $referrer->id)->where('reason', 'referral')
+            ->where('created_at', '>=', now()->startOfDay())->count() >= (int) config('engagement.referral_daily_cap')) {
+            $reasons[] = 'daily_cap';
+        }
+
+        return $reasons;
+    }
+
+    /**
+     * The IP addresses each user has signed in from (their API tokens), by user id.
+     *
+     * @param  list<int>  $ids
+     * @return array<int, list<string>>
+     */
+    public function loginIps(array $ids): array
+    {
+        return DB::table('personal_access_tokens')->where('tokenable_type', User::class)->whereIn('tokenable_id', $ids)
+            ->whereNotNull('ip_address')->select('tokenable_id', 'ip_address')->distinct()->get()->groupBy('tokenable_id')
+            ->map(fn ($rows) => $rows->pluck('ip_address')->all())->all();
+    }
+
+    /**
      * Work out who earns what from one payment, before the money moves.
      *
      * @param  array<int, int>  $feeParts  Each payee's part of the platform fee: user id => cents.
@@ -72,7 +117,9 @@ class AffiliateService
         foreach ($escrow->payees as $payee) {
             $referrer = $payee->user->referred_by ? User::find($payee->user->referred_by) : null;
 
-            if (! $referrer || $referrer->suspended_at || $referrer->id === $payee->user_id) {
+            // No commission on a held (suspected self-) referral, nor when the inviter is the client paying it.
+            if (! $referrer || $referrer->suspended_at || $referrer->id === $payee->user_id || $referrer->id === $escrow->client_id
+                || $payee->user->referral_held_at) {
                 continue;
             }
 

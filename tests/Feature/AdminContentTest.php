@@ -6,11 +6,14 @@ use App\Models\Category;
 use App\Models\City;
 use App\Models\ContactMessage;
 use App\Models\Country;
+use App\Models\Escrow;
+use App\Models\EscrowPayee;
 use App\Models\Medal;
 use App\Models\PointTransaction;
 use App\Models\Profile;
 use App\Models\User;
 use App\Notifications\ContactReply;
+use App\Services\AffiliateService;
 use App\Services\RewardsService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -226,6 +229,52 @@ class AdminContentTest extends TestCase
         $this->as($this->admin)->postJson("/api/admin/affiliate/referrals/{$invited->id}/revoke", ['reason' => 'Self-referral'])->assertOk();
         $this->assertSame(0, $referrer->fresh()->points);
         $this->assertNull($invited->fresh()->referred_by);
+    }
+
+    public function test_self_referrals_are_held_until_an_admin_approves_them(): void
+    {
+        $referrer = User::factory()->create(['registration_ip' => '5.6.7.8']);
+        $invited = User::factory()->create(['referred_by' => $referrer->id, 'registration_ip' => '5.6.7.8', 'email_verified_at' => now()]);
+        app(RewardsService::class)->onVerified($invited);
+
+        $this->assertNotNull($invited->fresh()->referral_held_at);
+        $this->assertSame(0, PointTransaction::where('user_id', $referrer->id)->where('reason', 'referral')->count());
+        $this->as($this->admin)->getJson('/api/admin/affiliate/suspicious')->assertJsonPath('data.0.held', true);
+
+        $this->as($this->admin)->postJson("/api/admin/affiliate/referrals/{$invited->id}/approve")->assertOk();
+        $this->assertNull($invited->fresh()->referral_held_at);
+        $this->assertSame(1, PointTransaction::where('user_id', $referrer->id)->where('reason', 'referral')->count());
+    }
+
+    public function test_genuine_referrals_are_rewarded_at_once_but_only_up_to_the_daily_cap(): void
+    {
+        config(['engagement.referral_daily_cap' => 2]);
+        $referrer = User::factory()->create(['registration_ip' => '9.9.9.9']);
+        foreach (range(1, 3) as $n) {
+            $invited = User::factory()->create(['referred_by' => $referrer->id, 'registration_ip' => "10.0.0.{$n}", 'email_verified_at' => now()]);
+            app(RewardsService::class)->onVerified($invited);
+        }
+
+        $this->assertSame(2, PointTransaction::where('user_id', $referrer->id)->where('reason', 'referral')->count());
+        $this->assertNotNull($invited->fresh()->referral_held_at);
+    }
+
+    public function test_no_commission_on_held_referrals_or_when_the_inviter_pays_their_own_invitee(): void
+    {
+        $referrer = User::factory()->create();
+        $freelancer = User::factory()->create(['referred_by' => $referrer->id]);
+        $affiliate = app(AffiliateService::class);
+        $commissionFor = function (User $client) use ($freelancer, $affiliate) {
+            $escrow = Escrow::factory()->create(['client_id' => $client->id]);
+            EscrowPayee::create(['escrow_id' => $escrow->id, 'user_id' => $freelancer->id, 'share_bp' => 10000, 'is_lead' => true]);
+
+            return $affiliate->commissionsFor($escrow->load('payees.user'), [$freelancer->id => 1000]);
+        };
+
+        $this->assertCount(1, $commissionFor(User::factory()->create()));
+        $this->assertCount(0, $commissionFor($referrer));
+        $freelancer->forceFill(['referral_held_at' => now()])->save();
+        $this->assertCount(0, $commissionFor(User::factory()->create()));
     }
 
     private function as(User $user): static

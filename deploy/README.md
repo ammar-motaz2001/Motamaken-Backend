@@ -40,3 +40,8 @@ A changed `Caddyfile` needs `docker compose up -d --force-recreate caddy` (a pla
 - Database shell: `docker compose exec postgres psql -U mutamakin mutamakin`
 - Backup: `docker compose exec postgres pg_dump -U mutamakin mutamakin | gzip > backup-$(date +%F).sql.gz`
 - Moyasar webhook: `https://api.mutamakin.com/api/webhooks/moyasar` with `MOYASAR_WEBHOOK_SECRET` from `backend.env` as its secret token.
+- Moyasar test and live: put both key pairs in `backend.env` (`MOYASAR_TEST_SECRET_KEY`, `MOYASAR_TEST_PUBLISHABLE_KEY`,
+  `MOYASAR_TEST_WEBHOOK_SECRET` and the same with `LIVE`), then `docker compose up -d api queue scheduler`. Admins switch
+  between them in Admin › Integrations; the website picks up the matching publishable key within a minute, no rebuild.
+  With only `MOYASAR_SECRET_KEY` set, the site stays in that key's mode.
+- Referral rewards held for review: `REFERRAL_DAILY_CAP` (default 10) referral rewards per inviter per day.

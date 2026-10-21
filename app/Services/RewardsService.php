@@ -182,16 +182,30 @@ class RewardsService
     }
 
     /**
-     * First time an email or phone is confirmed: welcome points, and the referrer's reward.
+     * First time an email or phone is confirmed: welcome points, and the referrer's reward. A referral that looks like
+     * self-referral (see AffiliateService::suspicion) is held instead: no points or commissions until an admin approves.
      */
     public function onVerified(User $user): void
     {
         $this->award($user, 'welcome', amount: (int) config('auth_flow.welcome_points'));
 
         if ($user->referred_by && $referrer = User::find($user->referred_by)) {
-            $this->award($referrer, 'referral', "referral:{$user->id}", ['userId' => $user->id]);
-            $this->syncMedals($referrer);
+            if (app(AffiliateService::class)->suspicion($user, countToday: true)) {
+                $user->forceFill(['referral_held_at' => now()])->save();
+
+                return;
+            }
+            $this->rewardReferral($user, $referrer);
         }
+    }
+
+    /**
+     * Give the inviter their referral points for this account (once) and update their medals.
+     */
+    public function rewardReferral(User $invited, User $referrer): void
+    {
+        $this->award($referrer, 'referral', "referral:{$invited->id}", ['userId' => $invited->id]);
+        $this->syncMedals($referrer);
     }
 
     /**

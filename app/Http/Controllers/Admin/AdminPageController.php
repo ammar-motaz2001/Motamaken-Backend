@@ -54,6 +54,11 @@ class AdminPageController extends Controller
             'titleAr' => ['required', 'string', 'max:150'],
             'bodyEn' => ['required', 'string', 'max:100000'],
             'bodyAr' => ['required', 'string', 'max:100000'],
+            'metaTitleEn' => ['sometimes', 'nullable', 'string', 'max:70'],
+            'metaTitleAr' => ['sometimes', 'nullable', 'string', 'max:70'],
+            'metaDescriptionEn' => ['sometimes', 'nullable', 'string', 'max:170'],
+            'metaDescriptionAr' => ['sometimes', 'nullable', 'string', 'max:170'],
+            'noindex' => ['sometimes', 'boolean'],
             'isPublished' => ['sometimes', 'boolean'],
             'sortOrder' => ['sometimes', 'integer', 'min:0', 'max:1000'],
         ]);
@@ -61,6 +66,9 @@ class AdminPageController extends Controller
         $page = Page::updateOrCreate(['slug' => $slug], [
             'section' => $data['section'], 'title_en' => $data['titleEn'], 'title_ar' => $data['titleAr'],
             'body_en' => $data['bodyEn'], 'body_ar' => $data['bodyAr'],
+            'meta_title_en' => $data['metaTitleEn'] ?? null, 'meta_title_ar' => $data['metaTitleAr'] ?? null,
+            'meta_description_en' => $data['metaDescriptionEn'] ?? null, 'meta_description_ar' => $data['metaDescriptionAr'] ?? null,
+            'noindex' => $data['noindex'] ?? false,
             'is_published' => $data['isPublished'] ?? true, 'sort_order' => $data['sortOrder'] ?? 0,
             'updated_by' => $request->user()->id,
         ]);
@@ -90,6 +98,8 @@ class AdminPageController extends Controller
         return [
             'slug' => $page->slug, 'section' => $page->section,
             'titleEn' => $page->title_en, 'titleAr' => $page->title_ar, 'bodyEn' => $page->body_en, 'bodyAr' => $page->body_ar,
+            'metaTitleEn' => $page->meta_title_en, 'metaTitleAr' => $page->meta_title_ar,
+            'metaDescriptionEn' => $page->meta_description_en, 'metaDescriptionAr' => $page->meta_description_ar, 'noindex' => $page->noindex,
             'isPublished' => $page->is_published, 'sortOrder' => $page->sort_order,
             'updatedAt' => $page->updated_at?->toIso8601String(),
         ];

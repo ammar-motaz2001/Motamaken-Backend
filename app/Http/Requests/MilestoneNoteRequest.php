@@ -19,6 +19,9 @@ class MilestoneNoteRequest extends FormRequest
         return [
             /** What was delivered (submit), or what must change (request changes: required). */
             'note' => [$this->routeIs('milestones.changes') ? 'required' : 'nullable', 'string', 'min:5', 'max:2000'],
+            // Deliveries only: links to the work, e.g. the published posts of an influencer request.
+            'links' => ['nullable', 'array', 'max:5'],
+            'links.*' => ['url:https', 'max:500', 'distinct'],
         ];
     }
 }

@@ -34,7 +34,9 @@ class PageController extends Controller
      *
      * @unauthenticated
      *
-     * @return array{data: array{slug: string, section: string, title: string, body: string, updatedAt: ?string}}
+     * `seo` holds the admin-written search title and description (null: use the page's own) and whether to stay out of search results.
+     *
+     * @return array{data: array{slug: string, section: string, title: string, body: string, seo: array{title: ?string, description: ?string, noindex: bool}, updatedAt: ?string}}
      */
     public function show(string $slug): array
     {
@@ -42,6 +44,7 @@ class PageController extends Controller
 
         return ['data' => [
             'slug' => $page->slug, 'section' => $page->section, 'title' => $page->title(), 'body' => $page->body(),
+            'seo' => $page->seo(),
             'updatedAt' => $page->updated_at?->toIso8601String(),
         ]];
     }

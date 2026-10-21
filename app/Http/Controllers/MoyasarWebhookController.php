@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Deposit;
 use App\Services\Payments\DepositService;
+use App\Support\MoyasarMode;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 
@@ -21,8 +22,9 @@ class MoyasarWebhookController extends Controller
      */
     public function __invoke(Request $request, DepositService $deposits): array
     {
-        $secret = (string) config('payments.moyasar.webhook_secret');
-        abort_unless($secret !== '' && hash_equals($secret, (string) $request->input('secret_token')), 403, __('payments.bad_signature'));
+        $token = (string) $request->input('secret_token');
+        $known = collect(MoyasarMode::webhookSecrets())->contains(fn (string $secret) => hash_equals($secret, $token));
+        abort_unless($known, 403, __('payments.bad_signature'));
 
         $paymentId = (string) $request->input('data.id');
         $deposit = $paymentId !== '' ? Deposit::where('provider', 'moyasar')->where('provider_ref', $paymentId)->first() : null;

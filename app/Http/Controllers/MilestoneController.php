@@ -37,7 +37,7 @@ class MilestoneController extends Controller
     {
         $milestone = $this->find($milestone, 'deliver');
 
-        return new MilestoneResource($this->escrows->submit($milestone, $request->user(), $request->input('note')));
+        return new MilestoneResource($this->escrows->submit($milestone, $request->user(), $request->input('note'), $request->input('links', [])));
     }
 
     /**
