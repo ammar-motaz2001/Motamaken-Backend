@@ -28,7 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->api(append: [SetLocaleFromHeader::class, CheckMaintenance::class, BlockBlacklistedIp::class]);
         $middleware->alias(['admin.can' => AdminCan::class]);
-        // Global, so 404s and other errors get them too; only API paths (the Swagger page needs its scripts).
+        // The API has no login page: a guest gets a JSON 401, never a redirect (which crashed without Accept: json).
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/');
+        // Global, so 404s and other errors get them too (a strict policy everywhere but the Swagger page).
         $middleware->append(SecurityHeaders::class);
 
         // DOCS_RECORD=1 php artisan test: capture real requests and responses as Swagger examples.

@@ -28,4 +28,9 @@ class SecurityHeadersTest extends TestCase
             ->assertHeader('Cross-Origin-Opener-Policy', 'same-origin');
         $this->assertEmpty($response->headers->getCookies());
     }
+
+    public function test_a_guest_gets_a_json_401_even_without_asking_for_json(): void
+    {
+        $this->get('/api/me/summary')->assertUnauthorized()->assertJsonStructure(['message']);
+    }
 }
