@@ -25,6 +25,8 @@ class RewardsController extends Controller
         $user = $request->user();
         $page = PointTransaction::where('user_id', $user->id)->latest('id')->paginate($request->integer('perPage', 15));
         $done = PointTransaction::where('user_id', $user->id)->whereNotNull('key')->pluck('key')->all();
+        // How many times each action has paid out so far (repeatable ones too).
+        $times = PointTransaction::where('user_id', $user->id)->selectRaw('reason, count(*) as total')->groupBy('reason')->pluck('total', 'reason');
 
         return [
             'balance' => $user->points,
@@ -34,6 +36,8 @@ class RewardsController extends Controller
                 'points' => $reason === 'welcome' ? (int) config('auth_flow.welcome_points') : $rule['amount'],
                 'once' => $rule['once'],
                 'done' => $rule['once'] && in_array($reason, $done, true),
+                /** Times earned so far; repeatable actions show their check once this is above zero. */
+                'times' => (int) ($times[$reason] ?? 0),
             ])->values(),
             'data' => collect($page->items())->map(fn (PointTransaction $row) => [
                 'id' => $row->id,

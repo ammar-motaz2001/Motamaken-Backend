@@ -69,6 +69,10 @@ class EngagementTest extends TestCase
 
         $invitee->markVerified(AuthMethod::Email);
         $this->assertSame(25, $referrer->fresh()->points);
+        // A repeatable action shows as earned (with its count) on the points page.
+        $this->actingAs($referrer, 'sanctum')->getJson('/api/me/points')
+            ->assertJsonPath('earn', fn ($rules) => collect($rules)->firstWhere('reason', 'referral')['times'] === 1
+                && collect($rules)->firstWhere('reason', 'referral')['done'] === false);
 
         $this->actingAs($referrer, 'sanctum')->getJson('/api/me/affiliate')->assertOk()
             ->assertJsonPath('stats.visits', 1)->assertJsonPath('stats.signups', 1)->assertJsonPath('stats.conversionRate', 100)
