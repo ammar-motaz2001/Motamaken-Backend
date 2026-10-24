@@ -12,6 +12,6 @@ return [
     ],
 
     'custom' => [
-        'recaptchaToken' => ['required' => 'The security check is still loading. Please try again in a moment.'],
+        'recaptchaToken' => ['required' => 'The security check (reCAPTCHA) could not be completed. Reload the page, turn off any ad blocker or VPN for this site, then try again.'],
     ],
 ];
