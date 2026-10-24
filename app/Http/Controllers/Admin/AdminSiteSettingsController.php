@@ -29,7 +29,8 @@ class AdminSiteSettingsController extends Controller
     /**
      * Site settings.
      *
-     * The platform's name, logo, contact details and social links, the mobile app links, maintenance mode, upload limits,
+     * The platform's name, logo, contact details and social links, the mobile app links, the footer's link columns
+     * (null: the built-in ones), maintenance mode, upload limits,
      * the default search-engine description, the staff sign-in policy and which payment methods are offered (in order).
      *
      * @return array{data: array<string, mixed>}
@@ -45,6 +46,7 @@ class AdminSiteSettingsController extends Controller
         $out['site']['logoUrl'] = Setting::get('site.logo_url');
         $out['social'] = [...config('site.defaults')['site.social'], ...(Setting::get('site.social') ?? [])];
         $out['apps'] = [...config('site.defaults')['site.apps'], ...(Setting::get('site.apps') ?? [])];
+        $out['footer'] = Setting::get('site.footer');
         $out['payments']['depositMethods'] = config('payments.deposit_methods');
         $out['payments']['withdrawalMethods'] = config('payments.withdrawal_methods');
 
@@ -85,6 +87,14 @@ class AdminSiteSettingsController extends Controller
             'social.*' => ['nullable', 'url:https', 'max:300'],
             'apps' => ['sometimes', 'array:android,ios'],
             'apps.*' => ['nullable', 'url:https', 'max:300'],
+            /** The footer's link columns, replacing the built-in ones; null goes back to them. Links are site paths (`/faq`) or https addresses. */
+            'footer' => ['sometimes', 'nullable', 'array', 'max:6'],
+            'footer.*.titleEn' => ['required', 'string', 'max:60'],
+            'footer.*.titleAr' => ['required', 'string', 'max:60'],
+            'footer.*.links' => ['required', 'array', 'min:1', 'max:12'],
+            'footer.*.links.*.labelEn' => ['required', 'string', 'max:60'],
+            'footer.*.links.*.labelAr' => ['required', 'string', 'max:60'],
+            'footer.*.links.*.href' => ['required', 'string', 'max:300', 'regex:#^(/[^\s]*|https://[^\s]+)$#'],
             'maintenance' => ['sometimes', 'array'],
             'maintenance.enabled' => ['sometimes', 'boolean'],
             'maintenance.messageEn' => ['sometimes', 'string', 'max:500'],
@@ -108,7 +118,7 @@ class AdminSiteSettingsController extends Controller
             'payments.withdrawalMethods' => ['sometimes', 'array', 'min:1'],
             'payments.withdrawalMethods.*' => ['distinct', Rule::in(config('payments.withdrawal_method_choices'))],
         ]);
-        request()->attributes->set('audit.before', collect($this->show()['data'])->only(array_keys($request->only(['site', 'social', 'apps', 'maintenance', 'uploads', 'seo', 'security', 'payments'])))->all());
+        request()->attributes->set('audit.before', collect($this->show()['data'])->only(array_keys($request->only(['site', 'social', 'apps', 'footer', 'maintenance', 'uploads', 'seo', 'security', 'payments'])))->all());
 
         foreach (self::FIELDS as $section => $fields) {
             foreach ($fields as $input => $key) {
@@ -121,6 +131,15 @@ class AdminSiteSettingsController extends Controller
             if ($request->has($section)) {
                 Setting::put("site.{$section}", array_map(fn ($v) => $v ?: null, $request->input($section)));
             }
+        }
+
+        if ($request->has('footer')) {
+            $footer = $request->input('footer');
+            Setting::put('site.footer', $footer === null ? null : array_map(fn (array $column) => [
+                'titleEn' => $column['titleEn'],
+                'titleAr' => $column['titleAr'],
+                'links' => array_map(fn (array $link) => ['labelEn' => $link['labelEn'], 'labelAr' => $link['labelAr'], 'href' => $link['href']], array_values($column['links'])),
+            ], array_values($footer)));
         }
 
         RuntimeConfig::apply();

@@ -13,7 +13,8 @@ class SiteSettingsController extends Controller
     /**
      * Site settings.
      *
-     * What the website shows from the admin settings: name, logo, contact details, social and app links, whether the site
+     * What the website shows from the admin settings: name, logo, contact details, social and app links, the footer's
+     * link columns, whether the site
      * is under maintenance, upload limits and the payment methods offered. Works during maintenance.
      *
      * @unauthenticated
@@ -36,6 +37,8 @@ class SiteSettingsController extends Controller
             /** Only the networks with a link. */
             'social' => (object) array_filter([...config('site.defaults')['site.social'], ...(Setting::get('site.social') ?? [])]),
             'apps' => (object) array_filter([...config('site.defaults')['site.apps'], ...(Setting::get('site.apps') ?? [])]),
+            /** The footer's link columns set by the admins, or null for the website's built-in ones. */
+            'footer' => Setting::get('site.footer'),
             'maintenance' => [
                 'enabled' => (bool) Setting::get('maintenance.enabled'),
                 'messageEn' => Setting::get('maintenance.message_en'),

@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\IdentifierRequest;
 use App\Http\Resources\AdminUserResource;
 use App\Models\Account;
 use App\Models\AdminLog;
 use App\Models\AdminNote;
 use App\Models\BlacklistEntry;
+use App\Models\Deposit;
 use App\Models\Dispute;
+use App\Models\Escrow;
 use App\Models\KycEvent;
+use App\Models\LedgerEntry;
 use App\Models\Medal;
 use App\Models\PointTransaction;
 use App\Models\Project;
@@ -19,6 +23,7 @@ use App\Models\Report;
 use App\Models\Review;
 use App\Models\User;
 use App\Models\UserMedal;
+use App\Models\Withdrawal;
 use App\Services\Payments\LedgerService;
 use App\Services\Payments\WalletService;
 use App\Support\LikeSearch;
@@ -28,8 +33,11 @@ use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Laravel\Sanctum\PersonalAccessToken;
+use Propaganistas\LaravelPhone\PhoneNumber;
 
 #[Group('Admin', 'The admin panel. Every call needs an administrator account.', weight: 99)]
 class AdminUserController extends Controller
@@ -243,6 +251,114 @@ class AdminUserController extends Controller
         }
 
         return new AdminUserResource($target->load(['profile', 'adminRole']));
+    }
+
+    /**
+     * Edit a user's details.
+     *
+     * Name, username, email and phone; send only what changes. An email or phone set here counts as
+     * verified, since staff entered it. Staff accounts are managed under Staff, not here.
+     */
+    public function update(Request $request, int $user): AdminUserResource
+    {
+        $target = $this->regularUser($user);
+        $data = $request->validate([
+            'firstName' => ['sometimes', 'nullable', 'string', 'max:50', 'regex:/^[\p{L} ]+$/u'],
+            'lastName' => ['sometimes', 'nullable', 'string', 'max:50', 'regex:/^[\p{L} ]+$/u'],
+            'username' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[\p{L}.]+( [\p{L}.]+)*$/u', Rule::unique('users', 'username')->ignore($target->id)],
+            'email' => ['sometimes', 'nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($target->id)],
+            /** International format, e.g. `+966501234567`. */
+            'phone' => ['sometimes', 'nullable', 'string', 'phone:INTERNATIONAL'],
+        ]);
+
+        if (isset($data['phone'])) {
+            $data['phone'] = (new PhoneNumber($data['phone']))->formatE164();
+            if (User::where('phone', $data['phone'])->whereKeyNot($target->id)->exists()) {
+                throw new ApiException(__('validation.unique', ['attribute' => 'phone']), 'phone_taken', 422);
+            }
+        }
+        if (array_key_exists('email', $data) || array_key_exists('phone', $data)) {
+            $email = array_key_exists('email', $data) ? $data['email'] : $target->email;
+            $phone = array_key_exists('phone', $data) ? $data['phone'] : $target->phone;
+            if (! $email && ! $phone) {
+                throw new ApiException(__('admin.needs_identifier'), 'needs_identifier', 422);
+            }
+        }
+
+        $map = ['firstName' => 'first_name', 'lastName' => 'last_name', 'username' => 'username', 'email' => 'email', 'phone' => 'phone'];
+        $changes = collect($data)->mapWithKeys(fn ($value, $key) => [$map[$key] => is_string($value) ? trim($value) : $value])->all();
+        if (isset($changes['email']) && $changes['email'] !== $target->email) {
+            $changes['email_verified_at'] = now();
+        }
+        if (isset($changes['phone']) && $changes['phone'] !== $target->phone) {
+            $changes['phone_verified_at'] = now();
+        }
+        $target->forceFill($changes)->save();
+
+        return new AdminUserResource($target->load(['profile', 'adminRole']));
+    }
+
+    /**
+     * Set a user's password.
+     *
+     * For a user locked out of their account. Their sessions end, so they sign in again with the new password.
+     *
+     * @return array{success: bool}
+     */
+    public function password(Request $request, int $user): array
+    {
+        $target = $this->regularUser($user);
+        $request->validate(['password' => IdentifierRequest::passwordRules()]);
+
+        $target->forceFill(['password' => Hash::make($request->input('password')), 'password_changed_at' => now()])->save();
+        $target->tokens()->delete();
+
+        return ['success' => true];
+    }
+
+    /**
+     * Delete a user.
+     *
+     * Only for an account with no money or work history (no projects, offers, contracts, disputes, payments or wallet
+     * movements), such as a spam sign-up. Anything else stays for the records: ban the account instead.
+     *
+     * @return array{success: bool}
+     */
+    public function destroy(Request $request, int $user): array
+    {
+        $target = $this->regularUser($user);
+
+        $history = Project::where('user_id', $target->id)->exists()
+            || Proposal::where('user_id', $target->id)->exists()
+            || Escrow::where('client_id', $target->id)->exists()
+            || Dispute::where('opened_by', $target->id)->orWhere('against_id', $target->id)->exists()
+            || Withdrawal::where('user_id', $target->id)->exists()
+            || Deposit::where('user_id', $target->id)->exists()
+            || LedgerEntry::whereIn('account_id', Account::where('user_id', $target->id)->select('id'))->exists();
+        if ($history) {
+            throw new ApiException(__('admin.user_has_history'), 'user_has_history', 422);
+        }
+
+        DB::transaction(function () use ($target) {
+            $target->tokens()->delete();
+            Account::where('user_id', $target->id)->delete();
+            $target->delete();
+        });
+
+        return ['success' => true];
+    }
+
+    /**
+     * The account to edit, set a password for or delete: staff accounts are refused (they are managed under Staff).
+     */
+    private function regularUser(int $user): User
+    {
+        $target = User::findOrFail($user);
+        if ($target->is_admin) {
+            throw new ApiException(__('admin.cannot_manage_admin'), 'cannot_manage_admin');
+        }
+
+        return $target;
     }
 
     /**

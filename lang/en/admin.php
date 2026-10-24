@@ -1,6 +1,11 @@
 <?php
 
 return [
+    'cannot_manage_admin' => 'Staff accounts are managed under Staff, not here.',
+    'needs_identifier' => 'Keep an email address or a phone number on the account.',
+    'user_has_history' => 'This account has projects, offers, contracts or payments, so it is kept for the records. Ban it instead.',
+    'currency_needed' => 'Keep at least one currency on.',
+    'currency_in_use' => 'Users still hold money in :code, so it stays on.',
     'cannot_suspend_admin' => 'Administrators cannot be suspended.',
     'report_closed' => 'This report was already decided.',
     'category_in_use' => 'Projects use this category. Move them first.',

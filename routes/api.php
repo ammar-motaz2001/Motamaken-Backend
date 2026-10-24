@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminBroadcastController;
 use App\Http\Controllers\Admin\AdminCampaignController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminContactController;
+use App\Http\Controllers\Admin\AdminCurrencyController;
 use App\Http\Controllers\Admin\AdminDepositController;
 use App\Http\Controllers\Admin\AdminDisputeController;
 use App\Http\Controllers\Admin\AdminDrawController;
@@ -305,6 +306,9 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
             Route::get('users/{user}/activity', [AdminUserController::class, 'activity'])->whereNumber('user');
         });
         Route::middleware('admin.can:users.manage')->group(function () {
+            Route::patch('users/{user}', [AdminUserController::class, 'update'])->whereNumber('user');
+            Route::post('users/{user}/password', [AdminUserController::class, 'password'])->whereNumber('user');
+            Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->whereNumber('user');
             Route::post('users/{user}/suspend', [AdminUserController::class, 'suspend'])->whereNumber('user');
             Route::post('users/{user}/ban', [AdminUserController::class, 'ban'])->whereNumber('user');
             Route::post('users/{user}/unsuspend', [AdminUserController::class, 'unsuspend'])->whereNumber('user');
@@ -454,6 +458,8 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
 
         Route::middleware('admin.can:settings')->group(function () {
             Route::get('site-settings', [AdminSiteSettingsController::class, 'show']);
+            Route::get('currencies', [AdminCurrencyController::class, 'index']);
+            Route::put('currencies', [AdminCurrencyController::class, 'update']);
             Route::put('site-settings', [AdminSiteSettingsController::class, 'update']);
             Route::post('site-settings/logo', [AdminSiteSettingsController::class, 'logo']);
             Route::get('mail', [AdminMailController::class, 'show']);

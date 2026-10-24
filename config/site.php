@@ -33,6 +33,8 @@ return [
             'snapchat' => null,
         ],
         'site.apps' => ['android' => null, 'ios' => null],
+        // The footer's link columns ([{titleEn, titleAr, links: [{labelEn, labelAr, href}]}]); null keeps the built-in ones.
+        'site.footer' => null,
 
         // Turns the site off for everyone but the staff, without a deploy.
         'maintenance.enabled' => false,

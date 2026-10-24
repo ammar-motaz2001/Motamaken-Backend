@@ -65,6 +65,14 @@ class RuntimeConfig
             MoyasarMode::apply($values['payments.moyasar_mode']);
         }
 
+        // The currency list edited in the panel: the active ones become the marketplace's currencies, in the chosen order.
+        if (! empty($values['currencies.list'])) {
+            config(['marketplace.currencies' => array_values(array_map(
+                fn (array $currency) => ['code' => $currency['code'], 'symbol' => $currency['symbol'], 'name_en' => $currency['name_en'], 'name_ar' => $currency['name_ar']],
+                array_filter($values['currencies.list'], fn (array $currency) => $currency['active']),
+            ))]);
+        }
+
         if (isset($values['uploads.chat_mb'])) {
             config(['marketplace.chat.max_file_kb' => (int) $values['uploads.chat_mb'] * 1024]);
         }

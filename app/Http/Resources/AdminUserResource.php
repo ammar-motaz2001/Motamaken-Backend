@@ -23,6 +23,8 @@ class AdminUserResource extends JsonResource
         return [
             'id' => $this->id,
             'fullName' => $this->full_name,
+            'firstName' => $this->first_name,
+            'lastName' => $this->last_name,
             'username' => $this->username,
             'email' => $this->email,
             'phone' => $this->phone,
