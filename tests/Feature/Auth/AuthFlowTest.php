@@ -104,7 +104,7 @@ class AuthFlowTest extends TestCase
 
     public function test_signup_can_be_retried_for_an_unverified_identifier(): void
     {
-        $payload = ['method' => 'email', 'username' => 'First', 'email' => 'retry@example.com', 'password' => self::PASSWORD];
+        $payload = ['method' => 'email', 'firstName' => 'Retry', 'lastName' => 'User', 'username' => 'First', 'email' => 'retry@example.com', 'password' => self::PASSWORD];
 
         $this->postJson('/api/auth/signup', $payload)->assertOk();
         $this->postJson('/api/auth/signup', [...$payload, 'username' => 'Second'])->assertOk();

@@ -13,7 +13,7 @@ class RecaptchaTest extends TestCase
 {
     use RefreshDatabase;
 
-    private const SIGNUP = ['method' => 'email', 'email' => 'nora@example.com', 'username' => 'Nora', 'password' => 'Secret#123', 'password_confirmation' => 'Secret#123'];
+    private const SIGNUP = ['method' => 'email', 'email' => 'nora@example.com', 'firstName' => 'Nora', 'lastName' => 'Saleh', 'username' => 'Nora', 'password' => 'Secret#123', 'password_confirmation' => 'Secret#123'];
 
     private const CONTACT = ['name' => 'Nora', 'email' => 'nora@example.com', 'topic' => 'general', 'subject' => 'Hello there', 'message' => 'A question about fees.'];
 

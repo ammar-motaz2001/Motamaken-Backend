@@ -265,7 +265,7 @@ class AdminUserController extends Controller
         $data = $request->validate([
             'firstName' => ['sometimes', 'nullable', 'string', 'max:50', 'regex:/^[\p{L} ]+$/u'],
             'lastName' => ['sometimes', 'nullable', 'string', 'max:50', 'regex:/^[\p{L} ]+$/u'],
-            'username' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[\p{L}.]+( [\p{L}.]+)*$/u', Rule::unique('users', 'username')->ignore($target->id)],
+            'username' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[\p{L}\p{N}._]+( [\p{L}\p{N}._]+)*$/u', Rule::unique('users', 'username')->ignore($target->id)],
             'email' => ['sometimes', 'nullable', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($target->id)],
             /** International format, e.g. `+966501234567`. */
             'phone' => ['sometimes', 'nullable', 'string', 'phone:INTERNATIONAL'],

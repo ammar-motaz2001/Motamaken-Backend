@@ -44,15 +44,16 @@ class HomepageTest extends TestCase
     public function test_home_hides_expired_featuring_and_closed_projects(): void
     {
         $category = Category::factory()->create();
-        Profile::factory()->featured()->create(['featured_until' => now()->subDay()]);
-        Profile::factory()->featured()->create(['featured_until' => now()->addDay()]);
+        $expired = Profile::factory()->featured()->create(['featured_until' => now()->subDay(), 'rating' => 5]);
+        $paid = Profile::factory()->featured()->create(['featured_until' => now()->addDay(), 'rating' => 1]);
         Project::factory()->featured()->create(['category_id' => $category->id, 'status' => Project::STATUS_CLOSED]);
-        Project::factory()->featured()->create(['category_id' => $category->id, 'featured_until' => now()->subMinute()]);
+        $lapsed = Project::factory()->featured()->create(['category_id' => $category->id, 'featured_until' => now()->subMinute()]);
 
         $response = $this->getJson('/api/home')->assertOk();
 
-        $this->assertCount(1, $response->json('featuredProfiles'));
-        $this->assertCount(0, $response->json('distinctiveProjects'));
+        // The paid placement comes first; the rest of the slider is filled with other profiles and open projects.
+        $this->assertSame([$paid->id, $expired->id], array_column($response->json('featuredProfiles'), 'id'));
+        $this->assertSame([$lapsed->id], array_column($response->json('distinctiveProjects'), 'id'), 'closed projects never show');
         // The project whose featuring expired is still a normal open project in the recent list.
         $this->assertCount(1, $response->json('recentProjects'));
     }

@@ -11,9 +11,9 @@ use Illuminate\Database\Seeder;
  */
 class PagesSeeder extends Seeder
 {
-    private const DRAFT_EN = "> **Draft.** This text is a starting point and must be reviewed before launch.\n\n";
+    private const DRAFT_EN = '';
 
-    private const DRAFT_AR = "> **مسودة.** هذا النص نقطة بداية ويجب مراجعته قبل الإطلاق.\n\n";
+    private const DRAFT_AR = '';
 
     public function run(): void
     {

@@ -72,9 +72,23 @@ class HomeController extends Controller
             ? Project::open()->with($card)->filter(['type' => $type, 'category' => $category->slug])->latest()->limit($tabLimit)->get()
             : collect();
 
+        // Paid placements first; the rest of the slider is filled with the best-rated profiles and newest open projects,
+        // so the sections are never empty on a young marketplace.
+        $profiles = Profile::featured()->with(['user', 'country', 'city'])->orderByDesc('rating')->orderBy('id')->limit($featuredLimit)->get();
+        if ($profiles->count() < $featuredLimit) {
+            $profiles = $profiles->concat(Profile::query()->with(['user', 'country', 'city'])->whereNotIn('id', $profiles->pluck('id'))
+                ->whereHas('user', fn ($q) => $q->where('is_admin', false)->whereNull('suspended_at'))
+                ->orderByDesc('rating')->orderByDesc('reviews_count')->latest('id')->limit($featuredLimit - $profiles->count())->get());
+        }
+        $projects = Project::open()->distinctive()->with($card)->filter(['type' => Project::TYPE_PROJECT])->latest()->limit($featuredLimit)->get();
+        if ($projects->count() < $featuredLimit) {
+            $projects = $projects->concat(Project::open()->with($card)->filter(['type' => Project::TYPE_PROJECT])->whereNotIn('projects.id', $projects->pluck('id'))
+                ->latest()->limit($featuredLimit - $projects->count())->get());
+        }
+
         return [
-            'featuredProfiles' => Profile::featured()->with(['user', 'country', 'city'])->orderByDesc('rating')->orderBy('id')->limit($featuredLimit)->get(),
-            'distinctiveProjects' => Project::open()->distinctive()->with($card)->filter(['type' => Project::TYPE_PROJECT])->latest()->limit($featuredLimit)->get(),
+            'featuredProfiles' => $profiles,
+            'distinctiveProjects' => $projects,
             'projectCategories' => $projectCategories,
             'recentProjects' => $latestIn(Project::TYPE_PROJECT, $projectCategories->first()),
             'influencerPlatforms' => $influencerPlatforms,

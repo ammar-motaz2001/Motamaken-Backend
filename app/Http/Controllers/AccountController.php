@@ -24,7 +24,7 @@ class AccountController extends Controller
         $data = $request->validate([
             'firstName' => ['sometimes', 'nullable', 'string', 'max:50', 'regex:/^[\p{L} ]+$/u'],
             'lastName' => ['sometimes', 'nullable', 'string', 'max:50', 'regex:/^[\p{L} ]+$/u'],
-            'username' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[\p{L}.]+( [\p{L}.]+)*$/u', Rule::unique('users', 'username')->ignore($user->id)],
+            'username' => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[\p{L}\p{N}._]+( [\p{L}\p{N}._]+)*$/u', Rule::unique('users', 'username')->ignore($user->id)],
             /** The newsletter checkbox. */
             'subscribed' => ['sometimes', 'boolean'],
         ]);
