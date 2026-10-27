@@ -29,6 +29,10 @@ class PublicProfileController extends Controller
     public function show(Request $request, int $user): array
     {
         $user = User::with(['profile.country', 'profile.city', 'profile.portfolio'])->findOrFail($user);
+        // Staff accounts have no public profile (the panel's people are not listed), and suspended ones are hidden.
+        abort_if($user->is_admin || $user->suspended_at, 404, __('errors.not_found'));
+        // Activity times are for signed-in members only, not for anyone scripting the API.
+        $member = $request->user('sanctum') !== null;
         abort_if($user->suspended_at ?? false, 404);
 
         $hired = Proposal::where('user_id', $user->id)->where('status', 'accepted')->pluck('project_id');
@@ -40,8 +44,8 @@ class PublicProfileController extends Controller
                 'fullName' => $user->full_name,
                 'username' => $user->username,
                 'avatarUrl' => $user->avatar_url,
-                'isOnline' => $user->isOnline(),
-                'lastSeenAt' => $user->last_seen_at,
+                'isOnline' => $member && $user->isOnline(),
+                'lastSeenAt' => $member ? $user->last_seen_at : null,
                 'memberSince' => $user->created_at,
                 /** The trust badges. */
                 'verified' => [

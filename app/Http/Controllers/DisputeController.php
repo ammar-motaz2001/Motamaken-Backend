@@ -161,7 +161,7 @@ class DisputeController extends Controller
     {
         $dispute = Dispute::with(['escrow.payees', 'opener'])->findOrFail($id);
 
-        if (! $request->user()->is_admin && ! $dispute->involves($request->user())) {
+        if (! $request->user()->canAdmin('disputes') && ! $dispute->involves($request->user())) {
             throw new ApiException(__('disputes.not_yours'), 'forbidden', 403);
         }
 

@@ -73,10 +73,10 @@ class AuthController extends Controller
         $identifier = $request->identifier();
         $user = User::findByIdentifier($method, $identifier);
 
-        // The sign-up form already tells whether an address is taken, so naming the missing account hides nothing more.
-        abort_if(! $user, 422, __("auth_flow.no_account.{$method->value}"));
-
-        if (! $user?->password || ! Hash::check($request->input('password'), $user->password)) {
+        // One message whether the account is missing or the password is wrong, and a hash check either way so the
+        // response time does not tell them apart either: login cannot be used to find out who is registered.
+        $hash = $user?->password ?: '$2y$12$'.str_repeat('a', 53);
+        if (! Hash::check($request->input('password'), $hash) || ! $user?->password) {
             abort(422, __("auth_flow.invalid_credentials.{$method->value}"));
         }
 

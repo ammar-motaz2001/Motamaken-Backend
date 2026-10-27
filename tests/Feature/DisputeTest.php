@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Account;
+use App\Models\AdminRole;
 use App\Models\Dispute;
 use App\Models\Escrow;
 use App\Models\Milestone;
@@ -202,7 +203,7 @@ class DisputeTest extends TestCase
     {
         $id = $this->open($this->client)->json('data.id');
 
-        $this->as($this->client)->postJson("/api/admin/disputes/{$id}/review")->assertForbidden();
+        $this->as($this->client)->postJson("/api/admin/disputes/{$id}/review")->assertNotFound();
         $this->as($this->admin)->getJson('/api/admin/disputes')->assertJsonPath('meta.total', 1)->assertJsonPath('data.0.id', $id);
         $this->as($this->admin)->postJson("/api/admin/disputes/{$id}/review")->assertOk()
             ->assertJsonPath('data.status', 'under_review')->assertJsonPath('data.assignedTo.fullName', 'Ada Admin');
@@ -262,6 +263,31 @@ class DisputeTest extends TestCase
         $this->as($this->admin)->getJson('/api/admin/disputes?status=resolved')->assertJsonPath('meta.total', 1);
         $this->as($this->admin)->getJson('/api/admin/disputes?status=bogus')->assertStatus(422);
         $this->assertSame(Dispute::RESOLVED, Dispute::first()->status);
+    }
+
+    // ---- staff roles --------------------------------------------------------------------------------------------------
+
+    public function test_a_dispute_officer_handles_cases_and_other_staff_cannot(): void
+    {
+        $officer = User::factory()->create(['is_admin' => true, 'admin_role_id' => AdminRole::create([
+            'slug' => 'test-dispute-officer', 'name_en' => 'Dispute officer', 'name_ar' => 'مسؤول النزاعات', 'permissions' => ['disputes'],
+        ])->id]);
+        $support = User::factory()->create(['is_admin' => true, 'admin_role_id' => AdminRole::create([
+            'slug' => 'test-support-only', 'name_en' => 'Support only', 'name_ar' => 'الدعم فقط', 'permissions' => ['support'],
+        ])->id]);
+        $id = $this->open($this->client)->assertCreated()->json('data.id');
+
+        $this->as($officer)->getJson('/api/admin/disputes')->assertOk()->assertJsonPath('data.0.id', $id);
+        $this->as($officer)->getJson("/api/disputes/{$id}")->assertOk()->assertJsonPath('data.permissions.canResolve', true);
+        $this->assertSame(1, $officer->notifications()->count(), 'the officer is told about the new case');
+
+        $this->as($support)->getJson('/api/admin/disputes')->assertForbidden();
+        $this->as($support)->getJson("/api/disputes/{$id}")->assertForbidden();
+        $this->as($support)->postJson("/api/admin/disputes/{$id}/resolve", ['resolution' => 'client_refund', 'note' => 'Refund the client in full.'])->assertForbidden();
+        $this->assertSame(0, $support->notifications()->count());
+
+        $this->as($officer)->postJson("/api/admin/disputes/{$id}/resolve", ['resolution' => 'client_refund', 'note' => 'Refund the client in full.'])
+            ->assertOk()->assertJsonPath('data.status', 'resolved');
     }
 
     // ---- helpers ----------------------------------------------------------------------------------------------------

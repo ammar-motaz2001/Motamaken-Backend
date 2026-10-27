@@ -21,7 +21,8 @@ class DisputeResource extends JsonResource
     public function toArray(Request $request): array
     {
         $viewer = $request->user();
-        $isAdmin = (bool) $viewer?->is_admin;
+        // Staff whose role handles disputes (an admin without that permission sees a case like anyone else).
+        $isAdmin = (bool) $viewer?->canAdmin('disputes');
         $mySide = $viewer ? $this->sideOf($viewer) : null;
 
         return [

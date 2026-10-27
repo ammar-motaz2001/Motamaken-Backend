@@ -369,7 +369,7 @@ class SubscriptionsTest extends TestCase
         $this->fund($this->user, 50);
         $this->as($this->user)->postJson('/api/subscriptions', ['planId' => $this->pro->id])->assertCreated();
 
-        $this->as($this->user)->getJson('/api/admin/plans')->assertForbidden();
+        $this->as($this->user)->getJson('/api/admin/plans')->assertNotFound();
         $list = $this->as($admin)->getJson('/api/admin/plans')->assertJsonCount(8, 'data')->json('data');
         $this->assertSame(1, collect($list)->firstWhere('code', 'freelancer-pro')['subscribers']);
         $this->assertSame(0, collect($list)->firstWhere('code', 'freelancer-elite')['subscribers']);

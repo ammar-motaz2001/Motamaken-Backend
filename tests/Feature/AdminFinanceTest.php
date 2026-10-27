@@ -27,7 +27,7 @@ class AdminFinanceTest extends TestCase
         $user = User::factory()->create();
 
         foreach (['/api/admin/withdrawals', '/api/admin/ledger/transactions', '/api/admin/ledger/trial-balance', '/api/admin/settings'] as $url) {
-            $this->actingAs($user, 'sanctum')->getJson($url)->assertForbidden();
+            $this->actingAs($user, 'sanctum')->getJson($url)->assertNotFound();
         }
 
         $this->app['auth']->forgetGuards();

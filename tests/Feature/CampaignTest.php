@@ -335,7 +335,7 @@ class CampaignTest extends TestCase
         $id = $this->launched();
         $this->visit($this->join($id));
 
-        $this->as($this->owner)->getJson('/api/admin/campaigns')->assertForbidden();
+        $this->as($this->owner)->getJson('/api/admin/campaigns')->assertNotFound();
         $this->as($admin)->getJson('/api/admin/campaigns')->assertOk()->assertJsonPath('data.0.owner.fullName', 'Ola Owner')->assertJsonPath('data.0.stats.validVisits', 1);
         $this->as($admin)->getJson('/api/admin/campaigns?status=cancelled')->assertJsonPath('data', []);
 
@@ -350,7 +350,7 @@ class CampaignTest extends TestCase
         $referrer = User::factory()->create(['first_name' => 'Rita', 'last_name' => 'Referrer']);
         User::factory()->count(2)->create(['referred_by' => $referrer->id]);
 
-        $this->as($this->owner)->getJson('/api/admin/affiliate')->assertForbidden();
+        $this->as($this->owner)->getJson('/api/admin/affiliate')->assertNotFound();
         $this->as($admin)->getJson('/api/admin/affiliate')->assertOk()
             ->assertJsonPath('totals.referrers', 1)
             ->assertJsonPath('totals.referredUsers', 2)

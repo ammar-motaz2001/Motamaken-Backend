@@ -18,7 +18,8 @@ class EnsureAdmin
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
-        abort_unless($user?->is_admin, 403, __('auth_flow.admins_only'));
+        // Non-staff get the same "not found" as any unknown address: the panel's routes are not confirmed to exist.
+        abort_unless($user?->is_admin, 404, __('errors.not_found'));
 
         if (Setting::get('admin.require_2fa', false) && ! $user->hasTwoFactor()) {
             return response()->json(['message' => __('admin.two_factor_required'), 'code' => 'admin_2fa_required'], 403);

@@ -2,13 +2,17 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class SecurityHeadersTest extends TestCase
 {
-    public function test_api_responses_carry_security_headers_and_the_health_check_reveals_no_versions(): void
+    use RefreshDatabase;
+
+    public function test_api_responses_carry_security_headers_and_the_health_check_reveals_only_up_or_down(): void
     {
-        $response = $this->getJson('/api/health')->assertOk()->assertExactJson(['status' => 'ok', 'database' => 'ok', 'redis' => 'ok']);
+        $response = $this->getJson('/api/health')->assertOk()->assertExactJson(['status' => 'ok']);
 
         $response->assertHeader('X-Content-Type-Options', 'nosniff')
             ->assertHeader('X-Frame-Options', 'DENY')
@@ -32,5 +36,14 @@ class SecurityHeadersTest extends TestCase
     public function test_a_guest_gets_a_json_401_even_without_asking_for_json(): void
     {
         $this->get('/api/me/summary')->assertUnauthorized()->assertJsonStructure(['message']);
+    }
+
+    public function test_missing_records_and_the_admin_panel_answer_a_generic_not_found(): void
+    {
+        $this->getJson('/api/projects/999999')->assertNotFound()->assertExactJson(['message' => 'Not found.']);
+        $this->actingAs(User::factory()->create(), 'sanctum')->getJson('/api/admin/users')->assertNotFound()->assertExactJson(['message' => 'Not found.']);
+        $admin = User::factory()->create(['is_admin' => true]);
+        $this->app['auth']->forgetGuards();
+        $this->getJson("/api/users/{$admin->id}")->assertNotFound();
     }
 }

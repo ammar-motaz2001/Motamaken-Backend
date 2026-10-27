@@ -37,7 +37,7 @@ class AdminModerationTest extends TestCase
 
         $this->actingAs($reporter, 'sanctum')->postJson('/api/reports', ['targetType' => 'project', 'targetId' => $project->id, 'reason' => 'scam'])->assertCreated();
         $this->actingAs($reporter, 'sanctum')->postJson('/api/reports', ['targetType' => 'user', 'targetId' => $owner->id, 'reason' => 'fake'])->assertCreated();
-        $this->actingAs($reporter, 'sanctum')->getJson('/api/admin/reports')->assertForbidden();
+        $this->actingAs($reporter, 'sanctum')->getJson('/api/admin/reports')->assertNotFound();
 
         $this->app['auth']->forgetGuards();
         $list = $this->actingAs($this->admin, 'sanctum')->getJson('/api/admin/reports?targetType=project')->assertOk()

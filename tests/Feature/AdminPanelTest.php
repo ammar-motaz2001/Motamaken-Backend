@@ -54,7 +54,7 @@ class AdminPanelTest extends TestCase
         $this->getJson('/api/admin/overview?days=90')->assertOk()->assertJsonCount(90, 'series')->assertJsonPath('days', 90);
         $this->getJson('/api/admin/overview?days=5')->assertJsonValidationErrors('days');
 
-        $this->as(User::factory()->create())->getJson('/api/admin/overview')->assertForbidden();
+        $this->as(User::factory()->create())->getJson('/api/admin/overview')->assertNotFound();
     }
 
     public function test_users_can_be_searched_filtered_and_opened(): void
@@ -73,7 +73,7 @@ class AdminPanelTest extends TestCase
         $this->assertNotContains('Omar Khaled', $names('status=active'));
         $this->assertSame(['Sara Mahmoud'], $names('kyc=approved'));
         $this->as($this->admin)->getJson('/api/admin/users?status=weird')->assertStatus(422);
-        $this->as($sara)->getJson('/api/admin/users')->assertForbidden();
+        $this->as($sara)->getJson('/api/admin/users')->assertNotFound();
 
         $this->as($this->admin)->getJson("/api/admin/users/{$sara->id}")->assertOk()
             ->assertJsonPath('data.email', 'sara@example.com')
@@ -92,7 +92,7 @@ class AdminPanelTest extends TestCase
         $user = User::factory()->create();
         $token = $user->createToken('web')->plainTextToken;
         $this->as($this->admin)->postJson("/api/admin/users/{$user->id}/suspend", [])->assertJsonValidationErrors('reason');
-        $this->as(User::factory()->create())->postJson("/api/admin/users/{$user->id}/suspend", ['reason' => 'Because'])->assertForbidden();
+        $this->as(User::factory()->create())->postJson("/api/admin/users/{$user->id}/suspend", ['reason' => 'Because'])->assertNotFound();
 
         $this->as($this->admin)->postJson("/api/admin/users/{$user->id}/suspend", ['reason' => 'Fake profile'])
             ->assertOk()->assertJsonPath('data.suspensionReason', 'Fake profile')->assertJsonPath('data.suspendedAt', fn ($at) => $at !== null);
@@ -123,7 +123,7 @@ class AdminPanelTest extends TestCase
         $adjust([])->assertJsonValidationErrors(['amount', 'currency', 'reason']);
         $adjust(['amount' => 0, 'currency' => 'USD', 'reason' => 'Nothing at all'])->assertJsonValidationErrors('amount');
         $adjust(['amount' => 5, 'currency' => 'USD', 'reason' => 'x'])->assertJsonValidationErrors('reason');
-        $this->as($user)->postJson("/api/admin/users/{$user->id}/adjust", ['amount' => 1000, 'currency' => 'USD', 'reason' => 'Giving myself money'])->assertForbidden();
+        $this->as($user)->postJson("/api/admin/users/{$user->id}/adjust", ['amount' => 1000, 'currency' => 'USD', 'reason' => 'Giving myself money'])->assertNotFound();
 
         $this->assertSame(15.5, $this->balance($user));
         $this->assertBooksBalance();
@@ -143,7 +143,7 @@ class AdminPanelTest extends TestCase
         $this->as($this->admin)->getJson('/api/admin/projects')->assertJsonPath('meta.total', 2);
         $this->as($this->admin)->getJson('/api/admin/projects?status=closed')->assertJsonPath('data.0.id', $closed->id);
         $this->as($this->admin)->getJson('/api/admin/projects?q=door')->assertJsonPath('data.0.proposalsCount', 1);
-        $this->as($owner)->getJson('/api/admin/projects')->assertForbidden();
+        $this->as($owner)->getJson('/api/admin/projects')->assertNotFound();
 
         $this->as($this->admin)->postJson("/api/admin/projects/{$open->id}/feature", ['days' => 7])->assertOk();
         $this->assertTrue($open->fresh()->is_featured);

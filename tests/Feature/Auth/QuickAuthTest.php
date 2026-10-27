@@ -67,12 +67,12 @@ class QuickAuthTest extends TestCase
         $this->postJson('/api/auth/quick/start', ['method' => 'email', 'email' => 'not-an-email'])->assertJsonValidationErrors('email');
     }
 
-    public function test_login_names_an_unknown_account_and_keeps_wrong_passwords_vague(): void
+    public function test_login_answers_the_same_for_an_unknown_account_and_a_wrong_password(): void
     {
         User::factory()->create(['email' => 'sara@example.com', 'email_verified_at' => now(), 'password' => Hash::make('Secret#123')]);
 
         $this->postJson('/api/auth/login', ['method' => 'email', 'identifier' => 'nobody@example.com', 'password' => 'Secret#123'])
-            ->assertStatus(422)->assertJsonPath('message', 'No account is linked to this email address.');
+            ->assertStatus(422)->assertJsonPath('message', 'The email or password is incorrect.');
         $this->postJson('/api/auth/login', ['method' => 'email', 'identifier' => 'sara@example.com', 'password' => 'Wrong#1234'])
             ->assertStatus(422)->assertJsonPath('message', 'The email or password is incorrect.');
     }

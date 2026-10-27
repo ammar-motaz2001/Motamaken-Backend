@@ -7,10 +7,12 @@ use App\Http\Middleware\RecordApiExamples;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocaleFromHeader;
 use App\Http\Middleware\TrustFrontendProxy;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -43,4 +45,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // A missing record or route answers one generic message: no model class names, and "no such id" looks the same
+        // as "no such page".
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $message = $e->getPrevious() instanceof ModelNotFoundException || ! $e->getMessage() || str_contains($e->getMessage(), 'could not be found')
+                    ? __('errors.not_found') : $e->getMessage();
+
+                return response()->json(['message' => $message], 404);
+            }
+        });
     })->create();

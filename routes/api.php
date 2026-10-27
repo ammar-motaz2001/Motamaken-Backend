@@ -111,12 +111,10 @@ use Illuminate\Support\Facades\Route;
  * @unauthenticated
  */
 Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        // Reachability only: versions would tell attackers what to target.
-        'database' => DB::selectOne('select 1 as ok') ? 'ok' : 'down',
-        'redis' => Redis::ping() ? 'ok' : 'down',
-    ]);
+    // Only up or down: which services sit behind the API is not anyone's business. 503 lets monitors alert.
+    $up = rescue(fn () => DB::selectOne('select 1 as ok') && Redis::ping(), false, false);
+
+    return response()->json(['status' => $up ? 'ok' : 'down'], $up ? 200 : 503);
 });
 
 // Contract of the frontend's authService (motamaken-front).
@@ -517,7 +515,7 @@ Route::get('projects', [ProjectController::class, 'index']);
 Route::get('projects/{project}', [ProjectController::class, 'show'])->whereNumber('project');
 Route::get('search', SearchController::class);
 Route::get('search/skills', [SearchController::class, 'skills']);
-Route::get('users/{user}', [PublicProfileController::class, 'show'])->whereNumber('user');
+Route::get('users/{user}', [PublicProfileController::class, 'show'])->whereNumber('user')->middleware('throttle:60,1');
 Route::get('draws/current', [DrawController::class, 'current']);
 Route::get('draws/history', [DrawController::class, 'history']);
 Route::post('affiliate/visits', [AffiliateController::class, 'visit'])->middleware('throttle:writes');

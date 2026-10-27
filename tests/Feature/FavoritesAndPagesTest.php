@@ -96,7 +96,7 @@ class FavoritesAndPagesTest extends TestCase
         $admin = User::factory()->create(['is_admin' => true]);
         $body = ['section' => 'help', 'titleEn' => 'FAQ', 'titleAr' => 'الأسئلة الشائعة', 'bodyEn' => 'Fee: {{site_fee}}%', 'bodyAr' => 'الرسوم {{site_fee}}%'];
 
-        $this->as(User::factory()->create())->putJson('/api/admin/pages/faq', $body)->assertForbidden();
+        $this->as(User::factory()->create())->putJson('/api/admin/pages/faq', $body)->assertNotFound();
         $this->as($admin)->putJson('/api/admin/pages/faq', [])->assertJsonValidationErrors(['section', 'titleEn', 'titleAr', 'bodyEn', 'bodyAr']);
         $this->as($admin)->putJson('/api/admin/pages/Bad_Slug!', $body)->assertNotFound();
         $this->as($admin)->putJson('/api/admin/pages/faq', $body)->assertOk()->assertJsonPath('data.bodyEn', 'Fee: {{site_fee}}%');
@@ -129,7 +129,7 @@ class FavoritesAndPagesTest extends TestCase
         $this->assertSame(['Uma User', 'Visitor Vee'], array_column($list, 'name'));
         $this->assertSame('uma@example.com', $list[0]['email']);
 
-        $this->as($user)->getJson('/api/admin/contact-messages')->assertForbidden();
+        $this->as($user)->getJson('/api/admin/contact-messages')->assertNotFound();
         $this->as($admin)->postJson("/api/admin/contact-messages/{$list[0]['id']}/handle", ['note' => 'Refunded'])->assertOk()
             ->assertJsonPath('data.status', 'handled')->assertJsonPath('data.adminNote', 'Refunded');
         $this->as($admin)->getJson('/api/admin/contact-messages')->assertJsonPath('meta.total', 1);

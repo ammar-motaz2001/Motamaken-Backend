@@ -178,7 +178,7 @@ class WalletTest extends TestCase
         $this->as($this->user)->getJson('/api/wallet')->assertJsonPath('data.0.pendingWithdrawals', 61);
         $this->assertStringNotContainsString('SA0380000000608010167519', DB::table('withdrawals')->value('destination'), 'the bank account is stored encrypted');
 
-        $this->as($this->user)->getJson('/api/admin/withdrawals')->assertForbidden();
+        $this->as($this->user)->getJson('/api/admin/withdrawals')->assertNotFound();
         $this->as($this->admin)->getJson('/api/admin/withdrawals')->assertOk()->assertJsonPath('data.0.id', $withdrawal['id'])
             ->assertJsonPath('data.0.user.id', $this->user->id);
 

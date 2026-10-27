@@ -240,7 +240,8 @@ class DisputeService
      */
     private function notifyAdmins(string $type, User $actor, array $params): void
     {
-        foreach (User::where('is_admin', true)->get() as $admin) {
+        // Only the staff whose role handles disputes.
+        foreach (User::where('is_admin', true)->with('adminRole')->get()->filter(fn (User $admin) => $admin->canAdmin('disputes')) as $admin) {
             $admin->notify(new ActivityNotification($type, $actor, $params));
         }
     }

@@ -72,7 +72,7 @@ class KycTest extends TestCase
     {
         $id = $this->submit();
 
-        $this->as($this->user)->getJson('/api/admin/kyc')->assertForbidden();
+        $this->as($this->user)->getJson('/api/admin/kyc')->assertNotFound();
         $this->as($this->admin)->getJson('/api/admin/kyc')->assertOk()->assertJsonPath('meta.total', 1);
         $this->as($this->admin)->getJson('/api/admin/kyc?status=approved')->assertJsonPath('data', []);
 

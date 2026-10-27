@@ -97,7 +97,7 @@ class EngagementTest extends TestCase
             ],
         ])->assertCreated()->json('data.id');
         $this->actingAs($admin, 'sanctum')->getJson('/api/admin/draws')->assertOk()->assertJsonPath('data.0.id', $id);
-        $this->actingAs($alice, 'sanctum')->getJson('/api/admin/draws')->assertForbidden();
+        $this->actingAs($alice, 'sanctum')->getJson('/api/admin/draws')->assertNotFound();
 
         $this->actingAs($alice, 'sanctum')->postJson("/api/draws/{$id}/entries", ['tickets' => 6])->assertJsonPath('code', 'too_many_tickets');
         $this->actingAs($alice, 'sanctum')->postJson("/api/draws/{$id}/entries", ['tickets' => 3])->assertOk()->assertJsonPath('data.me.tickets', 3);
