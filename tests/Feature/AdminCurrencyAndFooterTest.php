@@ -25,7 +25,7 @@ class AdminCurrencyAndFooterTest extends TestCase
         $list = $this->actingAs($this->admin, 'sanctum')->getJson('/api/admin/currencies')->assertOk()->json('data');
         $this->assertSame(['SAR', 'USD', 'AED', 'EUR'], array_column($list, 'code'));
 
-        $list[] = ['code' => 'KWD', 'symbol' => 'KD', 'nameEn' => 'Kuwaiti Dinar', 'nameAr' => 'دينار كويتي', 'active' => true];
+        $list[] = ['code' => 'KWD', 'symbol' => 'KD', 'nameEn' => 'Kuwaiti Dinar', 'nameAr' => 'دينار كويتي', 'active' => true, 'rate' => 0.31];
         $list[3]['active'] = false;
         $this->putJson('/api/admin/currencies', ['currencies' => array_reverse($list)])->assertOk()->assertJsonPath('data.0.code', 'KWD');
 
@@ -68,5 +68,10 @@ class AdminCurrencyAndFooterTest extends TestCase
 
         $this->putJson('/api/admin/site-settings', ['footer' => null])->assertOk()->assertJsonPath('data.footer', null);
         $this->getJson('/api/site-settings')->assertJsonPath('data.footer', null);
+    }
+
+    public function test_currencies_carry_exchange_rates_for_showing_prices(): void
+    {
+        $this->getJson('/api/currencies')->assertOk()->assertJsonFragment(['code' => 'SAR', 'rate' => 3.75])->assertJsonFragment(['code' => 'USD', 'rate' => 1]);
     }
 }

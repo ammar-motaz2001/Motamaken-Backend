@@ -68,7 +68,7 @@ class RuntimeConfig
         // The currency list edited in the panel: the active ones become the marketplace's currencies, in the chosen order.
         if (! empty($values['currencies.list'])) {
             config(['marketplace.currencies' => array_values(array_map(
-                fn (array $currency) => ['code' => $currency['code'], 'symbol' => $currency['symbol'], 'name_en' => $currency['name_en'], 'name_ar' => $currency['name_ar']],
+                fn (array $currency) => ['code' => $currency['code'], 'rate' => (float) ($currency['rate'] ?? self::defaultRate($currency['code'])), 'symbol' => $currency['symbol'], 'name_en' => $currency['name_en'], 'name_ar' => $currency['name_ar']],
                 array_filter($values['currencies.list'], fn (array $currency) => $currency['active']),
             ))]);
         }
@@ -92,5 +92,16 @@ class RuntimeConfig
     public static function attachmentTypes(): string
     {
         return implode(',', Setting::get('uploads.attachment_types'));
+    }
+
+    /** Built-in exchange rates (units per US dollar) for currencies saved before rates existed. */
+    private const DEFAULT_RATES = ['USD' => 1.0, 'SAR' => 3.75, 'AED' => 3.6725, 'EUR' => 0.92, 'EGP' => 48.5, 'KWD' => 0.307];
+
+    /**
+     * The built-in exchange rate of a currency (units per US dollar), or 1 when it has none.
+     */
+    public static function defaultRate(string $code): float
+    {
+        return self::DEFAULT_RATES[$code] ?? 1.0;
     }
 }

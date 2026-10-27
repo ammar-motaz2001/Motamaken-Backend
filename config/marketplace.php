@@ -17,11 +17,12 @@ return [
         ['code' => 'fr', 'label' => 'FR', 'name' => 'Français'],
     ],
 
+    // `rate`: how many units of the currency make one US dollar; used to show prices in the visitor's chosen currency.
     'currencies' => [
-        ['code' => 'SAR', 'symbol' => 'SAR', 'name_en' => 'Saudi Riyal', 'name_ar' => 'ريال سعودي'],
-        ['code' => 'USD', 'symbol' => '$', 'name_en' => 'US Dollar', 'name_ar' => 'دولار أمريكي'],
-        ['code' => 'AED', 'symbol' => 'AED', 'name_en' => 'UAE Dirham', 'name_ar' => 'درهم إماراتي'],
-        ['code' => 'EUR', 'symbol' => '€', 'name_en' => 'Euro', 'name_ar' => 'يورو'],
+        ['code' => 'SAR', 'rate' => 3.75, 'symbol' => 'SAR', 'name_en' => 'Saudi Riyal', 'name_ar' => 'ريال سعودي'],
+        ['code' => 'USD', 'rate' => 1, 'symbol' => '$', 'name_en' => 'US Dollar', 'name_ar' => 'دولار أمريكي'],
+        ['code' => 'AED', 'rate' => 3.6725, 'symbol' => 'AED', 'name_en' => 'UAE Dirham', 'name_ar' => 'درهم إماراتي'],
+        ['code' => 'EUR', 'rate' => 0.92, 'symbol' => '€', 'name_en' => 'Euro', 'name_ar' => 'يورو'],
     ],
 
     /*

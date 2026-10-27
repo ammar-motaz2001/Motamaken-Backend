@@ -24,6 +24,8 @@ class OptionsController extends Controller
             'code' => $currency['code'],
             'symbol' => $currency['symbol'],
             'name' => $currency[$name],
+            /** Units per one US dollar: convert a price with amount / rate(from) * rate(to). */
+            'rate' => (float) ($currency['rate'] ?? 1),
         ], config('marketplace.currencies'));
     }
 

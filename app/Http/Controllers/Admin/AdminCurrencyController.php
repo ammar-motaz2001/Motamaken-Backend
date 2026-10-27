@@ -45,6 +45,8 @@ class AdminCurrencyController extends Controller
             'currencies.*.nameEn' => ['required', 'string', 'max:40'],
             'currencies.*.nameAr' => ['required', 'string', 'max:40'],
             'currencies.*.active' => ['required', 'boolean'],
+            /** Units of this currency per one US dollar (USD is 1), for showing prices in the visitor's currency. */
+            'currencies.*.rate' => ['sometimes', 'numeric', 'gt:0', 'max:1000000'],
         ]);
 
         $list = array_map(fn (array $currency) => [
@@ -53,6 +55,7 @@ class AdminCurrencyController extends Controller
             'name_en' => trim($currency['nameEn']),
             'name_ar' => trim($currency['nameAr']),
             'active' => (bool) $currency['active'],
+            'rate' => $currency['code'] === 'USD' ? 1.0 : (float) ($currency['rate'] ?? RuntimeConfig::defaultRate($currency['code'])),
         ], $data['currencies']);
 
         if (! in_array(true, array_column($list, 'active'), true)) {
@@ -89,6 +92,7 @@ class AdminCurrencyController extends Controller
             'nameEn' => $currency['name_en'],
             'nameAr' => $currency['name_ar'],
             'active' => (bool) $currency['active'],
+            'rate' => (float) ($currency['rate'] ?? RuntimeConfig::defaultRate($currency['code'])),
             'inUse' => in_array($currency['code'], $held, true),
         ], $list));
     }
