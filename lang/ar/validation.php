@@ -2,6 +2,7 @@
 
 // Only the rules used by the API; anything missing falls back to English.
 return [
+    'no_markup' => 'لا يُسمح بكتابة أكواد أو وسوم HTML هنا.',
     'boolean' => 'يجب أن يكون حقل :attribute صحيحاً أو خاطئاً.',
     'digits' => 'يجب أن يتكون :attribute من :digits أرقام.',
     'email' => 'يجب أن يكون :attribute بريداً إلكترونياً صحيحاً.',
