@@ -71,7 +71,7 @@ class WalletService
                 ->where('type', Account::WALLET)->where('user_id', $user->id)
                 ->when($currency, fn (Builder $q) => $q->where('currency', $currency)))
             ->when($type, fn (Builder $q) => $q->whereHas('transaction', fn (Builder $t) => $t->where('type', $type)))
-            ->with(['transaction', 'account'])
+            ->with(['transaction.reference', 'account'])
             ->orderByDesc('created_at')
             ->orderByDesc('id');
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\LedgerEntry;
+use App\Models\Withdrawal;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -41,6 +42,8 @@ class LedgerEntryResource extends JsonResource
                 'type' => class_basename($this->transaction->reference_type),
                 'id' => $this->transaction->reference_id,
             ] : null,
+            /** `completed`, or for a withdrawal request the request's state: `pending`, `paid`, `rejected` or `cancelled`. */
+            'status' => $this->transaction->reference instanceof Withdrawal ? $this->transaction->reference->status : 'completed',
             'createdAt' => $this->created_at,
         ];
     }

@@ -3,9 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Models\DisputeMessage;
+use App\Support\SignedUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\URL;
 
 /**
  * @mixin DisputeMessage
@@ -36,7 +36,7 @@ class DisputeMessageResource extends JsonResource
                 'mime' => $this->attachment_mime,
                 'size' => $this->attachment_size,
                 /** Signed link, valid for an hour. */
-                'url' => URL::temporarySignedRoute(
+                'url' => SignedUrl::temporary(
                     'disputes.attachment', now()->addMinutes(config('marketplace.chat.attachment_url_minutes')), ['message' => $this->id],
                 ),
             ]),

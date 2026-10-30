@@ -38,5 +38,6 @@ return [
     'otp_expiry' => 'This code expires in :minutes minutes. If you did not request it, you can ignore this message.',
     'otp_whatsapp' => 'Your Mutamakin verification code is :code. It expires in :minutes minutes.',
     'suspended' => 'Account suspended. Contact support.',
+    'google_failed' => 'Google sign-in did not work. Please try again or use your email.',
     'admins_only' => 'Administrators only.',
 ];

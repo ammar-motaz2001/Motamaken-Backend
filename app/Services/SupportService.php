@@ -8,9 +8,9 @@ use App\Models\SupportTicket;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
 use App\Support\Paged;
+use App\Support\SignedUrl;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
 
 /**
  * Support conversations ("Contact support"): a user opens a ticket, the staff answer in the same thread.
@@ -108,7 +108,7 @@ class SupportService
                 'body' => $m->body,
                 'attachment' => $m->attachment_path ? [
                     'name' => $m->attachment_name, 'mime' => $m->attachment_mime, 'size' => $m->attachment_size,
-                    'url' => URL::temporarySignedRoute('support.attachment', now()->addMinutes(30), ['message' => $m->id]),
+                    'url' => SignedUrl::temporary('support.attachment', now()->addMinutes(30), ['message' => $m->id]),
                 ] : null,
                 'createdAt' => $m->created_at?->toIso8601String(),
             ])->all() : null,

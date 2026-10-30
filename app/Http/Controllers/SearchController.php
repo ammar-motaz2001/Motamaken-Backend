@@ -87,6 +87,8 @@ class SearchController extends Controller
         return Profile::query()
             ->with(['user', 'country', 'city'])
             ->where('profiles.type', $type)
+            // Staff and suspended accounts have no public profile: their card would open a 404.
+            ->whereHas('user', fn ($query) => $query->where('is_admin', false)->whereNull('suspended_at'))
             ->when($filters['q'] ?? null, fn ($query, $term) => LikeSearch::apply($query, [
                 'profiles.job_title', 'users.first_name', 'users.last_name', 'users.username',
             ], $term)->join('users', 'users.id', '=', 'profiles.user_id')->select('profiles.*'))

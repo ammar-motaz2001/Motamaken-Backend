@@ -56,6 +56,27 @@ class AdminLocationController extends Controller
     /**
      * Add a city.
      */
+    /**
+     * Add a country.
+     *
+     * Two-letter ISO code (e.g. `SA`, `EG`) and its English and Arabic names; it is shown on the site straight away.
+     */
+    public function storeCountry(Request $request): JsonResponse
+    {
+        $request->merge(['code' => strtoupper(trim((string) $request->input('code')))]);
+        $data = $request->validate([
+            'code' => ['required', 'string', 'size:2', 'regex:/^[A-Z]{2}$/', 'unique:countries,code'],
+            'nameEn' => ['required', 'string', 'max:100'],
+            'nameAr' => ['required', 'string', 'max:100'],
+        ]);
+        $country = Country::create(['code' => $data['code'], 'name_en' => $data['nameEn'], 'name_ar' => $data['nameAr'], 'is_active' => true]);
+        $this->forget();
+
+        return response()->json(['data' => [
+            'id' => $country->id, 'code' => $country->code, 'nameEn' => $country->name_en, 'nameAr' => $country->name_ar, 'isActive' => true, 'cities' => 0,
+        ]], 201);
+    }
+
     public function storeCity(Request $request, int $country): JsonResponse
     {
         $data = $request->validate(['nameEn' => ['required', 'string', 'max:100'], 'nameAr' => ['required', 'string', 'max:100']]);

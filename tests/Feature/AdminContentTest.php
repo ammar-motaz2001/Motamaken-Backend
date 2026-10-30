@@ -80,6 +80,19 @@ class AdminContentTest extends TestCase
         $this->assertSame(['Abha'], array_column($this->getJson("/api/countries/{$sa->id}/cities")->json('data'), 'name'));
     }
 
+    public function test_a_country_can_be_added(): void
+    {
+        Country::factory()->create(['code' => 'SA']);
+
+        $this->as($this->admin)->postJson('/api/admin/countries', ['code' => 'eg', 'nameEn' => 'Egypt', 'nameAr' => 'مصر'])
+            ->assertCreated()->assertJsonPath('data.code', 'EG');
+        $this->as($this->admin)->postJson('/api/admin/countries', ['code' => 'SA', 'nameEn' => 'Saudi', 'nameAr' => 'السعودية'])->assertUnprocessable();
+        $this->as($this->admin)->postJson('/api/admin/countries', ['code' => 'EGY', 'nameEn' => 'X', 'nameAr' => 'X'])->assertUnprocessable();
+
+        $this->app['auth']->forgetGuards();
+        $this->assertContains('EG', array_column($this->getJson('/api/countries')->json('data'), 'code'));
+    }
+
     public function test_the_faq_is_managed_and_searched(): void
     {
         $group = $this->as($this->admin)->postJson('/api/admin/faq-categories', ['nameEn' => 'Payments', 'nameAr' => 'المدفوعات'])->assertCreated()->json('data.id');

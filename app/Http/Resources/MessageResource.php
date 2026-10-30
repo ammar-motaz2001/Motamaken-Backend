@@ -3,9 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Models\Message;
+use App\Support\SignedUrl;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\URL;
 
 /**
  * @mixin Message
@@ -38,7 +38,7 @@ class MessageResource extends JsonResource
                 'mime' => $this->attachment_mime,
                 'size' => $this->attachment_size,
                 /** Signed link, valid for an hour: use it directly as an `<img>`, `<audio>` or download link. */
-                'url' => URL::temporarySignedRoute(
+                'url' => SignedUrl::temporary(
                     'messages.attachment', now()->addMinutes(config('marketplace.chat.attachment_url_minutes')), ['message' => $this->id],
                 ),
             ]),

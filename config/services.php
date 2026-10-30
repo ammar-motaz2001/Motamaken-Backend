@@ -36,6 +36,11 @@ return [
     ],
 
     // reCAPTCHA v3 (invisible, scored) on sign-up, quick sign-in and the contact form. Without a secret it is switched off.
+    // "Continue with Google": the OAuth client ID from Google Cloud Console (Credentials > OAuth client, web).
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+    ],
+
     'recaptcha' => [
         'site_key' => env('RECAPTCHA_SITE_KEY'),
         'secret_key' => env('RECAPTCHA_SECRET_KEY'),

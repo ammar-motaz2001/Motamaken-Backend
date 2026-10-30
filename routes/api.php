@@ -46,6 +46,7 @@ use App\Http\Controllers\Admin\AdminWithdrawalController;
 use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\AgreementChangeController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\OtpController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\QuickAuthController;
@@ -127,6 +128,7 @@ Route::prefix('auth')->middleware('throttle:auth')->group(function () {
     Route::post('password/reset', [PasswordController::class, 'reset']);
     Route::post('quick/start', [QuickAuthController::class, 'start']);
     Route::post('quick/verify', [QuickAuthController::class, 'verify']);
+    Route::post('google', [GoogleAuthController::class, 'login']);
 });
 
 Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::class])->group(function () {
@@ -356,6 +358,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
             Route::post('disputes/{dispute}/review', [AdminDisputeController::class, 'review'])->whereNumber('dispute');
             Route::post('disputes/{dispute}/resolve', [AdminDisputeController::class, 'resolve'])->whereNumber('dispute');
             Route::post('disputes/{dispute}/messages', [AdminDisputeController::class, 'message'])->whereNumber('dispute');
+            Route::get('disputes/{dispute}/conversation', [AdminDisputeController::class, 'conversation'])->whereNumber('dispute');
             Route::get('appeals', [AdminAppealController::class, 'index']);
             Route::post('appeals/{appeal}/decide', [AdminAppealController::class, 'decide'])->whereNumber('appeal')->middleware('throttle:money');
         });
@@ -419,6 +422,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
             Route::patch('skills/{skill}', [AdminSkillController::class, 'update'])->whereNumber('skill');
             Route::delete('skills/{skill}', [AdminSkillController::class, 'destroy'])->whereNumber('skill');
             Route::get('countries', [AdminLocationController::class, 'countries']);
+            Route::post('countries', [AdminLocationController::class, 'storeCountry']);
             Route::patch('countries/{country}', [AdminLocationController::class, 'updateCountry'])->whereNumber('country');
             Route::get('countries/{country}/cities', [AdminLocationController::class, 'cities'])->whereNumber('country');
             Route::post('countries/{country}/cities', [AdminLocationController::class, 'storeCity'])->whereNumber('country');
@@ -540,10 +544,10 @@ Route::post('webhooks/payments', PaymentWebhookController::class);
 Route::post('webhooks/moyasar', MoyasarWebhookController::class)->middleware('throttle:60,1');
 
 // Signed links: documents and evidence open in <img> tags and new tabs, which cannot send a token.
-Route::get('kyc-files/{submission}/{kind}', [AdminKycController::class, 'file'])->whereNumber('submission')->middleware('signed')->name('kyc.file');
-Route::get('support-files/{message}', [SupportController::class, 'attachment'])->whereNumber('message')->middleware('signed')->name('support.attachment');
-Route::get('dispute-files/{message}', [DisputeController::class, 'attachment'])->whereNumber('message')->middleware('signed')->name('disputes.attachment');
+Route::get('kyc-files/{submission}/{kind}', [AdminKycController::class, 'file'])->whereNumber('submission')->middleware('signed:relative')->name('kyc.file');
+Route::get('support-files/{message}', [SupportController::class, 'attachment'])->whereNumber('message')->middleware('signed:relative')->name('support.attachment');
+Route::get('dispute-files/{message}', [DisputeController::class, 'attachment'])->whereNumber('message')->middleware('signed:relative')->name('disputes.attachment');
 
 // Opened by <img>/<audio> tags, so it is protected by its signature instead of the token header.
 Route::get('messages/{message}/attachment', [MessageController::class, 'attachment'])
-    ->whereNumber('message')->middleware('signed')->name('messages.attachment');
+    ->whereNumber('message')->middleware('signed:relative')->name('messages.attachment');

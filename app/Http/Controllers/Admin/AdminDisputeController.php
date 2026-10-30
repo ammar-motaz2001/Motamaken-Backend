@@ -7,6 +7,8 @@ use App\Http\Requests\DisputeMessageRequest;
 use App\Http\Requests\ResolveDisputeRequest;
 use App\Http\Resources\DisputeMessageResource;
 use App\Http\Resources\DisputeResource;
+use App\Http\Resources\MessageResource;
+use App\Models\Conversation;
 use App\Models\Dispute;
 use App\Services\DisputeService;
 use Dedoc\Scramble\Attributes\Group;
@@ -83,5 +85,24 @@ class AdminDisputeController extends Controller
         );
 
         return (new DisputeMessageResource($message->load('user')))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Chat between the two parties.
+     *
+     * The direct conversation of the client and the freelancer (oldest first, at most the last 300 messages), so staff
+     * can read what was agreed before deciding the case.
+     */
+    public function conversation(int $dispute): AnonymousResourceCollection
+    {
+        $dispute = Dispute::findOrFail($dispute);
+        $conversation = Conversation::where('pair_key', Conversation::pairKey($dispute->opened_by, $dispute->against_id))
+            ->where('type', '!=', Conversation::GROUP)->first();
+
+        $messages = $conversation
+            ? $conversation->messages()->with('sender')->latest('id')->limit(300)->get()->reverse()->values()
+            : collect();
+
+        return MessageResource::collection($messages);
     }
 }

@@ -9,11 +9,11 @@ use App\Http\Resources\UserBriefResource;
 use App\Models\KycEvent;
 use App\Models\KycSubmission;
 use App\Services\KycService;
+use App\Support\SignedUrl;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -51,7 +51,7 @@ class AdminKycController extends Controller
     public function show(int $submission): array
     {
         $submission = KycSubmission::with('user')->findOrFail($submission);
-        $link = fn (string $kind) => URL::temporarySignedRoute('kyc.file', now()->addMinutes(10), [$submission->id, $kind]);
+        $link = fn (string $kind) => SignedUrl::temporary('kyc.file', now()->addMinutes(10), [$submission->id, $kind]);
 
         return ['data' => [
             ...(new KycResource($submission))->resolve(),
