@@ -6,9 +6,11 @@ use App\Models\Account;
 use App\Models\AdminRole;
 use App\Models\Dispute;
 use App\Models\Escrow;
+use App\Models\LedgerTransaction;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\User;
+use App\Services\Payments\EscrowService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -104,6 +106,67 @@ class DisputeTest extends TestCase
         $this->as($this->freelancer)->postJson("/api/milestones/{$this->milestone->id}/submit")->assertStatus(422);
         $this->assertSame(1000.0, $this->balance(Account::ESCROW));
         $this->assertSame(0.0, $this->balance($this->freelancer));
+    }
+
+    public function test_a_dispute_and_double_clicked_release_requests_keep_the_money_held_and_post_nothing_twice(): void
+    {
+        $ledgerBefore = LedgerTransaction::count();
+
+        // The dispute and, "at the same moment", two quick release requests from each side.
+        $this->open($this->client)->assertCreated();
+        foreach ([1, 2] as $click) {
+            $this->as($this->client)->postJson("/api/milestones/{$this->milestone->id}/approve")->assertStatus(422)->assertJsonPath('code', 'milestone_wrong_state');
+            $this->as($this->freelancer)->postJson("/api/milestones/{$this->milestone->id}/submit", ['note' => "click {$click}"])->assertStatus(422);
+        }
+
+        $this->assertSame(Milestone::DISPUTED, $this->milestone->fresh()->status);
+        $this->assertSame(1000.0, $this->balance(Account::ESCROW));
+        $this->assertSame(0.0, $this->balance($this->freelancer));
+        $this->assertSame($ledgerBefore, LedgerTransaction::count());
+        $this->assertSame(0, LedgerTransaction::where('idempotency_key', "milestone:{$this->milestone->id}:settle")->count());
+    }
+
+    public function test_a_release_that_wins_the_race_is_paid_once_and_the_late_dispute_is_refused(): void
+    {
+        $this->as($this->client)->postJson("/api/milestones/{$this->milestone->id}/approve")->assertOk();
+        $this->as($this->client)->postJson("/api/milestones/{$this->milestone->id}/approve")->assertStatus(422);
+        $this->open($this->freelancer)->assertStatus(422)->assertJsonPath('code', 'milestone_not_disputable');
+
+        $this->assertSame(1, LedgerTransaction::where('idempotency_key', "milestone:{$this->milestone->id}:settle")->count());
+        $this->assertSame(0.0, $this->balance(Account::ESCROW));
+        $this->assertSame(0, Dispute::count());
+    }
+
+    public function test_the_ledger_refuses_to_post_the_same_payout_twice(): void
+    {
+        $escrow = $this->milestone->escrow()->with(['client', 'project', 'payees.user'])->firstOrFail();
+        $service = app(EscrowService::class);
+
+        // Even if two requests slipped past the status check, the payout key lets only one through.
+        $service->settle($this->milestone->fresh(), $escrow, toClient: 0);
+        $service->settle($this->milestone->fresh(), $escrow, toClient: 0);
+
+        $this->assertSame(1, LedgerTransaction::where('idempotency_key', "milestone:{$this->milestone->id}:settle")->count());
+        $this->assertSame(0.0, $this->balance(Account::ESCROW));
+    }
+
+    public function test_the_same_note_sent_twice_quickly_is_written_once(): void
+    {
+        $this->open($this->client)->assertCreated();
+        $dispute = Dispute::firstOrFail();
+
+        foreach ([1, 2] as $click) {
+            $this->as($this->admin)->postJson("/api/admin/disputes/{$dispute->id}/messages", ['body' => 'The freelancer finished the work', 'internal' => true])->assertSuccessful();
+            $this->as($this->client)->postJson("/api/disputes/{$dispute->id}/messages", ['body' => 'Please look at the files'])->assertSuccessful();
+        }
+
+        $this->assertSame(1, $dispute->messages()->where('body', 'The freelancer finished the work')->count());
+        $this->assertSame(1, $dispute->messages()->where('body', 'Please look at the files')->count());
+
+        // Later, the same words are a new message again.
+        $this->travel(1)->minutes();
+        $this->as($this->client)->postJson("/api/disputes/{$dispute->id}/messages", ['body' => 'Please look at the files'])->assertSuccessful();
+        $this->assertSame(2, $dispute->messages()->where('body', 'Please look at the files')->count());
     }
 
     // ---- the case timeline ----------------------------------------------------------------------------------------

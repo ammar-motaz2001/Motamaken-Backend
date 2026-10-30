@@ -66,15 +66,35 @@ class DisputeService
             throw new ApiException(__('disputes.closed'), 'dispute_closed');
         }
 
-        $message = $dispute->messages()->create([
-            'user_id' => $author->id,
-            'kind' => $internal ? DisputeMessage::ADMIN_NOTE : DisputeMessage::MESSAGE,
-            'body' => $body,
-            'attachment_path' => $file?->store("disputes/{$dispute->id}", 'local'),
-            'attachment_name' => $file?->getClientOriginalName(),
-            'attachment_mime' => $file?->getMimeType(),
-            'attachment_size' => $file?->getSize(),
-        ]);
+        $kind = $internal ? DisputeMessage::ADMIN_NOTE : DisputeMessage::MESSAGE;
+
+        // A double click or a resent form must not write the same text twice: one at a time per case (the row lock), and
+        // the same words from the same person within half a minute return the message already written.
+        [$message, $isNew] = DB::transaction(function () use ($dispute, $author, $body, $file, $kind) {
+            Dispute::whereKey($dispute->id)->lockForUpdate()->first();
+
+            if ($file === null && filled($body)) {
+                $repeat = $dispute->messages()->where('user_id', $author->id)->where('kind', $kind)->where('body', $body)
+                    ->whereNull('attachment_path')->where('created_at', '>=', now()->subSeconds(30))->latest('id')->first();
+                if ($repeat) {
+                    return [$repeat, false];
+                }
+            }
+
+            return [$dispute->messages()->create([
+                'user_id' => $author->id,
+                'kind' => $kind,
+                'body' => $body,
+                'attachment_path' => $file?->store("disputes/{$dispute->id}", 'local'),
+                'attachment_name' => $file?->getClientOriginalName(),
+                'attachment_mime' => $file?->getMimeType(),
+                'attachment_size' => $file?->getSize(),
+            ]), true];
+        });
+
+        if (! $isNew) {
+            return $message;
+        }
 
         if (! $internal) {
             $dispute->loadMissing('escrow.payees.user');
