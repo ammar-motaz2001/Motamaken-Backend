@@ -339,6 +339,11 @@ class CampaignTest extends TestCase
         $this->as($admin)->getJson('/api/admin/campaigns')->assertOk()->assertJsonPath('data.0.owner.fullName', 'Ola Owner')->assertJsonPath('data.0.stats.validVisits', 1);
         $this->as($admin)->getJson('/api/admin/campaigns?status=cancelled')->assertJsonPath('data', []);
 
+        $this->as($admin)->getJson("/api/campaigns/{$id}")->assertOk()->assertJsonPath('data.id', $id);
+        $this->as($admin)->getJson("/api/campaigns/{$id}/visits")->assertOk();
+        $this->as($admin)->getJson("/api/campaigns/{$id}/daily")->assertOk();
+        $this->as($admin)->postJson("/api/campaigns/{$id}/pause")->assertForbidden();
+        $this->as($this->promoter)->getJson("/api/campaigns/{$id}")->assertForbidden();
         $this->as($admin)->postJson("/api/admin/campaigns/{$id}/cancel")->assertOk()->assertJsonPath('data.status', 'cancelled');
         $this->assertSame(14.5, $this->balance($this->owner));
         $this->assertBooksBalance();

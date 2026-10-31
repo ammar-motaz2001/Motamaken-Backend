@@ -12,4 +12,12 @@ class CampaignPolicy
     {
         return $user->id === $campaign->owner_id;
     }
+
+    /**
+     * Seeing a campaign's stats, promoters and visits: its owner, and staff who moderate the marketplace.
+     */
+    public function view(User $user, Campaign $campaign): bool
+    {
+        return $user->id === $campaign->owner_id || ($user->is_admin && $user->canAdmin('marketplace'));
+    }
 }

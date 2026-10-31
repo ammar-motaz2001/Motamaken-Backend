@@ -21,7 +21,7 @@ class AdminSiteSettingsController extends Controller
         'maintenance' => ['enabled' => 'maintenance.enabled', 'messageEn' => 'maintenance.message_en', 'messageAr' => 'maintenance.message_ar', 'endsAt' => 'maintenance.ends_at'],
         'uploads' => ['avatarMb' => 'uploads.avatar_mb', 'portfolioMb' => 'uploads.portfolio_mb', 'documentMb' => 'uploads.document_mb',
             'chatMb' => 'uploads.chat_mb', 'attachmentTypes' => 'uploads.attachment_types'],
-        'security' => ['requireAdmin2fa' => 'admin.require_2fa'],
+        'security' => ['requireAdmin2fa' => 'admin.require_2fa', 'ownersWriteFirst' => 'chat.owners_first'],
         'seo' => ['descriptionEn' => 'seo.description_en', 'descriptionAr' => 'seo.description_ar'],
         'payments' => ['depositMethods' => 'payments.deposit_methods', 'withdrawalMethods' => 'payments.withdrawal_methods'],
     ];
@@ -112,6 +112,8 @@ class AdminSiteSettingsController extends Controller
             'seo.descriptionAr' => ['sometimes', 'nullable', 'string', 'max:170'],
             'security' => ['sometimes', 'array'],
             'security.requireAdmin2fa' => ['sometimes', 'boolean'],
+            /** Freelancers and influencers cannot start a conversation with a project owner; the owner writes first. */
+            'security.ownersWriteFirst' => ['sometimes', 'boolean'],
             'payments' => ['sometimes', 'array'],
             'payments.depositMethods' => ['sometimes', 'array', 'min:1'],
             'payments.depositMethods.*' => ['distinct', Rule::in(config('payments.deposit_method_choices'))],

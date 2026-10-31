@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'owners_first' => 'You cannot start a conversation with a project owner. Send an offer and the owner will contact you if interested.',
     'cannot_message_yourself' => 'You cannot start a conversation with yourself.',
     'body_required' => 'Write a message before sending.',
     'file_required' => 'Attach a file to send this type of message.',

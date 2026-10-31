@@ -44,7 +44,10 @@ class HomepageTest extends TestCase
     public function test_home_hides_expired_featuring_and_closed_projects(): void
     {
         $category = Category::factory()->create();
-        $expired = Profile::factory()->featured()->create(['featured_until' => now()->subDay(), 'rating' => 5]);
+        $expired = Profile::factory()->featured()->create(['featured_until' => now()->subDay(), 'rating' => 5, 'job_title' => 'Designer', 'bio' => 'Ten years of brand work.']);
+        $expired->user->forceFill(['avatar_path' => 'avatars/1.png'])->save();
+        // A new, empty profile never fills the slider, however it is rated.
+        Profile::factory()->create(['rating' => 5, 'job_title' => null, 'bio' => null]);
         $paid = Profile::factory()->featured()->create(['featured_until' => now()->addDay(), 'rating' => 1]);
         Project::factory()->featured()->create(['category_id' => $category->id, 'status' => Project::STATUS_CLOSED]);
         $lapsed = Project::factory()->featured()->create(['category_id' => $category->id, 'featured_until' => now()->subMinute()]);

@@ -52,6 +52,9 @@ return [
 
         // Staff must sign in with two-factor to open the panel.
         'admin.require_2fa' => false,
+
+        // Freelancers and influencers cannot open a conversation with a project owner: the owner writes first.
+        'chat.owners_first' => false,
     ],
 
     /*

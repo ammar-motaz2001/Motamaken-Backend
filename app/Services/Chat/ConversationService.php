@@ -2,8 +2,12 @@
 
 namespace App\Services\Chat;
 
+use App\Exceptions\ApiException;
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Profile;
+use App\Models\Project;
+use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
 use App\Notifications\ConversationStarted;
@@ -25,6 +29,15 @@ class ConversationService
 
         if ($existing = Conversation::firstWhere('pair_key', $pairKey)) {
             return [$existing, false];
+        }
+
+        // With "owners write first" on, a freelancer or influencer cannot open a conversation with someone who posts
+        // projects; once the owner writes, the conversation exists and both sides talk freely.
+        if (Setting::get('chat.owners_first')
+            && Profile::where('user_id', $starter->id)->exists()
+            && Project::where('user_id', $other->id)->exists()
+            && ! Project::where('user_id', $starter->id)->exists()) {
+            throw new ApiException(__('chat.owners_first'), 'owners_write_first', 403);
         }
 
         try {

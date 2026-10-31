@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdatePreferencesRequest;
 use App\Http\Resources\UserResource;
 use App\Models\Account;
+use App\Models\Favorite;
 use App\Models\Message;
+use App\Models\Project;
+use App\Models\Proposal;
 use App\Models\User;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\Request;
@@ -34,6 +37,18 @@ class MeController extends Controller
             /** Messages received and not read yet, across all conversations. */
             'unreadMessages' => Message::unreadFor($user)->count(),
             'unreadNotifications' => $user->unreadNotifications()->count(),
+            /** Counts beside the header and account-menu links. */
+            'counts' => [
+                /** Saved projects and profiles. */
+                'favorites' => Favorite::where('user_id', $user->id)->count(),
+                /** My projects that are open or in progress. */
+                'projects' => Project::where('user_id', $user->id)->whereIn('status', [Project::STATUS_OPEN, Project::STATUS_IN_PROGRESS])->count(),
+                /** Offers waiting for my answer on my open projects. */
+                'offersReceived' => Proposal::where('status', Proposal::STATUS_PENDING)
+                    ->whereIn('project_id', Project::where('user_id', $user->id)->where('status', Project::STATUS_OPEN)->select('id'))->count(),
+                /** My offers still waiting for an answer. */
+                'offers' => Proposal::where('user_id', $user->id)->where('status', Proposal::STATUS_PENDING)->count(),
+            ],
         ];
     }
 

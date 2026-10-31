@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\Profile;
 use App\Models\Project;
+use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\ConversationStarted;
 use App\Services\Chat\ConversationService;
@@ -53,6 +55,21 @@ class ChatTest extends TestCase
 
         Notification::assertSentToTimes($this->other, ConversationStarted::class, 1);
         $this->assertDatabaseCount('conversations', 1);
+    }
+
+    public function test_with_owners_first_on_freelancers_wait_for_the_owner_to_write(): void
+    {
+        Setting::put('chat.owners_first', true);
+        $owner = User::factory()->create();
+        Project::factory()->create(['user_id' => $owner->id]);
+        $freelancer = User::factory()->create();
+        Profile::factory()->create(['user_id' => $freelancer->id]);
+
+        $this->actingAs($freelancer, 'sanctum')->postJson('/api/conversations', ['userId' => $owner->id])->assertForbidden()->assertJsonPath('code', 'owners_write_first');
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($owner, 'sanctum')->postJson('/api/conversations', ['userId' => $freelancer->id])->assertCreated();
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($freelancer, 'sanctum')->postJson('/api/conversations', ['userId' => $owner->id, 'body' => 'Thanks for writing'])->assertOk();
     }
 
     public function test_cannot_start_a_conversation_with_yourself_or_nobody(): void

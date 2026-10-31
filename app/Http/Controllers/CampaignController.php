@@ -63,7 +63,7 @@ class CampaignController extends Controller
      */
     public function show(Request $request, int $campaign): CampaignResource
     {
-        return new CampaignResource($this->withStats($this->owned($campaign), detailed: true));
+        return new CampaignResource($this->withStats($this->viewable($campaign), detailed: true));
     }
 
     /**
@@ -122,7 +122,7 @@ class CampaignController extends Controller
     public function promoters(PaginatedRequest $request, int $campaign): AnonymousResourceCollection
     {
         return CampaignPromoterResource::collection(
-            $this->owned($campaign)->promoters()->with('user')->orderByDesc('valid_visits')->orderBy('id')
+            $this->viewable($campaign)->promoters()->with('user')->orderByDesc('valid_visits')->orderBy('id')
                 ->paginate($request->integer('perPage', 20)),
         );
     }
@@ -141,7 +141,7 @@ class CampaignController extends Controller
         ]);
 
         return CampaignVisitResource::collection(
-            $this->owned($campaign)->visits()->with('promoter.user')
+            $this->viewable($campaign)->visits()->with('promoter.user')
                 ->when($request->input('status'), fn ($query, $status) => $query->where('status', $status))
                 ->when($request->input('reason'), fn ($query, $reason) => $query->where('reject_reason', $reason))
                 ->latest('id')
@@ -160,7 +160,7 @@ class CampaignController extends Controller
     {
         $request->validate(['days' => ['nullable', 'integer', 'min:1', 'max:90']]);
 
-        $campaign = $this->owned($campaign);
+        $campaign = $this->viewable($campaign);
         $days = $request->integer('days', 14);
         $since = now()->subDays($days - 1)->startOfDay();
 
@@ -180,6 +180,17 @@ class CampaignController extends Controller
                 'spent' => $valid * $campaign->cost_per_visit_cents / 100,
             ];
         })->all()];
+    }
+
+    /**
+     * Finds a campaign the current user may see (its owner, or marketplace staff), or fails with 404 / 403.
+     */
+    private function viewable(int $id): Campaign
+    {
+        $campaign = Campaign::findOrFail($id);
+        Gate::authorize('view', $campaign);
+
+        return $campaign;
     }
 
     /**

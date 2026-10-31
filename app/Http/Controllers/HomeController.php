@@ -79,8 +79,10 @@ class HomeController extends Controller
             ->whereHas('user', fn ($q) => $q->where('is_admin', false)->whereNull('suspended_at'))
             ->with(['user', 'country', 'city'])->orderByDesc('rating')->orderBy('id')->limit($featuredLimit)->get();
         if ($profiles->count() < $featuredLimit) {
+            // Only complete profiles fill the slider (photo, job title and bio), so a brand-new empty account never shows.
             $profiles = $profiles->concat(Profile::query()->with(['user', 'country', 'city'])->whereNotIn('id', $profiles->pluck('id'))
-                ->whereHas('user', fn ($q) => $q->where('is_admin', false)->whereNull('suspended_at'))
+                ->whereHas('user', fn ($q) => $q->where('is_admin', false)->whereNull('suspended_at')->whereNotNull('avatar_path'))
+                ->whereNotNull('job_title')->where('job_title', '!=', '')->whereNotNull('bio')->where('bio', '!=', '')
                 ->orderByDesc('rating')->orderByDesc('reviews_count')->latest('id')->limit($featuredLimit - $profiles->count())->get());
         }
         $projects = Project::open()->distinctive()->with($card)->filter(['type' => Project::TYPE_PROJECT])->latest()->limit($featuredLimit)->get();
