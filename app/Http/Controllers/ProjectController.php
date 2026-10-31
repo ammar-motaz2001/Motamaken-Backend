@@ -26,8 +26,8 @@ class ProjectController extends Controller
             ->with(['user', 'category', 'country', 'city'])
             ->filter($request->validated())
             ->when($request->input('sort'), fn ($query, $sort) => match ($sort) {
-                'budget_high' => $query->orderByRaw(Project::inUsd('projects.budget_max').' desc'),
-                'budget_low' => $query->orderByRaw(Project::inUsd('projects.budget_min').' asc'),
+                'budget_high' => $query->orderByRaw(Project::inUsd('projects.budget_max').' desc')->orderByRaw(Project::inUsd('projects.budget_min').' desc'),
+                'budget_low' => $query->orderByRaw(Project::inUsd('projects.budget_min').' asc')->orderByRaw(Project::inUsd('projects.budget_max').' asc'),
                 default => $query,
             })
             ->latest('projects.created_at')
