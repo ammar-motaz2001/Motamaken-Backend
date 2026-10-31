@@ -29,6 +29,8 @@ class AgreementChangeTest extends TestCase
         $this->client = User::factory()->create();
         $this->freelancer = User::factory()->create();
         $this->project = $this->hiredProject($this->client, $this->freelancer, 1000);
+        // A fixed starting deadline: the factory's random one could equal a requested change and make it "no change".
+        Proposal::whereKey($this->project->accepted_proposal_id)->update(['delivery_days' => 10]);
     }
 
     public function test_a_price_and_deadline_change_is_requested_by_one_side_and_accepted_by_the_other(): void
