@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'outside_budget' => 'يجب أن يكون السعر بين :min و:max :currency حسب ميزانية المشروع.',
     'profile_required' => 'أضف ملفك الشخصي قبل إرسال العروض.',
     'profile_type_mismatch' => [
         'project' => 'يمكن لملفات المستقلين فقط إرسال عروض على المشاريع.',

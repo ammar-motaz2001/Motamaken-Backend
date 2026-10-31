@@ -25,6 +25,8 @@ class ProjectIndexRequest extends FormRequest
             'countryId' => ['nullable', 'integer', 'exists:countries,id'],
             'cityId' => ['nullable', 'integer', 'exists:cities,id'],
             /** Only projects whose budget range reaches at least this amount. */
+            /** The currency of `budgetMin`/`budgetMax` (the visitor's display currency); US dollars when absent. */
+            'currency' => ['nullable', Rule::in(array_column(config('marketplace.currencies'), 'code'))],
             'budgetMin' => ['nullable', 'integer', 'min:0'],
             /** Only projects whose budget range starts at or below this amount. */
             'budgetMax' => ['nullable', 'integer', 'min:0'],

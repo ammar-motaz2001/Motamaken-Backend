@@ -24,9 +24,10 @@ class ReviewController extends Controller
     /**
      * A project's reviews.
      *
-     * Both sides' reviews once the project is completed, and whether the viewer can still leave theirs (`canReview`).
+     * The client's review once the project is completed (with the freelancer's reply), whether the viewer (the client)
+     * can still review (`canReview`) and whether the viewer (the freelancer) can still reply (`canReply`).
      *
-     * @return array{data: mixed, canReview: bool}
+     * @return array{data: mixed, canReview: bool, canReply: bool}
      */
     public function project(Request $request, int $project): array
     {
@@ -36,15 +37,16 @@ class ReviewController extends Controller
 
         return [
             'data' => ReviewResource::collection($reviews),
-            'canReview' => $viewer !== null && $this->otherSide($project, $viewer) !== null && ! $reviews->contains('reviewer_id', $viewer->id),
+            'canReview' => $viewer !== null && $viewer->id === $project->user_id && $this->otherSide($project, $viewer) !== null && ! $reviews->contains('reviewer_id', $viewer->id),
+            'canReply' => $viewer !== null && $reviews->contains(fn (Review $review) => $review->reviewee_id === $viewer->id && ! $review->reply),
         ];
     }
 
     /**
-     * Review the other side.
+     * Review the freelancer.
      *
-     * After a project is completed, the client reviews the freelancer (or team lead) and the freelancer reviews the
-     * client. Once per project and side.
+     * After a project is completed, the client rates the freelancer (or team lead), once. The freelancer does not rate
+     * the client: they answer the review with a reply instead (`review_reply_only`).
      */
     public function store(Request $request, int $project): JsonResponse
     {
@@ -54,6 +56,9 @@ class ReviewController extends Controller
         ]);
         $project = Project::findOrFail($project);
         $reviewee = $this->otherSide($project, $request->user()) ?? throw new ApiException(__('profiles.review_not_allowed'), 'review_not_allowed', 403);
+        if ($request->user()->id !== $project->user_id) {
+            throw new ApiException(__('profiles.review_reply_only'), 'review_reply_only', 403);
+        }
 
         if (Review::where(['project_id' => $project->id, 'reviewer_id' => $request->user()->id])->exists()) {
             throw new ApiException(__('profiles.review_exists'), 'review_exists');
@@ -78,6 +83,28 @@ class ReviewController extends Controller
         ]));
 
         return (new ReviewResource($review->load(['reviewer', 'project'])))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Reply to my review.
+     *
+     * The reviewed freelancer answers the client's review once, in text (no stars). Shown under the review.
+     */
+    public function reply(Request $request, int $review): ReviewResource
+    {
+        $data = $request->validate(['reply' => ['required', 'string', 'min:2', 'max:2000', new CleanText]]);
+        $review = Review::with('project')->findOrFail($review);
+
+        if ($review->reviewee_id !== $request->user()->id) {
+            throw new ApiException(__('profiles.review_not_allowed'), 'review_not_allowed', 403);
+        }
+        if ($review->reply) {
+            throw new ApiException(__('profiles.reply_exists'), 'reply_exists');
+        }
+
+        $review->update(['reply' => $data['reply'], 'replied_at' => now()]);
+
+        return new ReviewResource($review->load(['reviewer', 'project']));
     }
 
     /**

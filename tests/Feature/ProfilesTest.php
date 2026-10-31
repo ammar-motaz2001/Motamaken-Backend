@@ -63,7 +63,7 @@ class ProfilesTest extends TestCase
         $this->as($this->freelancer)->deleteJson("/api/me/portfolio/{$id}")->assertOk();
     }
 
-    public function test_both_sides_review_a_completed_project_and_the_rating_updates(): void
+    public function test_the_client_reviews_the_freelancer_replies_and_the_rating_updates(): void
     {
         $project = $this->completedProject();
 
@@ -73,7 +73,11 @@ class ProfilesTest extends TestCase
         $this->app['auth']->forgetGuards();
         $this->as($this->client)->postJson("/api/projects/{$project->id}/reviews", ['rating' => 4, 'comment' => 'Great logo'])->assertCreated();
         $this->as($this->client)->postJson("/api/projects/{$project->id}/reviews", ['rating' => 5])->assertJsonPath('code', 'review_exists');
-        $this->as($this->freelancer)->postJson("/api/projects/{$project->id}/reviews", ['rating' => 5, 'comment' => 'Clear brief'])->assertCreated();
+        $this->as($this->freelancer)->postJson("/api/projects/{$project->id}/reviews", ['rating' => 5, 'comment' => 'Clear brief'])->assertJsonPath('code', 'review_reply_only');
+        $reviewId = $this->as($this->freelancer)->getJson("/api/projects/{$project->id}/reviews")->assertJsonPath('canReply', true)->json('data.0.id');
+        $this->as($this->client)->postJson("/api/reviews/{$reviewId}/reply", ['reply' => 'Not mine'])->assertForbidden();
+        $this->as($this->freelancer)->postJson("/api/reviews/{$reviewId}/reply", ['reply' => 'Thanks, clear brief'])->assertOk()->assertJsonPath('data.reply', 'Thanks, clear brief');
+        $this->as($this->freelancer)->postJson("/api/reviews/{$reviewId}/reply", ['reply' => 'Again'])->assertJsonPath('code', 'reply_exists');
         $stranger = User::factory()->create();
         $this->as($stranger)->postJson("/api/projects/{$project->id}/reviews", ['rating' => 1])->assertForbidden();
 
@@ -83,7 +87,7 @@ class ProfilesTest extends TestCase
         $this->getJson("/api/users/{$this->freelancer->id}")->assertOk()
             ->assertJsonPath('stats.completedJobs', 1)->assertJsonPath('stats.rating', 4)->assertJsonPath('reviews.0.comment', 'Great logo')
             ->assertJsonPath('profile.jobTitle', 'Designer')->assertJsonPath('isMe', false);
-        $this->getJson("/api/users/{$this->client->id}")->assertJsonPath('profile', null)->assertJsonPath('stats.completedProjects', 1)->assertJsonPath('stats.reviewsCount', 1);
+        $this->getJson("/api/users/{$this->client->id}")->assertJsonPath('profile', null)->assertJsonPath('stats.completedProjects', 1)->assertJsonPath('stats.reviewsCount', 0);
         $this->getJson("/api/users/{$this->freelancer->id}/reviews")->assertJsonPath('average', 4)->assertJsonPath('total', 1);
         $this->assertContains('review.received', $this->as($this->freelancer)->getJson('/api/notifications')->json('data.*.type'));
     }

@@ -231,7 +231,7 @@ class Project extends Model
      * The filters shared by the project list and the search bar.
      *
      * @param  Builder<self>  $query
-     * @param  array{type?: string, category?: string, q?: string, countryId?: int, cityId?: int, budgetMin?: int, budgetMax?: int}  $filters
+     * @param  array{type?: string, category?: string, q?: string, countryId?: int, cityId?: int, budgetMin?: int, budgetMax?: int, currency?: string}  $filters
      * @return Builder<self>
      */
     public function scopeFilter(Builder $query, array $filters): Builder
@@ -246,8 +246,33 @@ class Project extends Model
             ))
             ->when($filters['countryId'] ?? null, fn ($query, $id) => $query->where('projects.country_id', $id))
             ->when($filters['cityId'] ?? null, fn ($query, $id) => $query->where('projects.city_id', $id))
-            // Budget ranges that overlap the requested range.
-            ->when($filters['budgetMin'] ?? null, fn ($query, $min) => $query->where('projects.budget_max', '>=', $min))
-            ->when($filters['budgetMax'] ?? null, fn ($query, $max) => $query->where('projects.budget_min', '<=', $max));
+            // Budget ranges that overlap the requested range, compared in US dollars: the filter is in the visitor's
+            // currency (`currency`, US dollars when absent) and each project in its own.
+            ->when($filters['budgetMin'] ?? null, fn ($query, $min) => $query->whereRaw(self::inUsd('projects.budget_max').' >= cast(? as double precision)', [self::toUsd((float) $min, $filters['currency'] ?? null)]))
+            ->when($filters['budgetMax'] ?? null, fn ($query, $max) => $query->whereRaw(self::inUsd('projects.budget_min').' <= cast(? as double precision)', [self::toUsd((float) $max, $filters['currency'] ?? null)]));
+    }
+
+    /**
+     * SQL for a budget column converted to US dollars with the admins' exchange rates (units per dollar), so budgets in
+     * different currencies sort and compare fairly.
+     */
+    public static function inUsd(string $column): string
+    {
+        $cases = collect(config('marketplace.currencies'))
+            ->filter(fn (array $currency) => preg_match('/^[A-Z]{3}$/', $currency['code']) && (float) ($currency['rate'] ?? 0) > 0)
+            ->map(fn (array $currency) => "when '{$currency['code']}' then ".((float) $currency['rate']))
+            ->implode(' ');
+
+        return "({$column} * 1.0 / case projects.currency {$cases} else 1 end)";
+    }
+
+    /**
+     * An amount in a currency converted to US dollars (unknown currencies count as dollars).
+     */
+    public static function toUsd(float $amount, ?string $currency): float
+    {
+        $rate = (float) (collect(config('marketplace.currencies'))->firstWhere('code', $currency)['rate'] ?? 1);
+
+        return $rate > 0 ? $amount / $rate : $amount;
     }
 }

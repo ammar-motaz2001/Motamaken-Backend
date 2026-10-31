@@ -225,6 +225,8 @@ class TeamService
     {
         $this->assertNotInUse($team);
         $team->update(['status' => Team::DISBANDED, 'published_at' => null]);
+        // Unanswered invitations die with the team, so invitees no longer see them.
+        $team->members()->where('status', TeamMember::INVITED)->update(['status' => TeamMember::EXPIRED, 'responded_at' => now()]);
 
         return $team;
     }

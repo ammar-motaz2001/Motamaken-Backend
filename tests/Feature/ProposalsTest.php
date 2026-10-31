@@ -305,7 +305,7 @@ class ProposalsTest extends TestCase
         $project = $this->project();
         $mine = $this->proposal($project);
         $second = $this->proposal($project, $this->freelancerWithProfile(), ['status' => Proposal::STATUS_DECLINED]);
-        $elsewhere = $this->proposal(Project::factory()->create(['user_id' => $this->stranger->id, 'category_id' => $this->web->id]));
+        $elsewhere = $this->proposal(Project::factory()->create(['user_id' => $this->stranger->id, 'category_id' => $this->web->id, 'budget_min' => 1, 'budget_max' => 100000]));
 
         $this->as($this->owner)->getJson("/api/projects/{$project->id}/proposals")
             ->assertOk()->assertJsonPath('meta.total', 2)->assertJsonPath('data.0.freelancer.jobTitle', fn ($t) => $t !== null);
@@ -424,7 +424,7 @@ class ProposalsTest extends TestCase
      */
     private function project(array $override = []): Project
     {
-        return Project::factory()->create(['user_id' => $this->owner->id, 'category_id' => $this->web->id, ...$override]);
+        return Project::factory()->create(['user_id' => $this->owner->id, 'category_id' => $this->web->id, 'budget_min' => 1, 'budget_max' => 100000, ...$override]);
     }
 
     /**
@@ -437,6 +437,16 @@ class ProposalsTest extends TestCase
             'user_id' => ($by ?? $this->freelancer)->id,
             ...$override,
         ]);
+    }
+
+    public function test_an_offer_price_must_be_inside_the_project_budget(): void
+    {
+        $project = $this->project(['budget_min' => 200, 'budget_max' => 500]);
+        $offer = fn (int $amount) => $this->as($this->freelancer)->postJson("/api/projects/{$project->id}/proposals", ['amount' => $amount, 'deliveryDays' => 5, 'message' => 'I can build this for you quickly.']);
+
+        $offer(150)->assertUnprocessable()->assertJsonValidationErrors('amount');
+        $offer(600)->assertJsonValidationErrors('amount');
+        $offer(300)->assertCreated();
     }
 
     private function freelancerWithProfile(): User

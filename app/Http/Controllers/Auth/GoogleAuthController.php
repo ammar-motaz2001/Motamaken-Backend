@@ -58,7 +58,7 @@ class GoogleAuthController extends Controller
             return [$user, $isNew];
         });
 
-        abort_if($user->suspended_at, 403, __('auth_flow.suspended'));
+        abort_if($user->suspended_at !== null, 403, __('auth_flow.suspended'));
 
         return [...$this->tokenResponse($user), 'isNew' => $isNew];
     }

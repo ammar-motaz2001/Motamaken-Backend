@@ -70,8 +70,8 @@ class SearchController extends Controller
             ->filter([...$filters, 'type' => $type]);
 
         return match ($filters['sort'] ?? 'newest') {
-            'budget_high' => $query->orderByDesc('projects.budget_max')->orderByDesc('projects.id'),
-            'budget_low' => $query->orderBy('projects.budget_min')->orderByDesc('projects.id'),
+            'budget_high' => $query->orderByRaw(Project::inUsd('projects.budget_max').' desc')->orderByDesc('projects.id'),
+            'budget_low' => $query->orderByRaw(Project::inUsd('projects.budget_min').' asc')->orderByDesc('projects.id'),
             default => $query->latest('projects.created_at')->latest('projects.id'),
         };
     }

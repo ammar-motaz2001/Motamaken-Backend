@@ -58,6 +58,11 @@ class NotificationResource extends JsonResource
             return (string) (app()->getLocale() === 'ar' ? ($params['bodyAr'] ?? '') : ($params['bodyEn'] ?? ''));
         }
 
+        // Points reasons are stored as a key and read in the viewer's language (older rows keep their saved text).
+        if (isset($params['reasonKey'])) {
+            $params['reason'] = __("rewards.reasons.{$params['reasonKey']}");
+        }
+
         return NotificationTemplate::text($data['type'], [
             'name' => $data['user']['fullName'] ?? '',
             'project' => $data['projectTitle'] ?? '',

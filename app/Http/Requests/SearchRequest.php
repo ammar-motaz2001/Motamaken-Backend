@@ -25,8 +25,10 @@ class SearchRequest extends FormRequest
             /** Projects and requests: a category slug ("Choose Section"). */
             'category' => ['nullable', 'string', 'max:80'],
             /** Projects and requests: budgets that overlap this range. */
+            /** The currency of `budgetMin`/`budgetMax` (the visitor's display currency); US dollars when absent. */
+            'currency' => ['nullable', Rule::in(array_column(config('marketplace.currencies'), 'code'))],
             'budgetMin' => ['nullable', 'numeric', 'min:0'],
-            'budgetMax' => ['nullable', 'numeric', 'min:0', 'gte:budgetMin'],
+            'budgetMax' => ['nullable', 'numeric', 'min:0', ...($this->filled('budgetMin') ? ['gte:budgetMin'] : [])],
             /** Freelancers and influencers: a skill they list (partial match, any case). */
             'skill' => ['nullable', 'string', 'max:40'],
             /** Freelancers and influencers: at least this many stars. */

@@ -44,7 +44,7 @@ class RewardsService
             return $transaction;
         });
 
-        $user->notify(new ActivityNotification('points.earned', null, ['points' => $amount, 'reason' => __("rewards.reasons.{$reason}")]));
+        $user->notify(new ActivityNotification('points.earned', null, ['points' => $amount, 'reason' => __("rewards.reasons.{$reason}"), 'reasonKey' => $reason]));
 
         return $transaction;
     }

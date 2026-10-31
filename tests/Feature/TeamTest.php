@@ -354,6 +354,16 @@ class TeamTest extends TestCase
 
     // ---- helpers ----------------------------------------------------------------------------------------------------
 
+    public function test_disbanding_a_team_withdraws_its_open_invitations(): void
+    {
+        $team = $this->team();
+        $this->invite($team, $this->dana, 30);
+        $this->as($this->dana)->getJson('/api/me/team-invitations')->assertJsonCount(1, 'data');
+
+        $this->as($this->lead)->postJson("/api/teams/{$team->id}/disband")->assertOk();
+        $this->as($this->dana)->getJson('/api/me/team-invitations')->assertJsonCount(0, 'data');
+    }
+
     private function as(User $user): static
     {
         return $this->actingAs($user->fresh(), 'sanctum');

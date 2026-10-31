@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'outside_budget' => 'The price must be between :min and :max :currency, the project\'s budget.',
     'profile_required' => 'Add your profile before sending offers.',
     'profile_type_mismatch' => [
         'project' => 'Only freelancer profiles can send offers on projects.',

@@ -47,6 +47,19 @@ class AdvancedSearchTest extends TestCase
         $this->getJson('/api/search?type=projects&budgetMin=500&budgetMax=100')->assertJsonValidationErrors('budgetMax');
     }
 
+    public function test_budgets_in_different_currencies_compare_in_dollars(): void
+    {
+        $design = Category::factory()->create(['slug' => 'design', 'type' => 'project']);
+        // 2,500–5,000 riyals is about 667–1,333 dollars.
+        $riyals = Project::factory()->create(['category_id' => $design->id, 'currency' => 'SAR', 'budget_min' => 2500, 'budget_max' => 5000]);
+        $dollars = Project::factory()->create(['category_id' => $design->id, 'currency' => 'USD', 'budget_min' => 2000, 'budget_max' => 3000]);
+
+        $this->getJson('/api/search?type=projects&category=design&budgetMin=2000&budgetMax=4000')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $dollars->id);
+        $this->getJson('/api/search?type=projects&category=design&budgetMin=4000&currency=SAR')->assertJsonCount(2, 'data');
+        $this->getJson('/api/search?type=projects&category=design&budgetMax=1000')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $riyals->id);
+        $this->getJson('/api/search?type=projects&category=design&sort=budget_high')->assertJsonPath('data.0.id', $dollars->id);
+    }
+
     public function test_skill_suggestions_are_the_most_listed(): void
     {
         $this->profile('A', ['Figma', 'Branding'], 4, 1);

@@ -17,7 +17,8 @@ class ProjectFactory extends Factory
      */
     public function definition(): array
     {
-        $min = fake()->numberBetween(5, 50) * 10;
+        // A wide range by default, so test offers fit the budget unless a test sets its own.
+        $min = fake()->numberBetween(1, 5);
 
         return [
             'user_id' => User::factory(),
@@ -26,7 +27,7 @@ class ProjectFactory extends Factory
             'title' => fake()->sentence(4),
             'description' => fake()->paragraph(),
             'budget_min' => $min,
-            'budget_max' => $min + fake()->numberBetween(1, 30) * 10,
+            'budget_max' => $min + fake()->numberBetween(100, 200) * 1000,
             'currency' => 'USD',
             'status' => Project::STATUS_OPEN,
             'is_featured' => false,

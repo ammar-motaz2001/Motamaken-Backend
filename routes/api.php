@@ -164,6 +164,7 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
     Route::patch('me/portfolio/{item}', [PortfolioController::class, 'update'])->whereNumber('item');
     Route::delete('me/portfolio/{item}', [PortfolioController::class, 'destroy'])->whereNumber('item');
     Route::post('projects/{project}/reviews', [ReviewController::class, 'store'])->whereNumber('project')->middleware('throttle:writes');
+    Route::post('reviews/{review}/reply', [ReviewController::class, 'reply'])->whereNumber('review')->middleware('throttle:writes');
     Route::post('reports', [ReportController::class, 'store'])->middleware('throttle:writes');
     Route::get('me/reports', [ReportController::class, 'mine']);
 

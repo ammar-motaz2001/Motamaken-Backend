@@ -44,7 +44,7 @@ class RejectMarkup
             if (is_array($value)) {
                 $this->scan($value, $path, $errors);
             } elseif (is_string($value) && ! in_array((string) $key, self::SKIP, true) && preg_match(self::MARKUP, $value)) {
-                $errors[$path] = __('validation.no_markup');
+                $errors[$path] = (string) __('validation.no_markup');
             }
         }
     }

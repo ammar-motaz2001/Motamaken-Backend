@@ -23,6 +23,9 @@ class ReviewResource extends JsonResource
             /** 1 to 5 stars. */
             'rating' => $this->rating,
             'comment' => $this->comment,
+            /** The reviewed freelancer's answer, if any. */
+            'reply' => $this->reply,
+            'repliedAt' => $this->replied_at,
             'reviewer' => new UserBriefResource($this->whenLoaded('reviewer')),
             'revieweeId' => $this->reviewee_id,
             'project' => $this->whenLoaded('project', fn () => ['id' => $this->project->id, 'title' => $this->project->title]),

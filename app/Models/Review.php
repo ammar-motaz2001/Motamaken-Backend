@@ -41,7 +41,7 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['project_id', 'reviewer_id', 'reviewee_id', 'rating', 'comment'])]
+#[Fillable(['project_id', 'reviewer_id', 'reviewee_id', 'rating', 'comment', 'reply', 'replied_at'])]
 class Review extends Model
 {
     /**
