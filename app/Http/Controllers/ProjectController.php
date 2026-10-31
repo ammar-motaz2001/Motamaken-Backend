@@ -23,7 +23,7 @@ class ProjectController extends Controller
     public function index(ProjectIndexRequest $request): AnonymousResourceCollection
     {
         $projects = Project::open()
-            ->with(['user', 'category', 'country', 'city'])
+            ->with(['user', 'category', 'country', 'city'])->withCount('proposals')
             ->filter($request->validated())
             ->when($request->input('sort'), fn ($query, $sort) => match ($sort) {
                 'budget_high' => $query->orderByRaw(Project::inUsd('projects.budget_max').' desc')->orderByRaw(Project::inUsd('projects.budget_min').' desc'),

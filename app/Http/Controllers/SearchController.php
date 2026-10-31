@@ -66,7 +66,7 @@ class SearchController extends Controller
     private function projects(array $filters, string $type): Builder
     {
         $query = Project::open()
-            ->with(['user', 'category', 'country', 'city'])
+            ->with(['user', 'category', 'country', 'city'])->withCount('proposals')
             ->filter([...$filters, 'type' => $type]);
 
         return match ($filters['sort'] ?? 'newest') {

@@ -69,7 +69,7 @@ class HomeController extends Controller
         $influencerPlatforms = Category::ofType(Category::TYPE_INFLUENCER)->where('is_active', true)->whereNull('parent_id')->orderBy('sort_order')->get();
 
         $latestIn = fn (string $type, ?Category $category) => $category
-            ? Project::open()->with($card)->filter(['type' => $type, 'category' => $category->slug])->latest()->limit($tabLimit)->get()
+            ? Project::open()->with($card)->withCount('proposals')->filter(['type' => $type, 'category' => $category->slug])->latest()->limit($tabLimit)->get()
             : collect();
 
         // Paid placements first; the rest of the slider is filled with the best-rated profiles and newest open projects,
@@ -87,9 +87,9 @@ class HomeController extends Controller
                 ->where('rating', '>=', 4.5)->where('reviews_count', '>', 0)
                 ->orderByDesc('rating')->orderByDesc('reviews_count')->latest('id')->limit($featuredLimit - $profiles->count())->get());
         }
-        $projects = Project::open()->distinctive()->with($card)->filter(['type' => Project::TYPE_PROJECT])->latest()->limit($featuredLimit)->get();
+        $projects = Project::open()->distinctive()->with($card)->withCount('proposals')->filter(['type' => Project::TYPE_PROJECT])->latest()->limit($featuredLimit)->get();
         if ($projects->count() < $featuredLimit) {
-            $projects = $projects->concat(Project::open()->with($card)->filter(['type' => Project::TYPE_PROJECT])->whereNotIn('projects.id', $projects->pluck('id'))
+            $projects = $projects->concat(Project::open()->with($card)->withCount('proposals')->filter(['type' => Project::TYPE_PROJECT])->whereNotIn('projects.id', $projects->pluck('id'))
                 ->latest()->limit($featuredLimit - $projects->count())->get());
         }
 
