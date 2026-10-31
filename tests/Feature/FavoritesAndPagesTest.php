@@ -82,7 +82,7 @@ class FavoritesAndPagesTest extends TestCase
         $this->getJson('/api/pages/nope')->assertNotFound();
 
         Page::where('slug', 'terms')->update(['is_published' => false]);
-        $this->getJson('/api/pages/terms')->assertNotFound();
+        $this->getJson('/api/pages/terms')->assertNotFound()->assertJsonPath('code', 'page_unpublished');
         $this->assertNotContains('terms', array_column($this->getJson('/api/pages')->json('data'), 'slug'));
 
         // Seeding again does not overwrite an admin's edit.

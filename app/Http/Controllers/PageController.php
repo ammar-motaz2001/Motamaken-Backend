@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ApiException;
 use App\Models\Page;
 use Dedoc\Scramble\Attributes\Group;
 
@@ -34,13 +35,17 @@ class PageController extends Controller
      *
      * @unauthenticated
      *
-     * `seo` holds the admin-written search title and description (null: use the page's own) and whether to stay out of search results.
+     * An unpublished page answers 404 with `code: page_unpublished`. `seo` holds the admin-written search title and description (null: use the page's own) and whether to stay out of search results.
      *
      * @return array{data: array{slug: string, section: string, title: string, body: string, seo: array{title: ?string, description: ?string, noindex: bool}, updatedAt: ?string}}
      */
     public function show(string $slug): array
     {
-        $page = Page::where('slug', $slug)->where('is_published', true)->firstOrFail();
+        $page = Page::where('slug', $slug)->firstOrFail();
+        // A page the admins hid answers 404 with its own code, so the website can send visitors home instead.
+        if (! $page->is_published) {
+            throw new ApiException(__('errors.not_found'), 'page_unpublished', 404);
+        }
 
         return ['data' => [
             'slug' => $page->slug, 'section' => $page->section, 'title' => $page->title(), 'body' => $page->body(),
