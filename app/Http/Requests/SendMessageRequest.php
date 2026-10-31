@@ -11,7 +11,8 @@ use Illuminate\Validation\Validator;
 
 class SendMessageRequest extends FormRequest
 {
-    private const VOICE_MIME_TYPES = 'audio/webm,video/webm,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/x-wav';
+    // Browsers record AAC voice notes in an MP4 box, which file sniffing reports as video/mp4.
+    private const VOICE_MIME_TYPES = 'audio/webm,video/webm,video/mp4,audio/ogg,audio/mpeg,audio/mp4,audio/x-m4a,audio/aac,audio/wav,audio/x-wav';
 
     /**
      * The message type sent, or guessed: an attachment when a file came, text otherwise.

@@ -146,6 +146,16 @@ class ChatTest extends TestCase
             ->assertHeader('Content-Disposition', 'inline; filename=rec.m4a');
     }
 
+    public function test_an_aac_voice_note_recorded_in_an_mp4_box_is_accepted(): void
+    {
+        Storage::fake('local');
+        $conversation = app(ConversationService::class)->findOrCreate($this->me, $this->other)[0];
+        // An MP4 header ("ftyp"): sniffed as video/mp4, as Safari and Chrome AAC recordings are.
+        $mp4 = UploadedFile::fake()->createWithContent('voice.m4a', "\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom".str_repeat("\x00", 64));
+
+        $this->actingAs($this->me, 'sanctum')->post("/api/conversations/{$conversation->id}/messages", ['type' => 'voice', 'duration' => 3, 'file' => $mp4], ['Accept' => 'application/json'])->assertCreated();
+    }
+
     public function test_message_validation(): void
     {
         $conversation = $this->conversation();

@@ -98,7 +98,7 @@ class MessageController extends Controller
         $message = Message::whereNotNull('attachment_path')->findOrFail($message);
         $inline = in_array($message->attachment_mime, self::INLINE_MIME_TYPES, true)
             // Browsers often label WebM voice notes video/webm: still a recording to play in place.
-            || ($message->type === Message::TYPE_VOICE && (str_starts_with((string) $message->attachment_mime, 'audio/') || $message->attachment_mime === 'video/webm'));
+            || ($message->type === Message::TYPE_VOICE && (str_starts_with((string) $message->attachment_mime, 'audio/') || in_array($message->attachment_mime, ['video/webm', 'video/mp4'], true)));
 
         return Storage::disk('local')->response(
             $message->attachment_path,
