@@ -53,6 +53,8 @@ class AuthController extends Controller
             'subscribed' => $request->boolean('subscribe'),
             // The language of the page they signed up from: their emails follow it.
             'locale' => $user->locale ?? app()->getLocale(),
+            // A new account starts in the page's usual currency: riyals on the Arabic site.
+            'currency' => $user->exists ? $user->currency : (app()->getLocale() === 'ar' ? 'SAR' : 'USD'),
         ])->save();
 
         $this->otp->send(OtpPurpose::Signup, $method, $identifier);

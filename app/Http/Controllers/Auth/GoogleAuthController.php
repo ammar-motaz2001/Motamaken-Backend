@@ -105,7 +105,7 @@ class GoogleAuthController extends Controller
             'username' => $username !== '' ? $username : 'User',
             'subscribed' => true,
         ]);
-        $user->forceFill(['email' => $email, 'registration_ip' => $ip]);
+        $user->forceFill(['email' => $email, 'registration_ip' => $ip, 'locale' => app()->getLocale(), 'currency' => app()->getLocale() === 'ar' ? 'SAR' : 'USD']);
 
         if ($referralCode) {
             $user->referred_by = User::where('referral_code', Str::upper($referralCode))->value('id');
