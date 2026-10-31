@@ -51,6 +51,8 @@ class AuthController extends Controller
             'username' => $request->input('username'),
             'password' => $request->input('password'),
             'subscribed' => $request->boolean('subscribe'),
+            // The language of the page they signed up from: their emails follow it.
+            'locale' => $user->locale ?? app()->getLocale(),
         ])->save();
 
         $this->otp->send(OtpPurpose::Signup, $method, $identifier);

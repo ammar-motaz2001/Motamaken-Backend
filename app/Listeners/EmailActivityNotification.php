@@ -8,7 +8,8 @@ use App\Notifications\ActivityNotification;
 use Illuminate\Notifications\Events\NotificationSent;
 
 /**
- * After a bell notification is stored, email it too when the user wants that group by email.
+ * After a bell notification is stored, email it too when the user wants that group by email. Every bell notification
+ * counts (activity, offers, new conversations), not only ActivityNotification.
  */
 class EmailActivityNotification
 {
@@ -17,15 +18,16 @@ class EmailActivityNotification
      */
     public function handle(NotificationSent $event): void
     {
-        if (! $event->notification instanceof ActivityNotification || $event->channel !== 'database' || ! $event->notifiable instanceof User) {
+        if ($event->channel !== 'database' || ! $event->notifiable instanceof User || ! method_exists($event->notification, 'toArray')) {
             return;
         }
 
-        $group = $event->notification->group();
         $user = $event->notifiable;
+        $data = $event->notification->toArray($user);
+        $group = isset($data['type']) ? ActivityNotification::groupOf((string) $data['type']) : null;
 
         if ($group && $user->email && $user->wantsEmailFor($group)) {
-            $user->notify((new ActivityEmail($event->notification->toArray($user)))->locale($user->locale ?: config('app.locale')));
+            $user->notify((new ActivityEmail($data))->locale($user->locale ?: config('app.locale')));
         }
     }
 }

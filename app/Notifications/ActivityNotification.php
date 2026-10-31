@@ -38,9 +38,17 @@ class ActivityNotification extends Notification
      */
     public function group(): ?string
     {
+        return self::groupOf($this->type);
+    }
+
+    /**
+     * The settings group of a notification type (config/notifications.php), or null when it fits none.
+     */
+    public static function groupOf(string $type): ?string
+    {
         foreach (config('notifications.groups') as $group => $prefixes) {
             foreach ($prefixes as $prefix) {
-                if (str_starts_with($this->type, $prefix)) {
+                if (str_starts_with($type, $prefix)) {
                     return $group;
                 }
             }

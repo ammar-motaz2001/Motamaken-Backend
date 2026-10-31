@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'project.published' => 'تم نشر مشروعك ":project" وأصبح متاحاً لاستقبال العروض.',
+    'proposal.sent' => 'تم إرسال عرضك على ":project". سيصلك إشعار عند رد صاحب المشروع.',
     'email_subject' => 'نشاط جديد على متمكن',
     'email_greeting' => 'مرحباً :name،',
     'email_action' => 'افتح متمكن',

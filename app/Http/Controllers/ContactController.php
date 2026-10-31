@@ -5,10 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\ContactMessage;
 use App\Models\User;
 use App\Notifications\ActivityNotification;
+use App\Notifications\ContactReceived;
 use App\Rules\Recaptcha;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
 #[Group('Site pages', 'The information pages of the footer and the contact form.', weight: 14)]
@@ -52,6 +54,12 @@ class ContactController extends Controller
             $admin->notify(new ActivityNotification('admin.contact_message', $user, [
                 'contactId' => $message->id, 'subject' => $message->subject, 'from' => $message->name,
             ]));
+        }
+
+        // The sender gets a copy confirming it arrived, in the language of the page they wrote from.
+        if ($message->email) {
+            Notification::route('mail', $message->email)
+                ->notify((new ContactReceived((string) $message->name, $message->subject, $message->message))->locale(app()->getLocale()));
         }
 
         return response()->json(['success' => true], 201);

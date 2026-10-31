@@ -7,6 +7,7 @@ use App\Http\Requests\MyProjectsRequest;
 use App\Http\Requests\ProjectRequest;
 use App\Http\Resources\ProjectResource;
 use App\Models\Project;
+use App\Notifications\ActivityNotification;
 use App\Services\ProposalService;
 use Dedoc\Scramble\Attributes\Group;
 use Illuminate\Http\JsonResponse;
@@ -35,6 +36,9 @@ class ProjectManagementController extends Controller
             'type' => $request->input('type'),
             'status' => $request->boolean('draft') ? Project::STATUS_DRAFT : Project::STATUS_OPEN,
         ]);
+        if ($project->status === Project::STATUS_OPEN) {
+            $this->confirmPublished($project);
+        }
 
         return (new ProjectResource($project->load(self::WITH)))->response()->setStatusCode(201);
     }
@@ -98,6 +102,7 @@ class ProjectManagementController extends Controller
         }
 
         $project->update(['status' => Project::STATUS_OPEN, 'created_at' => now()]);
+        $this->confirmPublished($project);
 
         return new ProjectResource($project->load(self::WITH));
     }
@@ -174,5 +179,13 @@ class ProjectManagementController extends Controller
         }
 
         return $request->isMethod('POST') ? $attributes + ['currency' => 'USD'] : $attributes;
+    }
+
+    /**
+     * Tells the owner (bell and email) that the project is live and receiving offers.
+     */
+    private function confirmPublished(Project $project): void
+    {
+        $project->user->notify(new ActivityNotification('project.published', null, ['projectId' => $project->id, 'project' => $project->title]));
     }
 }

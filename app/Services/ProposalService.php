@@ -10,6 +10,7 @@ use App\Models\Proposal;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\User;
+use App\Notifications\ActivityNotification;
 use App\Notifications\ProposalActivity;
 use App\Services\Chat\ConversationService;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -45,6 +46,8 @@ class ProposalService
                 ]);
 
                 $project->user->notify(new ProposalActivity(ProposalActivity::RECEIVED, $offerer, $project, $proposal));
+                // The sender's own confirmation (bell and email).
+                $offerer->notify(new ActivityNotification('proposal.sent', null, ['projectId' => $project->id, 'project' => $project->title]));
 
                 return $proposal;
             });

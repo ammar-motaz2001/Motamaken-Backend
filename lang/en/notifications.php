@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'project.published' => 'Your project ":project" is live and receiving offers.',
+    'proposal.sent' => 'Your offer on ":project" was sent. You will be notified when the owner answers.',
     'email_subject' => 'New activity on Mutamakin',
     'email_greeting' => 'Hello :name,',
     'email_action' => 'Open Mutamakin',

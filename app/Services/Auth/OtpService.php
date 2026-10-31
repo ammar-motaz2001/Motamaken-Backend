@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Enums\AuthMethod;
 use App\Enums\OtpPurpose;
+use App\Models\User;
 use App\Notifications\OtpCode;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
@@ -97,8 +98,12 @@ class OtpService
             'expires_at' => now()->addMinutes(config('auth_flow.otp.ttl'))->timestamp,
         ], now()->addMinutes(self::RECORD_TTL_MINUTES));
 
+        // The page's language when the request says it (Accept-Language), else the account's saved one.
+        $locale = request()->hasHeader('Accept-Language') ? app()->getLocale()
+            : (User::findByIdentifier($method, $target)?->locale ?? app()->getLocale());
+
         Notification::route($method === AuthMethod::Email ? 'mail' : 'whatsapp', $target)
-            ->notify((new OtpCode($code, $purpose))->locale(app()->getLocale()));
+            ->notify((new OtpCode($code, $purpose))->locale($locale));
     }
 
     /**

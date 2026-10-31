@@ -48,7 +48,7 @@ class ActivityEmail extends Notification implements ShouldQueue
             ->subject($subject ?: __('notifications.email_subject'))
             ->greeting(__('notifications.email_greeting', ['name' => $notifiable->first_name ?: $notifiable->username]))
             ->line($text)
-            ->action(__('notifications.email_action'), config('auth_flow.frontend_url').$this->path($params))
+            ->action(__('notifications.email_action'), config('auth_flow.frontend_url').$this->path([...$this->data, ...$params]))
             ->line(__('notifications.email_footer'));
     }
 
