@@ -85,6 +85,13 @@ class HomeController extends Controller
                 ->whereNotNull('job_title')->where('job_title', '!=', '')->whereNotNull('bio')->where('bio', '!=', '')
                 ->orderByDesc('rating')->orderByDesc('reviews_count')->latest('id')->limit($featuredLimit - $profiles->count())->get());
         }
+        // Still short of a full slider on a young marketplace: profiles with at least a job title (they show the default image).
+        if ($profiles->count() < $featuredLimit) {
+            $profiles = $profiles->concat(Profile::query()->with(['user', 'country', 'city'])->whereNotIn('id', $profiles->pluck('id'))
+                ->whereHas('user', fn ($q) => $q->where('is_admin', false)->whereNull('suspended_at'))
+                ->whereNotNull('job_title')->where('job_title', '!=', '')
+                ->orderByDesc('rating')->orderByDesc('reviews_count')->latest('id')->limit($featuredLimit - $profiles->count())->get());
+        }
         $projects = Project::open()->distinctive()->with($card)->filter(['type' => Project::TYPE_PROJECT])->latest()->limit($featuredLimit)->get();
         if ($projects->count() < $featuredLimit) {
             $projects = $projects->concat(Project::open()->with($card)->filter(['type' => Project::TYPE_PROJECT])->whereNotIn('projects.id', $projects->pluck('id'))
