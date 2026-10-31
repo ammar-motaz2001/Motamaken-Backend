@@ -39,6 +39,8 @@ class SiteSettingsController extends Controller
             'apps' => (object) array_filter([...config('site.defaults')['site.apps'], ...(Setting::get('site.apps') ?? [])]),
             /** The footer's link columns set by the admins, or null for the website's built-in ones. */
             'footer' => Setting::get('site.footer'),
+            /** Project owners write first: freelancers and influencers cannot open a conversation with them. */
+            'chatOwnersFirst' => (bool) Setting::get('chat.owners_first'),
             'maintenance' => [
                 'enabled' => (bool) Setting::get('maintenance.enabled'),
                 'messageEn' => Setting::get('maintenance.message_en'),
