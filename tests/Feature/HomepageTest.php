@@ -78,7 +78,7 @@ class HomepageTest extends TestCase
         $insta = Category::factory()->influencer()->create(['slug' => 'instagram']);
 
         $cheap = Project::factory()->create(['category_id' => $web->id, 'title' => 'Landing page', 'budget_min' => 50, 'budget_max' => 100, 'country_id' => $egypt->id, 'city_id' => $cairo->id]);
-        $pricey = Project::factory()->create(['category_id' => $web->id, 'title' => 'Big 100% store', 'budget_min' => 900, 'budget_max' => 1500]);
+        $pricey = Project::factory()->create(['category_id' => $web->id, 'title' => 'Big 100% store', 'budget_min' => 1000, 'budget_max' => 1500]);
         Project::factory()->create(['category_id' => $writing->id, 'title' => 'Blog posts']);
         Project::factory()->influencerRequest()->create(['category_id' => $insta->id]);
         Project::factory()->create(['category_id' => $web->id, 'status' => Project::STATUS_CLOSED]);

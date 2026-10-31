@@ -55,8 +55,9 @@ class AdvancedSearchTest extends TestCase
         $dollars = Project::factory()->create(['category_id' => $design->id, 'currency' => 'USD', 'budget_min' => 2000, 'budget_max' => 3000]);
 
         $this->getJson('/api/search?type=projects&category=design&budgetMin=2000&budgetMax=4000')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $dollars->id);
-        $this->getJson('/api/search?type=projects&category=design&budgetMin=4000&currency=SAR')->assertJsonCount(2, 'data');
-        $this->getJson('/api/search?type=projects&category=design&budgetMax=1000')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $riyals->id);
+        // Only budgets wholly inside the range: 2,000–6,000 riyals keeps the riyal project and leaves the dollar one out.
+        $this->getJson('/api/search?type=projects&category=design&budgetMin=2000&budgetMax=6000&currency=SAR')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $riyals->id);
+        $this->getJson('/api/search?type=projects&category=design&budgetMax=1400')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $riyals->id);
         $this->getJson('/api/search?type=projects&category=design&sort=budget_high')->assertJsonPath('data.0.id', $dollars->id);
     }
 

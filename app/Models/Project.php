@@ -246,10 +246,11 @@ class Project extends Model
             ))
             ->when($filters['countryId'] ?? null, fn ($query, $id) => $query->where('projects.country_id', $id))
             ->when($filters['cityId'] ?? null, fn ($query, $id) => $query->where('projects.city_id', $id))
-            // Budget ranges that overlap the requested range, compared in US dollars: the filter is in the visitor's
-            // currency (`currency`, US dollars when absent) and each project in its own.
-            ->when($filters['budgetMin'] ?? null, fn ($query, $min) => $query->whereRaw(self::inUsd('projects.budget_max').' >= cast(? as double precision)', [self::toUsd((float) $min, $filters['currency'] ?? null)]))
-            ->when($filters['budgetMax'] ?? null, fn ($query, $max) => $query->whereRaw(self::inUsd('projects.budget_min').' <= cast(? as double precision)', [self::toUsd((float) $max, $filters['currency'] ?? null)]));
+            // Budgets that lie inside the requested range (from its minimum up to its maximum), compared in US dollars:
+            // the filter is in the visitor's currency (`currency`, US dollars when absent) and each project in its own.
+            // A tiny tolerance absorbs rounding of the converted amounts.
+            ->when($filters['budgetMin'] ?? null, fn ($query, $min) => $query->whereRaw(self::inUsd('projects.budget_min').' >= cast(? as double precision)', [self::toUsd((float) $min, $filters['currency'] ?? null) - 0.01]))
+            ->when($filters['budgetMax'] ?? null, fn ($query, $max) => $query->whereRaw(self::inUsd('projects.budget_max').' <= cast(? as double precision)', [self::toUsd((float) $max, $filters['currency'] ?? null) + 0.01]));
     }
 
     /**
