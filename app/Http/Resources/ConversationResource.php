@@ -33,6 +33,10 @@ class ConversationResource extends JsonResource
             'participants' => $this->isGroup() ? UserBriefResource::collection($this->participants) : null,
             /** Groups: the person who created it and manages the members. */
             'createdBy' => $this->when($this->isGroup(), fn () => $this->created_by),
+            /** Groups: whether you manage it (add and remove members). */
+            'isManager' => $this->isGroup() && $this->created_by === $request->user()->id,
+            /** A team's group chat: its members follow the team, so they are managed from the team page. */
+            'teamId' => $this->team_id,
             'lastMessage' => $last ? [
                 'id' => $last->id,
                 'type' => $last->type,

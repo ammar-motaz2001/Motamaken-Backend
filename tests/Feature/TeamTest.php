@@ -207,6 +207,37 @@ class TeamTest extends TestCase
         $this->as($this->dana)->getJson("/api/teams/{$team->id}")->assertForbidden();
     }
 
+    public function test_a_published_team_gets_a_group_chat_that_follows_its_members(): void
+    {
+        $team = $this->publishedTeam();
+        $chatId = $this->as($this->dana)->getJson("/api/teams/{$team->id}")->assertOk()->json('data.conversationId');
+
+        $chat = Conversation::findOrFail($chatId);
+        $this->assertSame('group', $chat->type);
+        $this->assertSame('Pixel Crew', $chat->title);
+        $this->assertEqualsCanonicalizing([$this->lead->id, $this->dana->id], $chat->participants()->pluck('users.id')->all());
+
+        // Publishing again after a new member joins reuses the same chat.
+        $this->as($this->lead)->postJson("/api/teams/{$team->id}/unpublish")->assertOk();
+        $this->as($this->lead)->patchJson("/api/teams/{$team->id}/members/".TeamMember::where('user_id', $this->dana->id)->value('id'), ['sharePercent' => 20])->assertOk();
+        $this->as($this->dana)->postJson('/api/team-invitations/'.TeamMember::where('user_id', $this->dana->id)->value('id').'/accept')->assertOk();
+        $eliId = $this->invite($team, $this->eli, 10);
+        $this->as($this->eli)->postJson("/api/team-invitations/{$eliId}/accept")->assertOk();
+        $this->as($this->lead)->postJson("/api/teams/{$team->id}/publish")->assertOk()->assertJsonPath('data.conversationId', $chatId);
+        $this->assertSame(1, Conversation::where('team_id', $team->id)->count());
+        $this->assertCount(3, $chat->participants()->get());
+
+        // Leaving the team means leaving its chat.
+        $this->as($this->eli)->postJson("/api/teams/{$team->id}/leave")->assertOk();
+        $this->assertEqualsCanonicalizing([$this->lead->id, $this->dana->id], $chat->participants()->pluck('users.id')->all());
+        $this->as($this->eli)->getJson("/api/conversations/{$chatId}/messages")->assertNotFound();
+
+        // Its members are managed from the team, not the chat.
+        $this->as($this->lead)->getJson("/api/conversations/{$chatId}")->assertJsonPath('data.teamId', $team->id)->assertJsonPath('data.isManager', true);
+        $this->as($this->lead)->postJson("/api/conversations/{$chatId}/members", ['userIds' => [$this->client->id]])->assertStatus(422)->assertJsonPath('code', 'team_chat');
+        $this->as($this->dana)->postJson("/api/conversations/{$chatId}/leave")->assertStatus(422)->assertJsonPath('code', 'team_chat');
+    }
+
     public function test_only_the_involved_see_a_team(): void
     {
         $team = $this->publishedTeam();

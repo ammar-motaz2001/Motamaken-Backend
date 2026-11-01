@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\DB;
  * @property int $id
  * @property string|null $pair_key
  * @property int|null $project_id
+ * @property int|null $team_id
  * @property int|null $last_message_id
  * @property Carbon|null $last_message_at
  * @property Carbon|null $created_at
@@ -48,7 +49,7 @@ use Illuminate\Support\Facades\DB;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['pair_key', 'project_id', 'type', 'title', 'created_by', 'last_message_id', 'last_message_at'])]
+#[Fillable(['pair_key', 'project_id', 'team_id', 'type', 'title', 'created_by', 'last_message_id', 'last_message_at'])]
 class Conversation extends Model
 {
     use HasFactory;

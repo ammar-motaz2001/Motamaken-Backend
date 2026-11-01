@@ -57,6 +57,9 @@ class TeamResource extends JsonResource
             'myMembership' => $request->user() ? $this->members->where('user_id', $request->user()->id)->map(fn ($m) => [
                 'id' => $m->id, 'status' => $m->status, 'isLead' => $m->is_lead,
             ])->first() : null,
+            /** The team's group chat, for its accepted members once it has been published. */
+            'conversationId' => $request->user() && $this->members->where('user_id', $request->user()->id)->where('status', 'accepted')->isNotEmpty()
+                ? $this->conversation()->value('id') : null,
             'publishedAt' => $this->published_at,
             'createdAt' => $this->created_at,
         ];

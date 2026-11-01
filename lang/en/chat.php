@@ -10,5 +10,6 @@ return [
     'group_created' => 'Group created.',
     'group_creator_only' => 'Only the person who created the group can do this.',
     'group_too_big' => 'A group can have at most :max members.',
+    'group_team_managed' => 'A team chat follows the team\'s members; manage them from the team page.',
     'group_cannot_remove_creator' => 'The creator cannot be removed. Leave the group instead.',
 ];

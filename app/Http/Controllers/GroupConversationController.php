@@ -76,7 +76,7 @@ class GroupConversationController extends Controller
      */
     public function leave(Request $request, int $conversation): array
     {
-        $group = Conversation::forUser($request->user())->where('type', Conversation::GROUP)->findOrFail($conversation);
+        $group = $this->notTeamChat(Conversation::forUser($request->user())->where('type', Conversation::GROUP)->findOrFail($conversation));
 
         $this->conversations->removeMember($group, $request->user()->id);
 
@@ -96,6 +96,18 @@ class GroupConversationController extends Controller
 
         if ($group->created_by !== $request->user()->id) {
             throw new ApiException(__('chat.group_creator_only'), 'forbidden', 403);
+        }
+
+        return $this->notTeamChat($group);
+    }
+
+    /**
+     * A team's chat follows the team's members: it is changed from the team page, not here.
+     */
+    private function notTeamChat(Conversation $group): Conversation
+    {
+        if ($group->team_id !== null) {
+            throw new ApiException(__('chat.group_team_managed'), 'team_chat');
         }
 
         return $group;

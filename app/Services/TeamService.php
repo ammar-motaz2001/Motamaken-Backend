@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\ApiException;
+use App\Services\Chat\ConversationService;
 use App\Models\Escrow;
 use App\Models\Proposal;
 use App\Models\Team;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\DB;
 class TeamService
 {
     public const INVITATION_DAYS = 7;
+
+    public function __construct(private readonly ConversationService $conversations) {}
 
     /**
      * Create a draft team with its lead as the first member, accepted and holding the full share.
@@ -122,6 +125,7 @@ class TeamService
         DB::transaction(function () use ($team, $member) {
             $member->delete();
             $this->rebalance($team);
+            $this->leaveChat($team, $member);
         });
     }
 
@@ -158,6 +162,7 @@ class TeamService
             $member->delete();
             $team->update(['status' => Team::DRAFT, 'published_at' => null]);
             $this->rebalance($team);
+            $this->leaveChat($team, $member);
         });
 
         $this->notify($team->owner, 'team.left', $member->user, $team);
@@ -199,6 +204,7 @@ class TeamService
         }
 
         $team->update(['status' => Team::ACTIVE, 'published_at' => now()]);
+        $this->conversations->ensureTeamGroup($team);
 
         foreach ($team->members()->where('is_lead', false)->with('user')->get() as $member) {
             $this->notify($member->user, 'team.published', $team->owner, $team);
@@ -345,5 +351,15 @@ class TeamService
     private function notify(User $to, string $type, ?User $actor, Team $team): void
     {
         $to->notify(new ActivityNotification($type, $actor, ['teamId' => $team->id, 'team' => $team->name]));
+    }
+
+    /**
+     * Someone who is no longer in the team is no longer in its group chat.
+     */
+    private function leaveChat(Team $team, TeamMember $member): void
+    {
+        if ($chat = $team->conversation()->first()) {
+            $this->conversations->removeMember($chat, $member->user_id);
+        }
     }
 }

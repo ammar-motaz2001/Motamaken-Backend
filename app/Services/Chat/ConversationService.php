@@ -4,6 +4,8 @@ namespace App\Services\Chat;
 
 use App\Exceptions\ApiException;
 use App\Models\Conversation;
+use App\Models\Team;
+use App\Models\TeamMember;
 use App\Models\Message;
 use App\Models\Profile;
 use App\Models\Project;
@@ -160,6 +162,25 @@ class ConversationService
         $existing->participants()->syncWithoutDetaching(collect($memberIds)->push($client->id)->all());
 
         return $existing;
+    }
+
+    /**
+     * A team's group chat: the lead and every accepted member. Made on first publish, later calls add new members.
+     */
+    public function ensureTeamGroup(Team $team): Conversation
+    {
+        $memberIds = $team->members()->where('status', TeamMember::ACCEPTED)->pluck('user_id')->all();
+
+        if ($existing = $team->conversation()->first()) {
+            $this->addMembers($existing, $team->owner, $memberIds);
+
+            return $existing;
+        }
+
+        $conversation = $this->createGroup($team->owner, $team->name, $memberIds);
+        $conversation->update(['team_id' => $team->id]);
+
+        return $conversation;
     }
 
     /**
