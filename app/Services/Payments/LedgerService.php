@@ -26,6 +26,14 @@ class LedgerService
     }
 
     /**
+     * A user's earnings on hold in the guarantee period, in a currency.
+     */
+    public function held(User $user, string $currency): Account
+    {
+        return $this->account(Account::HELD, "h:{$user->id}", $currency, $user->id);
+    }
+
+    /**
      * A platform account (escrow, revenue, gateway, ...) in a currency.
      */
     public function system(string $type, string $currency): Account

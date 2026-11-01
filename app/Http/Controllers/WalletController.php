@@ -21,7 +21,7 @@ class WalletController extends Controller
      * One row per currency. `available` can be spent or withdrawn; `inEscrow` is what you paid into escrow and
      * not yet released; `incoming` is what is held for you (before the platform fee); `pendingWithdrawals` waits for an admin.
      *
-     * @return array{data: list<array{currency: string, available: float, inEscrow: float, incoming: float, pendingWithdrawals: float}>}
+     * @return array{data: list<array{currency: string, available: float, inEscrow: float, incoming: float, onHold: float, pendingWithdrawals: float}>}
      */
     public function show(Request $request): array
     {

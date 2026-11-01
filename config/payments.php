@@ -52,6 +52,8 @@ return [
         'deposits.min' => 5,
         'deposits.max' => 10000,
         'withdrawals.min' => 20,
+        // Guarantee policy: days a released payment stays on hold before the freelancer can spend or withdraw it (0: none).
+        'escrow.guarantee_days' => 0,
         // Flat fee charged on top of every withdrawal.
         'withdrawals.fee' => 1,
         'withdrawals.require_kyc' => true,

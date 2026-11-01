@@ -19,3 +19,6 @@ Schedule::command('draws:run')->everyFiveMinutes();
 
 // Campaigns past their end date stop and give back what is left.
 Schedule::command('campaigns:close-ended')->everyFifteenMinutes();
+
+// Guarantee policy: payouts whose hold period ended become spendable.
+Schedule::command('escrow:release-holds')->everyFifteenMinutes();

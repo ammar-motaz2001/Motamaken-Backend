@@ -9,6 +9,7 @@ use App\Models\EscrowPayee;
 use App\Models\Milestone;
 use App\Models\Project;
 use App\Models\Proposal;
+use App\Models\Setting;
 use App\Models\Team;
 use App\Models\TeamMember;
 use App\Models\Tip;
@@ -149,7 +150,8 @@ class EscrowService
                 throw ValidationException::withMessages(['links' => __('payments.proof_required')]);
             }
 
-            $milestone->update(['status' => Milestone::SUBMITTED, 'submitted_at' => now(), 'submission_note' => $note,
+            // The guarantee policy in force when the work is delivered applies to this milestone (later changes do not).
+            $milestone->update(['guarantee_days' => (int) Setting::get('escrow.guarantee_days'), 'status' => Milestone::SUBMITTED, 'submitted_at' => now(), 'submission_note' => $note,
                 'delivery_links' => array_values($links) ?: null, 'changes_note' => null]);
 
             $escrow->client->notify(new ActivityNotification('milestone.submitted', $payee, $this->labels($escrow, $milestone)));
@@ -292,6 +294,8 @@ class EscrowService
         $payouts = $this->distribute($toPayees - $fee, $escrow->payees);
 
         $legs = [[$this->ledger->system(Account::ESCROW, $escrow->currency), -$milestone->amount_cents]];
+        // Guarantee policy: the payout waits on hold for these days (fixed at delivery; the current policy if never delivered).
+        $holdDays = $toPayees > 0 ? ($milestone->guarantee_days ?? (int) Setting::get('escrow.guarantee_days')) : 0;
 
         if ($toClient > 0) {
             $legs[] = [$this->ledger->wallet($escrow->client, $escrow->currency), $toClient];
@@ -299,7 +303,8 @@ class EscrowService
 
         foreach ($payouts as $userId => $cents) {
             if ($cents > 0) {
-                $legs[] = [$this->ledger->wallet($escrow->payees->firstWhere('user_id', $userId)->user, $escrow->currency), $cents];
+                $payee = $escrow->payees->firstWhere('user_id', $userId)->user;
+                $legs[] = [$holdDays > 0 ? $this->ledger->held($payee, $escrow->currency) : $this->ledger->wallet($payee, $escrow->currency), $cents];
             }
         }
 
@@ -327,6 +332,8 @@ class EscrowService
             'fee_cents' => $fee,
             'refunded_cents' => $toClient,
             'released_at' => now(),
+            'guarantee_days' => $holdDays ?: $milestone->guarantee_days,
+            'held_until' => $holdDays > 0 ? now()->addDays($holdDays) : null,
         ]);
 
         foreach ($payouts as $userId => $cents) {
@@ -336,6 +343,41 @@ class EscrowService
         }
 
         $this->completeIfFinished($escrow);
+    }
+
+    /**
+     * Ends the guarantee period of a released milestone: each payee's held share moves to their wallet. Safe to call
+     * twice (the second call does nothing). Run by the scheduler once `held_until` has passed.
+     */
+    public function releaseHold(Milestone $milestone): void
+    {
+        DB::transaction(function () use ($milestone) {
+            $milestone = Milestone::whereKey($milestone->id)->lockForUpdate()->firstOrFail();
+            if (! $milestone->held_until || $milestone->hold_released_at) {
+                return;
+            }
+            $escrow = $milestone->escrow()->with('payees.user')->firstOrFail();
+            $payouts = $this->distribute($milestone->amount_cents - $milestone->refunded_cents - $milestone->fee_cents, $escrow->payees);
+
+            $legs = [];
+            foreach ($payouts as $userId => $cents) {
+                if ($cents > 0) {
+                    $user = $escrow->payees->firstWhere('user_id', $userId)->user;
+                    $legs[] = [$this->ledger->held($user, $escrow->currency), -$cents];
+                    $legs[] = [$this->ledger->wallet($user, $escrow->currency), $cents];
+                }
+            }
+            if ($legs) {
+                $this->ledger->post('guarantee_release', $legs, ['reference' => $milestone, 'key' => "milestone:{$milestone->id}:hold-release"]);
+            }
+            $milestone->update(['hold_released_at' => now()]);
+
+            foreach ($payouts as $userId => $cents) {
+                $escrow->payees->firstWhere('user_id', $userId)->user->notify(new ActivityNotification(
+                    'milestone.hold_released', null, [...$this->labels($escrow, $milestone), 'amount' => Money::fromCents($cents)],
+                ));
+            }
+        });
     }
 
     /**

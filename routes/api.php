@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminBroadcastController;
 use App\Http\Controllers\Admin\AdminCampaignController;
 use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminContactController;
+use App\Http\Controllers\Admin\AdminConversationController;
 use App\Http\Controllers\Admin\AdminCurrencyController;
 use App\Http\Controllers\Admin\AdminDepositController;
 use App\Http\Controllers\Admin\AdminDisputeController;
@@ -447,6 +448,8 @@ Route::middleware(['auth:sanctum', EnsureNotSuspended::class, TouchLastSeen::cla
             Route::post('support/{ticket}/reply', [AdminSupportController::class, 'reply'])->whereNumber('ticket');
             Route::patch('support/{ticket}', [AdminSupportController::class, 'update'])->whereNumber('ticket');
             Route::get('messages/stats', [AdminMessageController::class, 'stats']);
+            Route::get('conversations', [AdminConversationController::class, 'index']);
+            Route::get('conversations/{conversation}', [AdminConversationController::class, 'show'])->whereNumber('conversation');
             Route::get('feedback', AdminFeedbackController::class);
         });
 

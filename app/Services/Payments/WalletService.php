@@ -20,11 +20,13 @@ class WalletService
     /**
      * One row per currency the user has money in or is waiting for, always including their preferred currency.
      *
-     * @return list<array{currency: string, available: float, inEscrow: float, incoming: float, pendingWithdrawals: float}>
+     * @return list<array{currency: string, available: float, inEscrow: float, incoming: float, onHold: float, pendingWithdrawals: float}>
      */
     public function balances(User $user): array
     {
         $available = Account::where('type', Account::WALLET)->where('user_id', $user->id)->pluck('balance_cents', 'currency');
+        // Earned but in the guarantee period (guarantee policy): released, not spendable yet.
+        $onHold = Account::where('type', Account::HELD)->where('user_id', $user->id)->pluck('balance_cents', 'currency');
 
         // Paid by the user into escrow, not yet released.
         $inEscrow = Milestone::query()
@@ -48,13 +50,15 @@ class WalletService
             ->groupBy('currency')->map(fn (Collection $w) => (int) $w->sum(fn (Withdrawal $x) => $x->amount_cents + $x->fee_cents));
 
         return collect([$user->currency])
-            ->merge($available->keys())->merge($inEscrow->keys())->merge($incoming->keys())->merge($pending->keys())
+            ->merge($available->keys())->merge($inEscrow->keys())->merge($incoming->keys())->merge($onHold->keys())->merge($pending->keys())
             ->unique()->values()
             ->map(fn (string $currency) => [
                 'currency' => $currency,
                 'available' => Money::fromCents((int) ($available[$currency] ?? 0)),
                 'inEscrow' => Money::fromCents((int) ($inEscrow[$currency] ?? 0)),
-                'incoming' => Money::fromCents((int) ($incoming[$currency] ?? 0)),
+                'incoming' => Money::fromCents((int) ($incoming[$currency] ?? 0) + (int) ($onHold[$currency] ?? 0)),
+                /** Part of `incoming`: released payouts waiting out the guarantee period. */
+                'onHold' => Money::fromCents((int) ($onHold[$currency] ?? 0)),
                 'pendingWithdrawals' => Money::fromCents((int) ($pending[$currency] ?? 0)),
             ])->all();
     }

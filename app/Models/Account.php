@@ -53,6 +53,9 @@ class Account extends Model
     /** Budgets of promotion campaigns, paid out to promoters as visits are counted. */
     public const CAMPAIGNS = 'campaigns';
 
+    /** A freelancer's earnings in the guarantee period: released, but not spendable until the period ends. */
+    public const HELD = 'held';
+
     /** What the platform spends on prizes (prize draw). An expense: goes negative as prizes are paid. */
     public const MARKETING = 'marketing';
 

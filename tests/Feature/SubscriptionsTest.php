@@ -216,6 +216,8 @@ class SubscriptionsTest extends TestCase
 
     public function test_a_failed_renewal_has_a_grace_period_and_then_the_plan_ends(): void
     {
+        // A fixed mid-month start: adding a month from the 31st would shift the dates this test counts in days.
+        $this->travelTo(now()->setDate(2026, 10, 10)->setTime(12, 0));
         $this->fund($this->user, 17);
         $this->as($this->user)->postJson('/api/subscriptions', ['planId' => $this->pro->id])->assertCreated();
 

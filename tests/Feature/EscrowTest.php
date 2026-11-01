@@ -118,6 +118,34 @@ class EscrowTest extends TestCase
         $this->as($this->freelancer)->getJson('/api/wallet')->assertJsonPath('data.0.incoming', 400)->assertJsonPath('data.0.available', 0);
     }
 
+    public function test_the_guarantee_policy_holds_a_payout_for_the_days_set_at_delivery(): void
+    {
+        Setting::put('escrow.guarantee_days', 7);
+        [$design] = $this->setUpEscrow();
+        $this->fund($this->client, 1000);
+        $this->as($this->client)->postJson("/api/projects/{$this->project->id}/escrow/fund")->assertOk();
+        $this->as($this->freelancer)->postJson("/api/milestones/{$design->id}/submit", ['note' => 'All screens are in Figma.'])->assertOk();
+
+        // Changing the policy after delivery does not affect this milestone.
+        Setting::put('escrow.guarantee_days', 30);
+        $this->as($this->client)->postJson("/api/milestones/{$design->id}/approve")->assertOk();
+
+        $this->assertSame(0.0, $this->balance($this->freelancer), 'nothing spendable during the guarantee period');
+        $this->as($this->freelancer)->getJson('/api/wallet')->assertJsonPath('data.0.onHold', 360);
+        $this->assertSame(7, $design->fresh()->guarantee_days);
+        $this->assertBooksBalance();
+
+        $this->artisan('escrow:release-holds')->assertSuccessful();
+        $this->assertSame(0.0, $this->balance($this->freelancer), 'not before the period ends');
+
+        $this->travel(8)->days();
+        $this->artisan('escrow:release-holds')->assertSuccessful();
+        $this->artisan('escrow:release-holds')->assertSuccessful();
+        $this->assertSame(360.0, $this->balance($this->freelancer), 'released once');
+        $this->as($this->freelancer)->getJson('/api/wallet')->assertJsonPath('data.0.onHold', 0);
+        $this->assertBooksBalance();
+    }
+
     public function test_funding_without_enough_money_changes_nothing(): void
     {
         $this->setUpEscrow();

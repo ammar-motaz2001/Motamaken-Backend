@@ -51,7 +51,7 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
-#[Fillable(['escrow_id', 'position', 'title', 'amount_cents', 'status', 'due_date', 'fee_cents', 'submission_note', 'delivery_links', 'changes_note', 'refunded_cents', 'funded_at', 'submitted_at', 'released_at'])]
+#[Fillable(['escrow_id', 'position', 'title', 'amount_cents', 'status', 'due_date', 'fee_cents', 'submission_note', 'delivery_links', 'changes_note', 'refunded_cents', 'funded_at', 'submitted_at', 'released_at', 'guarantee_days', 'held_until', 'hold_released_at'])]
 class Milestone extends Model
 {
     use HasFactory;
@@ -93,6 +93,9 @@ class Milestone extends Model
             'funded_at' => 'datetime',
             'submitted_at' => 'datetime',
             'released_at' => 'datetime',
+            'guarantee_days' => 'integer',
+            'held_until' => 'datetime',
+            'hold_released_at' => 'datetime',
         ];
     }
 

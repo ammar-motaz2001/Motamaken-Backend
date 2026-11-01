@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'milestone.hold_released' => 'انتهت فترة الضمان لدفعة ":project" وأُضيف :amount إلى رصيدك المتاح.',
     'project.published' => 'تم نشر مشروعك ":project" وأصبح متاحاً لاستقبال العروض.',
     'proposal.sent' => 'تم إرسال عرضك على ":project". سيصلك إشعار عند رد صاحب المشروع.',
     'email_subject' => 'نشاط جديد على متمكن',

@@ -29,7 +29,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Before the rate limiters run, so they count the real visitor and not the website's server.
         $middleware->prepend(TrustFrontendProxy::class);
 
-        $middleware->api(append: [SetLocaleFromHeader::class, CheckMaintenance::class, BlockBlacklistedIp::class, RejectMarkup::class]);
+        // The language first, so even the earliest answers (e.g. "too many attempts" from the throttle) are translated.
+        $middleware->api(prepend: [SetLocaleFromHeader::class], append: [CheckMaintenance::class, BlockBlacklistedIp::class, RejectMarkup::class]);
         $middleware->alias(['admin.can' => AdminCan::class]);
         // The API has no login page: a guest gets a JSON 401, never a redirect (which crashed without Accept: json).
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/');

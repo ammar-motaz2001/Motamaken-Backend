@@ -17,12 +17,13 @@ class AdminSettingsController extends Controller
         'withdrawalMin' => 'withdrawals.min',
         'withdrawalFee' => 'withdrawals.fee',
         'withdrawalRequiresKyc' => 'withdrawals.require_kyc',
+        'guaranteeDays' => 'escrow.guarantee_days',
     ];
 
     /**
      * Show settings.
      *
-     * @return array{data: array{siteFeePercent: float, depositMin: float, depositMax: float, withdrawalMin: float, withdrawalFee: float, withdrawalRequiresKyc: bool}}
+     * @return array{data: array{siteFeePercent: float, depositMin: float, depositMax: float, withdrawalMin: float, withdrawalFee: float, withdrawalRequiresKyc: bool, guaranteeDays: int}}
      */
     public function show(): array
     {
@@ -34,7 +35,7 @@ class AdminSettingsController extends Controller
      *
      * Send only what changes. Takes effect immediately for new movements; past ones are never recalculated.
      *
-     * @return array{data: array{siteFeePercent: float, depositMin: float, depositMax: float, withdrawalMin: float, withdrawalFee: float, withdrawalRequiresKyc: bool}}
+     * @return array{data: array{siteFeePercent: float, depositMin: float, depositMax: float, withdrawalMin: float, withdrawalFee: float, withdrawalRequiresKyc: bool, guaranteeDays: int}}
      */
     public function update(UpdateSettingsRequest $request): array
     {
@@ -64,6 +65,7 @@ class AdminSettingsController extends Controller
             'withdrawalMin' => (float) Setting::get('withdrawals.min'),
             'withdrawalFee' => (float) Setting::get('withdrawals.fee'),
             'withdrawalRequiresKyc' => (bool) Setting::get('withdrawals.require_kyc'),
+            'guaranteeDays' => (int) Setting::get('escrow.guarantee_days'),
         ];
     }
 }

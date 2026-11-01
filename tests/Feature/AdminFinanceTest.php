@@ -70,7 +70,7 @@ class AdminFinanceTest extends TestCase
     public function test_settings_can_be_read_and_changed(): void
     {
         $this->actingAs($this->admin, 'sanctum')->getJson('/api/admin/settings')->assertOk()->assertExactJson(['data' => [
-            'siteFeePercent' => 10, 'depositMin' => 5, 'depositMax' => 10000, 'withdrawalMin' => 20, 'withdrawalFee' => 1, 'withdrawalRequiresKyc' => true,
+            'siteFeePercent' => 10, 'depositMin' => 5, 'depositMax' => 10000, 'withdrawalMin' => 20, 'withdrawalFee' => 1, 'withdrawalRequiresKyc' => true, 'guaranteeDays' => 0,
         ]]);
 
         $this->actingAs($this->admin, 'sanctum')->putJson('/api/admin/settings', ['siteFeePercent' => 12.5, 'withdrawalRequiresKyc' => false])

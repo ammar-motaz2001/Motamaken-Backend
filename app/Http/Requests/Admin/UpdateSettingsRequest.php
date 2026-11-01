@@ -23,6 +23,8 @@ class UpdateSettingsRequest extends FormRequest
             'withdrawalFee' => ['sometimes', 'numeric', 'min:0'],
             /** Whether users must pass the identity check before withdrawing. */
             'withdrawalRequiresKyc' => ['sometimes', 'boolean'],
+            /** Guarantee policy: days a released payment is held before the freelancer can use it. Applies to milestones delivered from now on. */
+            'guaranteeDays' => ['sometimes', 'integer', 'min:0', 'max:90'],
         ];
     }
 }

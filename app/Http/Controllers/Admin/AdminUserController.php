@@ -101,7 +101,7 @@ class AdminUserController extends Controller
      *
      * With their numbers and wallet balances.
      *
-     * @return array{data: array<string, mixed>, wallet: list<array{currency: string, available: float, inEscrow: float, incoming: float, pendingWithdrawals: float}>}
+     * @return array{data: array<string, mixed>, wallet: list<array{currency: string, available: float, inEscrow: float, incoming: float, onHold: float, pendingWithdrawals: float}>}
      */
     public function show(int $user): array
     {
@@ -434,7 +434,7 @@ class AdminUserController extends Controller
      * Support tool: adds money (positive `amount`) or takes it (negative) with a mandatory reason. It is a normal ledger
      * movement against the gateway account, recorded under your name, and cannot take a wallet below zero.
      *
-     * @return array{data: list<array{currency: string, available: float, inEscrow: float, incoming: float, pendingWithdrawals: float}>}
+     * @return array{data: list<array{currency: string, available: float, inEscrow: float, incoming: float, onHold: float, pendingWithdrawals: float}>}
      */
     public function adjust(Request $request, int $user): array
     {

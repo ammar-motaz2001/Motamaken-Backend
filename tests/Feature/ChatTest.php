@@ -156,6 +156,20 @@ class ChatTest extends TestCase
         $this->actingAs($this->me, 'sanctum')->post("/api/conversations/{$conversation->id}/messages", ['type' => 'voice', 'duration' => 3, 'file' => $mp4], ['Accept' => 'application/json'])->assertCreated();
     }
 
+    public function test_support_staff_read_every_conversation(): void
+    {
+        $conversation = app(ConversationService::class)->findOrCreate($this->me, $this->other)[0];
+        $this->actingAs($this->me, 'sanctum')->postJson("/api/conversations/{$conversation->id}/messages", ['type' => 'text', 'body' => 'Hello there'])->assertCreated();
+        $this->app['auth']->forgetGuards();
+
+        $staff = User::factory()->create(['is_admin' => true]);
+        $this->actingAs($staff, 'sanctum')->getJson('/api/admin/conversations')->assertOk()
+            ->assertJsonPath('data.0.id', $conversation->id)->assertJsonPath('data.0.messagesCount', 1)->assertJsonPath('data.0.lastMessage.body', 'Hello there');
+        $this->getJson("/api/admin/conversations/{$conversation->id}")->assertOk()->assertJsonPath('data.0.body', 'Hello there')->assertJsonCount(2, 'conversation.members');
+        $this->app['auth']->forgetGuards();
+        $this->actingAs($this->other, 'sanctum')->getJson('/api/admin/conversations')->assertNotFound();
+    }
+
     public function test_message_validation(): void
     {
         $conversation = $this->conversation();

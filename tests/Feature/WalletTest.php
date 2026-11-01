@@ -117,8 +117,8 @@ class WalletTest extends TestCase
 
         $wallet = $this->as($this->user)->getJson('/api/wallet')->assertOk()->json('data');
         $this->assertEquals(
-            [['currency' => 'USD', 'available' => 100, 'inEscrow' => 0, 'incoming' => 0, 'pendingWithdrawals' => 0],
-                ['currency' => 'SAR', 'available' => 25, 'inEscrow' => 0, 'incoming' => 0, 'pendingWithdrawals' => 0]],
+            [['currency' => 'USD', 'available' => 100, 'inEscrow' => 0, 'incoming' => 0, 'onHold' => 0, 'pendingWithdrawals' => 0],
+                ['currency' => 'SAR', 'available' => 25, 'inEscrow' => 0, 'incoming' => 0, 'onHold' => 0, 'pendingWithdrawals' => 0]],
             $wallet,
         );
 

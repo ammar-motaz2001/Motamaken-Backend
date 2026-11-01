@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'milestone.hold_released' => 'The guarantee period of your payment for ":project" ended; :amount is now in your available balance.',
     'project.published' => 'Your project ":project" is live and receiving offers.',
     'proposal.sent' => 'Your offer on ":project" was sent. You will be notified when the owner answers.',
     'email_subject' => 'New activity on Mutamakin',
