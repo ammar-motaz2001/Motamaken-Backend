@@ -30,9 +30,15 @@
 	redir @plainHttp https://{host}{uri} 301
 }
 
-http://mutamakin.com, https://mutamakin.com, http://www.mutamakin.com, https://www.mutamakin.com {
+http://mutamakin.com, https://mutamakin.com {
 	import common
 	reverse_proxy web:3000
+}
+
+# One address for the site: www goes to the main domain.
+http://www.mutamakin.com, https://www.mutamakin.com {
+	import common
+	redir https://mutamakin.com{uri} 301
 }
 
 http://api.mutamakin.com, https://api.mutamakin.com {
